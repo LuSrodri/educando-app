@@ -10,6 +10,28 @@
 This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
 Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
 
+## Configuração do Pagamento PIX
+
+Este projeto usa o Mercado Pago para processar pagamentos PIX. Para configurar:
+
+1. Crie uma conta no [Mercado Pago Developers](https://www.mercadopago.com.br/developers)
+2. Crie uma aplicação no [Painel de Aplicações](https://www.mercadopago.com.br/developers/panel/app)
+3. Copie seu Access Token (Credenciais de Produção ou Teste)
+4. Crie um arquivo `.env.local` na raiz do projeto com o seguinte conteúdo:
+
+```env
+MERCADOPAGO_ACCESS_TOKEN=seu_access_token_aqui
+```
+
+### Funcionamento do Pagamento
+
+- O usuário tem 3 atividades gratuitas por dia
+- Após esgotar, pode pagar R$ 1,99 por atividade adicional via PIX
+- O pagamento é processado completamente no client-side
+- QR Code PIX é gerado e exibido no modal
+- Verificação automática do status a cada 2.5 segundos
+- Confirmação instantânea após pagamento aprovado
+
 ## Deployment
 
 Your project is live at:
