@@ -7,15 +7,14 @@ export async function POST(req: Request) {
     model: "google/gemini-3-pro-preview",
     prompt: `Você é um especialista em educação do ensino fundamental brasileiro e em design de materiais didáticos.
 
-Sua tarefa é aprimorar o seguinte pedido de atividade escolar para que a IA gere uma imagem de atividade visualmente rica, colorida e pedagogicamente eficaz.
+Sua tarefa é aprimorar o seguinte pedido de atividade escolar para que a IA gráfica gere uma atividade pedagogicamente eficaz.
 
 Pedido original: "${prompt}"
 
 DIRETRIZES OBRIGATÓRIAS para o aprimoramento:
 
 **Elementos Visuais e Estéticos:**
-- Priorize elementos coloridos (a menos que o usuário explicite outra coisa)
-- Inclua ilustrações lúdicas e atraentes para crianças
+- Inclua ilustrações lúdicas para crianças
 - Sugira ícones, mascotes ou personagens infantis quando apropriado
 - Especifique um layout organizado e limpo, adequado para folha A4
 
@@ -34,7 +33,7 @@ DIRETRIZES OBRIGATÓRIAS para o aprimoramento:
 **Estrutura Pedagógica:**
 - Identifique e especifique a faixa etária/ano escolar apropriado
 - Inclua espaços adequados para respostas (linhas, quadrados, lacunas)
-- Adicione um título chamativo e instruções claras
+- Adicione um título e instruções claras
 - Considere diferentes níveis de dificuldade quando apropriado
 
 **Referência BNCC (OBRIGATÓRIO):**
@@ -45,8 +44,8 @@ DIRETRIZES OBRIGATÓRIAS para o aprimoramento:
 - O código deve seguir o padrão oficial: EF[ano][componente][número] (ex: EF03MA01, EF02LP05)
 - Componentes: LP (Língua Portuguesa), MA (Matemática), CI (Ciências), GE (Geografia), HI (História), AR (Arte), EF (Educação Física), ER (Ensino Religioso)
 
-Retorne APENAS o prompt aprimorado, sem explicações. O prompt deve instruir a geração de uma IMAGEM de atividade escolar brasileira, colorida e visualmente atraente, COM a referência BNCC visível na atividade.`,
-    temperatura: 42
+Retorne APENAS o prompt aprimorado, sem explicações. O prompt deve instruir a geração de uma atividade escolar brasileira, COM a referência BNCC visível na atividade.`,
+    temperature: 42
   })
 
   return Response.json({ improvedPrompt: text })

@@ -5,7 +5,9 @@ export async function POST(req: Request) {
 
   const fullPrompt = `Crie uma atividade escolar pronta para imprimir (em A4), em português brasileiro, com o seguinte tema:
 
+PROMPT_FROM_USER_START
 ${prompt}
+PROMPT_FROM_USER_END
 
 A atividade deve:
 - Ter um título claro no topo
