@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { X, Shield, Zap, Loader2, Copy, Check, QrCode } from "lucide-react"
-import { getSessionId, PRICE_PER_ACTIVITY, addPaidActivity } from "@/lib/session"
+import { getSessionId, PRICE_PER_ACTIVITY, addPaidActivity, addExtraCredit } from "@/lib/session"
 
 interface PaymentModalProps {
   isOpen: boolean
@@ -101,13 +101,15 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current)
         }
-        // Adicionar atividade paga
+        // Adicionar atividade paga e crédito extra
         addPaidActivity()
-        // Aguardar 1.5s para mostrar sucesso antes de fechar
+        addExtraCredit()
+        // Aguardar 2s para mostrar sucesso e depois resetar modal
         setTimeout(() => {
           onSuccess?.()
-          onClose()
-        }, 1500)
+          // Resetar modal para permitir nova compra
+          resetModal()
+        }, 2000)
       } else if (data.status === "rejected" || data.status === "cancelled") {
         setPaymentStatus("failed")
         if (pollingIntervalRef.current) {
@@ -179,7 +181,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
     }
   }
 
-  const handleBack = () => {
+  const resetModal = () => {
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current)
     }
@@ -191,6 +193,11 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
     setCopied(false)
     setEmailError("")
     setTimeRemaining("")
+    setIsLoading(false)
+  }
+
+  const handleBack = () => {
+    resetModal()
   }
 
   return (

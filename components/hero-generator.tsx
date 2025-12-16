@@ -19,7 +19,7 @@ import {
   Zap,
 } from "lucide-react"
 import { PaymentModal } from "@/components/payment-modal"
-import { canGenerateFree, getRemainingFree, incrementDailyUsage, FREE_DAILY_LIMIT } from "@/lib/session"
+import { canGenerateFree, getRemainingFree, incrementDailyUsage, FREE_DAILY_LIMIT, getExtraCredits, useExtraCredit } from "@/lib/session"
 
 export interface HeroGeneratorRef {
   setPromptValue: (value: string) => void
@@ -43,9 +43,11 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [remainingFree, setRemainingFree] = useState(FREE_DAILY_LIMIT)
+  const [extraCredits, setExtraCredits] = useState(0)
 
   useEffect(() => {
     setRemainingFree(getRemainingFree())
+    setExtraCredits(getExtraCredits())
   }, [])
 
   useImperativeHandle(ref, () => ({
@@ -104,9 +106,18 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   const generateActivity = async () => {
     if (!prompt.trim()) return
 
+    // Verificar se pode gerar gratuitamente
     if (!canGenerateFree()) {
-      setShowPaymentModal(true)
-      return
+      // Verificar se tem créditos extras
+      const currentExtraCredits = getExtraCredits()
+      if (currentExtraCredits > 0) {
+        // Usar crédito extra
+        useExtraCredit()
+        setExtraCredits(getExtraCredits())
+      } else {
+        setShowPaymentModal(true)
+        return
+      }
     }
 
     setIsGenerating(true)
@@ -253,7 +264,8 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   }
 
   const regenerate = () => {
-    if (!canGenerateFree()) {
+    // Verificar se pode gerar gratuitamente ou com créditos extras
+    if (!canGenerateFree() && getExtraCredits() === 0) {
       setShowPaymentModal(true)
       return
     }
@@ -392,6 +404,15 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                       </span>
                     )}
                   </Button>
+
+                  {/* Mensagem de créditos extras */}
+                  {extraCredits > 0 && (
+                    <div className="bg-green-50 border border-green-300 rounded-lg p-3 text-center">
+                      <p className="text-sm text-green-800 font-medium">
+                        🎉 Você tem {extraCredits} crédito{extraCredits > 1 ? 's' : ''} extra{extraCredits > 1 ? 's' : ''}, clique no botão acima para gerar a atividade.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Error */}
                   {error && (
@@ -548,7 +569,14 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
         </div>
       </section>
 
-      <PaymentModal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} />
+      <PaymentModal 
+        isOpen={showPaymentModal} 
+        onClose={() => setShowPaymentModal(false)} 
+        onSuccess={() => {
+          setExtraCredits(getExtraCredits())
+          setRemainingFree(getRemainingFree())
+        }}
+      />
     </>
   )
 })
