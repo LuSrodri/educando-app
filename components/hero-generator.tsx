@@ -409,7 +409,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                   {extraCredits > 0 && (
                     <div className="bg-green-50 border border-green-300 rounded-lg p-3 text-center">
                       <p className="text-sm text-green-800 font-medium">
-                        🎉 Você tem {extraCredits} crédito{extraCredits > 1 ? 's' : ''} extra{extraCredits > 1 ? 's' : ''}, clique no botão acima para gerar a atividade.
+                        🎉 Você comprou {extraCredits} crédito{extraCredits > 1 ? 's' : ''} extra{extraCredits > 1 ? 's' : ''}, clique no botão acima para gerar a atividade.
                       </p>
                     </div>
                   )}

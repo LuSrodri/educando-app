@@ -104,10 +104,11 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
         // Adicionar atividade paga e crédito extra
         addPaidActivity()
         addExtraCredit()
-        // Aguardar 2s para mostrar sucesso e depois resetar modal
+        // Aguardar 2s para mostrar sucesso, fechar modal e resetar para próximo uso
         setTimeout(() => {
           onSuccess?.()
-          // Resetar modal para permitir nova compra
+          onClose()
+          // Resetar modal para permitir nova compra quando abrir novamente
           resetModal()
         }, 2000)
       } else if (data.status === "rejected" || data.status === "cancelled") {
