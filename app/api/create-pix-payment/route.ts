@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { MercadoPagoConfig, Payment } from "mercadopago"
 
 const client = new MercadoPagoConfig({
-  accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || "",
+  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || "",
 })
 
 export async function POST(request: NextRequest) {
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     const body = {
       transaction_amount: amount,
       description: "Atividade Educando.app",
+      statement_descriptor: "Educando.app",
       payment_method_id: "pix",
       date_of_expiration: expirationDate.toISOString(),
       payer: {
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         session_id: sessionId,
       },
+      installments: 1,
     }
 
     const result = await payment.create({ body })
