@@ -44,8 +44,7 @@ DIRETRIZES OBRIGATÓRIAS para o aprimoramento:
 - O código deve seguir o padrão oficial: EF[ano][componente][número] (ex: EF03MA01, EF02LP05)
 - Componentes: LP (Língua Portuguesa), MA (Matemática), CI (Ciências), GE (Geografia), HI (História), AR (Arte), EF (Educação Física), ER (Ensino Religioso)
 
-Retorne APENAS o prompt aprimorado, sem explicações. O prompt deve instruir a geração de uma atividade escolar brasileira, COM a referência BNCC visível na atividade.`,
-    temperature: 42
+Retorne APENAS o prompt aprimorado, sem explicações. O prompt deve instruir a geração de uma atividade escolar brasileira, COM a referência BNCC visível na atividade.`
   })
 
   return Response.json({ improvedPrompt: text })
