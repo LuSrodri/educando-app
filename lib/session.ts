@@ -49,35 +49,6 @@ export function incrementDailyUsage(): number {
   return newCount
 }
 
-export function getPaidActivities(): number {
-  if (typeof window === "undefined") return 0
-
-  const todayKey = getTodayKey()
-  const paidData = localStorage.getItem("educando_paid_activities")
-
-  if (!paidData) return 0
-
-  try {
-    const data = JSON.parse(paidData)
-    if (data.date !== todayKey) {
-      localStorage.setItem("educando_paid_activities", JSON.stringify({ date: todayKey, count: 0 }))
-      return 0
-    }
-    return data.count || 0
-  } catch {
-    return 0
-  }
-}
-
-export function addPaidActivity(): void {
-  if (typeof window === "undefined") return
-
-  const todayKey = getTodayKey()
-  const currentPaid = getPaidActivities()
-
-  localStorage.setItem("educando_paid_activities", JSON.stringify({ date: todayKey, count: currentPaid + 1 }))
-}
-
 export function getExtraCredits(): number {
   if (typeof window === "undefined") return 0
 
@@ -116,13 +87,11 @@ export const PRICE_PER_ACTIVITY = 1.99
 
 export function canGenerateFree(): boolean {
   const usage = getDailyUsage()
-  const paid = getPaidActivities()
-  return usage < FREE_DAILY_LIMIT + paid
+  return usage < FREE_DAILY_LIMIT
 }
 
 export function getRemainingFree(): number {
   const usage = getDailyUsage()
-  const paid = getPaidActivities()
-  const remaining = FREE_DAILY_LIMIT + paid - usage
+  const remaining = FREE_DAILY_LIMIT - usage
   return Math.max(0, remaining)
 }

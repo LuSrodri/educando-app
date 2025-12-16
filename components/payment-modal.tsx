@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { X, Shield, Zap, Loader2, Copy, Check, QrCode } from "lucide-react"
-import { getSessionId, PRICE_PER_ACTIVITY, addPaidActivity, addExtraCredit } from "@/lib/session"
+import { getSessionId, PRICE_PER_ACTIVITY, addExtraCredit } from "@/lib/session"
 
 interface PaymentModalProps {
   isOpen: boolean
@@ -101,8 +101,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current)
         }
-        // Adicionar atividade paga e crédito extra
-        addPaidActivity()
+        // Adicionar crédito extra
         addExtraCredit()
         // Aguardar 2s para mostrar sucesso, fechar modal e resetar para próximo uso
         setTimeout(() => {
