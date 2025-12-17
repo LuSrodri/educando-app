@@ -4,7 +4,7 @@ export async function POST(req: Request) {
   const { prompt } = await req.json()
 
   const { text } = await generateText({
-    model: "google/gemini-3-pro-preview",
+    model: "google/gemini-3-flash",
     prompt: `Você é um especialista em educação do ensino fundamental brasileiro e em design de materiais didáticos.
 
 Sua tarefa é aprimorar o seguinte pedido de atividade escolar para que a IA gráfica gere uma atividade pedagogicamente eficaz.
