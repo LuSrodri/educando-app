@@ -19,7 +19,7 @@ import {
   Zap,
 } from "lucide-react"
 import { PaymentModal } from "@/components/payment-modal"
-import { canGenerateFree, getRemainingFree, incrementDailyUsage, FREE_DAILY_LIMIT, getExtraCredits, useExtraCredit } from "@/lib/session"
+import { canGenerateFree, getRemainingFree, incrementDailyUsage, FREE_DAILY_LIMIT, getExtraCredits, useExtraCredit, addExtraCredit } from "@/lib/session"
 
 export interface HeroGeneratorRef {
   setPromptValue: (value: string) => void
@@ -106,6 +106,8 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   const generateActivity = async () => {
     if (!prompt.trim()) return
 
+    let usedExtraCredit = false
+
     // Verificar se pode gerar gratuitamente
     if (!canGenerateFree()) {
       // Verificar se tem créditos extras
@@ -114,6 +116,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
         // Usar crédito extra
         useExtraCredit()
         setExtraCredits(getExtraCredits())
+        usedExtraCredit = true
       } else {
         setShowPaymentModal(true)
         return
@@ -159,6 +162,11 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
       }
     } catch (err) {
       setError("Erro ao gerar a atividade. Tente novamente.")
+      // Devolver crédito extra se foi usado
+      if (usedExtraCredit) {
+        addExtraCredit()
+        setExtraCredits(getExtraCredits())
+      }
     } finally {
       setIsGenerating(false)
       setGenerationStatus(null)
