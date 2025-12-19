@@ -17,6 +17,7 @@ import {
   CheckCircle,
   BookOpen,
   Zap,
+  VenetianMask,
 } from "lucide-react"
 import { PaymentModal } from "@/components/payment-modal"
 import { canGenerateFree, getRemainingFree, incrementDailyUsage, FREE_DAILY_LIMIT, getExtraCredits, useExtraCredit, addExtraCredit } from "@/lib/session"
@@ -301,21 +302,20 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
         <div className="absolute inset-0 bg-[url('/subtle-grid-pattern.png')] opacity-5" />
 
         <div className="container mx-auto px-4 relative">
-          {/* Header minimalista */}
-          <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-8">
+          {/* Header */}
+          <header className="flex flex-col items-center text-center max-w-3xl mx-auto mb-8">
+            <BookOpen className="w-12 h-12 text-amber-600 mb-4" />
+
             <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-3 leading-tight">
-              Crie atividades em <span className="text-amber-600">30 segundos</span>
+              Crie atividades escolares em <br/><span className="text-amber-600">30 segundos</span>
             </h1>
 
-            <p className="text-base md:text-lg text-gray-600 mb-3 max-w-xl">
-              Digite o tema e nossa IA gera atividades prontas para imprimir.
+            <p className="text-base md:text-lg text-gray-600 max-w-xl">
+              Digite o tema, clique em{" "}
+              <span className="text-amber-600 inline-flex items-center gap-1 text-sm"><Sparkles className="w-3 h-3 inline" /> Gerar Atividade</span> e crie
+              atividades pedagógicas prontas para imprimir.
             </p>
-
-            <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1.5 rounded-full text-sm font-medium border border-green-200">
-              <CheckCircle className="w-4 h-4" />
-              Alinhado à BNCC
-            </div>
-          </div>
+          </header>
 
           {/* Formulário principal - destaque visual */}
           <div className="max-w-2xl mx-auto">
@@ -571,6 +571,14 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
               <div className="flex items-center gap-2">
                 <Printer className="w-4 h-4 text-amber-600" />
                 <span className="font-medium">Pronto para imprimir</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-amber-600" />
+                <span className="font-medium">Alinhado à BNCC</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <VenetianMask className="w-4 h-4 text-amber-600" />
+                <span className="font-medium">Sem Login</span>
               </div>
             </div>
           </div>

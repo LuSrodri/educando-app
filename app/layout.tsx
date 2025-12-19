@@ -10,11 +10,11 @@ const _nunitoSans = Nunito_Sans({ subsets: ["latin"] })
 export const metadata: Metadata = {
   metadataBase: new URL("https://educando.app"),
   title: {
-    default: "educando.app - Gerador de Atividades Escolares com IA | Alinhado à BNCC",
+    default: "Crie atividade escolares alinhadas à BNCC a partir de um tema — prontas para imprimir — em 30 segundos. Sem login. 3 atividades gratuitas por dia. Acesse educando.app",
     template: "%s | educando.app",
   },
   description:
-    "Crie atividades escolares personalizadas com inteligência artificial, alinhadas à BNCC. Alfabetização, matemática, ciências e mais para o Ensino Fundamental. Gere, edite, baixe e imprima em segundos.",
+    "Com o educando.app, você transforma qualquer tema em atividades pedagógicas completas, com códigos da BNCC e prontas para imprimir. Tudo em segundos, direto no navegador e sem necessidade de login. Recupere seu tempo livre e garanta aulas criativas hoje mesmo!",
   keywords: [
     "gerador de atividades",
     "atividades escolares",
@@ -33,6 +33,8 @@ export const metadata: Metadata = {
     "atividades 5º ano",
     "material didático",
     "recurso pedagógico",
+    "30 segundos",
+    "sem login",
   ],
   authors: [{ name: "educando.app" }],
   creator: "educando.app",
@@ -53,9 +55,9 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     url: "https://educando.app",
     siteName: "educando.app",
-    title: "educando.app - Gerador de Atividades Escolares com IA",
+    title: "Crie atividade escolares alinhadas à BNCC a partir de um tema — prontas para imprimir — em 30 segundos. Sem login. 3 atividades gratuitas por dia. Acesse educando.app",
     description:
-      "Crie atividades escolares personalizadas com IA, alinhadas à BNCC. Alfabetização, matemática, ciências e mais. Gere, edite, baixe e imprima em segundos.",
+      "Com o educando.app, você transforma qualquer tema em atividades pedagógicas completas, com códigos da BNCC e prontas para imprimir. Tudo em segundos, direto no navegador e sem necessidade de login. Recupere seu tempo livre e garanta aulas criativas hoje mesmo!",
     images: [
       {
         url: "/og-image.png",
@@ -67,16 +69,15 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "educando.app - Gerador de Atividades Escolares com IA",
+    title: "Crie atividade escolares alinhadas à BNCC a partir de um tema — prontas para imprimir — em 30 segundos. Sem login. 3 atividades gratuitas por dia. Acesse educando.app",
     description:
-      "Crie atividades escolares personalizadas com IA, alinhadas à BNCC. Gere, edite, baixe e imprima em segundos.",
+      "Com o educando.app, você transforma qualquer tema em atividades pedagógicas completas, com códigos da BNCC e prontas para imprimir. Tudo em segundos, direto no navegador e sem necessidade de login. Recupere seu tempo livre e garanta aulas criativas hoje mesmo!",
     images: ["/og-image.png"],
   },
   alternates: {
     canonical: "https://educando.app",
   },
   category: "education",
-    generator: 'v0.app'
 }
 
 export const viewport: Viewport = {
