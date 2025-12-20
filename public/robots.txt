@@ -1,0 +1,25 @@
+# robots.txt para educando.app
+# Gerador de Atividades Escolares com IA
+
+# Permitir todos os crawlers
+User-agent: *
+Allow: /
+
+# Bloquear rotas de API
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://educando.app/sitemap.xml
+
+# Crawl-delay para ser gentil com os bots
+Crawl-delay: 1
+
+# Regras específicas para Google
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+
+# Regras específicas para Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
