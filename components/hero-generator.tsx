@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Loader2,
   Sparkles,
@@ -19,6 +20,9 @@ import {
   Zap,
   VenetianMask,
   History,
+  ChevronDown,
+  ChevronUp,
+  Info,
 } from "lucide-react"
 import { PaymentModal } from "@/components/payment-modal"
 import { EducationalLevelSelector } from "@/components/educational-level-selector"
@@ -28,6 +32,18 @@ import { FREE_DAILY_LIMIT } from "@/lib/session"
 import { type EducationalLevelId, EDUCATIONAL_LEVELS } from "@/types/educational-levels"
 import type { Activity } from "@/lib/supabase/types"
 import Link from "next/link"
+
+// Tipos para as opções de elementos
+interface ActivityElements {
+  header: boolean // Cabeçalho (nome, data)
+  title: boolean // Título da atividade
+  instructions: boolean // Enunciado/Instruções
+  illustrations: boolean // Figuras/Ilustrações
+  bncc: boolean // Referência BNCC
+}
+
+// Tipo de atividade
+type ActivityType = "student" | "teacher_support"
 
 export interface HeroGeneratorRef {
   setPromptValue: (value: string) => void
@@ -56,6 +72,21 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   const [educationalLevel, setEducationalLevel] = useState<EducationalLevelId>("fundamental_1")
   const [grade, setGrade] = useState("1")
 
+  // Opções avançadas state
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
+
+  // Tipo de atividade: para aluno ou material de apoio para professor
+  const [activityType, setActivityType] = useState<ActivityType>("student")
+
+  // Elementos da atividade
+  const [elements, setElements] = useState<ActivityElements>({
+    header: true,
+    title: true,
+    instructions: true,
+    illustrations: true,
+    bncc: true,
+  })
+
   // Use new hooks
   const { browserId, isLoading: browserLoading } = useBrowserId()
   const { remainingFree, extraCredits, canGenerate, refresh: refreshCredits } = useCredits(browserId)
@@ -76,8 +107,8 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
   const improvingMessages = [
     "Aprimorando seu prompt com IA...",
-    "Analisando o contexto pedagogico...",
-    "Adaptando para o nivel escolar...",
+    "Analisando o contexto pedagógico...",
+    "Adaptando para o nível escolar...",
     "Alinhando com a BNCC...",
   ]
 
@@ -85,9 +116,9 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
     "Gerando sua atividade...",
     "Criando os elementos visuais...",
     "Organizando o layout...",
-    "Adicionando ilustracoes educativas...",
-    "Incluindo referencia a BNCC...",
-    "Preparando material para impressao...",
+    "Adicionando ilustrações educativas...",
+    "Incluindo referência à BNCC...",
+    "Preparando material para impressão...",
     "Finalizando a atividade...",
     "Quase pronto...",
   ]
@@ -144,6 +175,8 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
           prompt,
           educationalLevel,
           grade,
+          activityType,
+          elements,
         }),
       })
 
@@ -163,6 +196,8 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
           browserId,
           educationalLevel,
           grade,
+          activityType,
+          elements,
         }),
       })
 
@@ -210,6 +245,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
           mediaType,
           browserId,
           parentActivityId: currentActivity?.id,
+          originalPrompt: currentActivity?.improved_prompt || currentActivity?.original_prompt,
         }),
       })
 
@@ -224,7 +260,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
         setEditPrompt("")
         setIsEditing(false)
       } else {
-        throw new Error("Erro ao aplicar edicao")
+        throw new Error("Erro ao aplicar edição")
       }
     } catch (err) {
       setError("Erro ao editar a atividade. Tente novamente.")
@@ -306,7 +342,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
     generateActivity()
   }
 
-  const editSuggestions = ["Remover a imagem do canto", "Adicionar mais linhas", "Trocar o titulo", "Aumentar espacos"]
+  const editSuggestions = ["Remover a imagem do canto", "Adicionar mais linhas", "Trocar o título", "Aumentar espaços"]
 
   // Dynamic suggestions based on educational level
   const getSuggestions = () => {
@@ -315,29 +351,29 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
         return [
           "Reconhecimento de letras do alfabeto",
           "Contagem de 1 a 10 com desenhos",
-          "Ligar imagens as palavras",
+          "Ligar imagens às palavras",
           "Pintar as vogais",
         ]
       case "fundamental_1":
         return [
-          `Alfabetizacao fonetica para ${grade}o ano`,
-          `Fluencia leitora para ${grade}o ano`,
-          `Tabuada divertida para ${grade}o ano`,
-          "Problemas de adicao com desenhos",
+          `Alfabetização fonética para ${grade}º ano`,
+          `Fluência leitora para ${grade}º ano`,
+          `Tabuada divertida para ${grade}º ano`,
+          "Problemas de adição com desenhos",
         ]
       case "fundamental_2":
         return [
-          `Interpretacao de texto para ${grade}o ano`,
-          `Equacoes do 1o grau para ${grade}o ano`,
-          `Ciencias: sistema solar para ${grade}o ano`,
-          `Historia do Brasil para ${grade}o ano`,
+          `Interpretação de texto para ${grade}º ano`,
+          `Equações do 1º grau para ${grade}º ano`,
+          `Ciências: sistema solar para ${grade}º ano`,
+          `História do Brasil para ${grade}º ano`,
         ]
       default:
         return [
-          "Alfabetizacao fonetica para 1o ano",
-          "Fluencia leitora para 3o ano",
-          "Tabuada divertida para 2o ano",
-          "Problemas de adicao com desenhos",
+          "Alfabetização fonética para 1º ano",
+          "Fluência leitora para 3º ano",
+          "Tabuada divertida para 2º ano",
+          "Problemas de adição com desenhos",
         ]
     }
   }
@@ -362,7 +398,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
             <p className="text-base md:text-lg text-gray-600 max-w-xl">
               Digite o tema, clique em{" "}
               <span className="text-amber-600 inline-flex items-center gap-1 text-sm"><Sparkles className="w-3 h-3 inline" /> Gerar Atividade</span> e crie
-              atividades pedagogicas prontas para imprimir.
+              atividades pedagógicas prontas para imprimir.
             </p>
           </header>
 
@@ -377,6 +413,109 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                     defaultGrade={grade}
                     onChange={handleEducationalLevelChange}
                   />
+
+                  {/* Tipo de Atividade */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-700">Tipo de Material</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActivityType("student")}
+                        className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                          activityType === "student"
+                            ? "bg-amber-100 border-amber-400 text-amber-800"
+                            : "bg-white border-gray-200 text-gray-700 hover:border-amber-300 hover:bg-amber-50"
+                        }`}
+                      >
+                        <span className="font-medium">Atividade ao Aluno</span>
+                        <p className="text-xs text-gray-500 mt-0.5">Material completo para o aluno</p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActivityType("teacher_support")}
+                        className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                          activityType === "teacher_support"
+                            ? "bg-amber-100 border-amber-400 text-amber-800"
+                            : "bg-white border-gray-200 text-gray-700 hover:border-amber-300 hover:bg-amber-50"
+                        }`}
+                      >
+                        <span className="font-medium">Material de Apoio</span>
+                        <p className="text-xs text-gray-500 mt-0.5">Apoio pedagógico ao professor</p>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Opções Avançadas (Elementos) */}
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                      className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                      {showAdvancedOptions ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                      <span>Opções avançadas</span>
+                    </button>
+
+                    {showAdvancedOptions && (
+                      <div className="bg-gray-50 rounded-lg p-3 space-y-3 border border-gray-200">
+                        <p className="text-xs text-gray-600 flex items-center gap-1">
+                          <Info className="w-3 h-3" />
+                          Escolha os elementos que deseja incluir na atividade
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              checked={elements.header}
+                              onCheckedChange={(checked) =>
+                                setElements((prev) => ({ ...prev, header: !!checked }))
+                              }
+                            />
+                            <span className="text-sm text-gray-700">Cabeçalho</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              checked={elements.title}
+                              onCheckedChange={(checked) =>
+                                setElements((prev) => ({ ...prev, title: !!checked }))
+                              }
+                            />
+                            <span className="text-sm text-gray-700">Título</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              checked={elements.instructions}
+                              onCheckedChange={(checked) =>
+                                setElements((prev) => ({ ...prev, instructions: !!checked }))
+                              }
+                            />
+                            <span className="text-sm text-gray-700">Enunciado</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              checked={elements.illustrations}
+                              onCheckedChange={(checked) =>
+                                setElements((prev) => ({ ...prev, illustrations: !!checked }))
+                              }
+                            />
+                            <span className="text-sm text-gray-700">Ilustrações</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              checked={elements.bncc}
+                              onCheckedChange={(checked) =>
+                                setElements((prev) => ({ ...prev, bncc: !!checked }))
+                              }
+                            />
+                            <span className="text-sm text-gray-700">Ref. BNCC</span>
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
@@ -394,14 +533,14 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                         >
                           {remainingFree}
                         </span>{" "}
-                        atividades gratis hoje
+                        atividades grátis hoje
                       </span>
                       <Link
                         href="/historico"
                         className="flex items-center gap-1 text-gray-500 hover:text-amber-600 transition-colors"
                       >
                         <History className="w-4 h-4" />
-                        <span className="hidden sm:inline">Historico</span>
+                        <span className="hidden sm:inline">Histórico</span>
                       </Link>
                     </div>
                     <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
@@ -422,7 +561,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                   <div>
                     <Textarea
                       ref={textareaRef}
-                      placeholder={`Ex: Atividade de ${EDUCATIONAL_LEVELS[educationalLevel].name.toLowerCase()} para ${grade}o ano...`}
+                      placeholder={`Ex: Atividade de ${EDUCATIONAL_LEVELS[educationalLevel].name.toLowerCase()} para ${grade}º ano...`}
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       className="min-h-[100px] text-base text-gray-900 placeholder:text-gray-500 resize-none border-2 border-amber-300 focus:border-amber-500 focus:ring-amber-500 bg-white"
@@ -472,7 +611,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                   {extraCredits > 0 && (
                     <div className="bg-green-50 border border-green-300 rounded-lg p-3 text-center">
                       <p className="text-sm text-green-800 font-medium">
-                        Voce tem {extraCredits} credito{extraCredits > 1 ? "s" : ""} extra{extraCredits > 1 ? "s" : ""} disponivel{extraCredits > 1 ? "is" : ""}.
+                        Você tem {extraCredits} crédito{extraCredits > 1 ? "s" : ""} extra{extraCredits > 1 ? "s" : ""} disponíve{extraCredits > 1 ? "is" : "l"}.
                       </p>
                     </div>
                   )}
@@ -505,15 +644,22 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                         <div className="border-t md:border-t-0 md:border-l border-green-300 bg-white p-4 flex flex-col gap-2">
                           <p className="text-sm font-bold text-green-800 mb-2">Atividade pronta!</p>
 
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setIsEditing(!isEditing)}
-                            className="justify-start text-blue-800 border-blue-300 hover:bg-blue-100 font-medium"
-                          >
-                            <Wand2 className="w-4 h-4 mr-2" />
-                            Editar
-                          </Button>
+                          {currentActivity?.generation_type === "edit" ? (
+                            <div className="text-xs text-gray-500 bg-gray-50 rounded p-2">
+                              <p className="font-medium text-gray-600">Já editada</p>
+                              <p>Apenas uma edição por atividade</p>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setIsEditing(!isEditing)}
+                              className="justify-start text-blue-800 border-blue-300 hover:bg-blue-100 font-medium"
+                            >
+                              <Wand2 className="w-4 h-4 mr-2" />
+                              Editar
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"
@@ -557,22 +703,35 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                       </div>
 
                       {/* Edicao */}
-                      {isEditing && (
+                      {isEditing && currentActivity?.generation_type !== "edit" && (
                         <div className="border-t border-green-300 bg-blue-50 p-4 space-y-3">
                           <div className="flex items-center justify-between">
-                            <p className="text-sm font-bold text-blue-900">Descreva as alteracoes</p>
+                            <p className="text-sm font-bold text-blue-900">Editar Atividade</p>
                             <button onClick={() => setIsEditing(false)} className="text-blue-700 hover:text-blue-900">
                               <X className="w-4 h-4" />
                             </button>
                           </div>
 
-                          <Input
-                            placeholder="Ex: Remover imagem, adicionar linhas..."
-                            value={editPrompt}
-                            onChange={(e) => setEditPrompt(e.target.value)}
-                            disabled={isApplyingEdit}
-                            className="bg-white text-gray-900 placeholder:text-gray-500 border-blue-300"
-                          />
+                          {/* Mostrar prompt original */}
+                          {(currentActivity?.improved_prompt || currentActivity?.original_prompt) && (
+                            <div className="bg-white/70 rounded-lg p-3 border border-blue-200">
+                              <p className="text-xs font-medium text-blue-800 mb-1">Prompt original:</p>
+                              <p className="text-xs text-gray-700 line-clamp-3">
+                                {currentActivity.improved_prompt || currentActivity.original_prompt}
+                              </p>
+                            </div>
+                          )}
+
+                          <div>
+                            <p className="text-xs text-blue-800 mb-1">Descreva as alterações:</p>
+                            <Input
+                              placeholder="Ex: Remover imagem, adicionar linhas..."
+                              value={editPrompt}
+                              onChange={(e) => setEditPrompt(e.target.value)}
+                              disabled={isApplyingEdit}
+                              className="bg-white text-gray-900 placeholder:text-gray-500 border-blue-300"
+                            />
+                          </div>
 
                           <div className="flex flex-wrap gap-1">
                             {editSuggestions.map((s, i) => (
@@ -585,6 +744,12 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                                 {s}
                               </button>
                             ))}
+                          </div>
+
+                          <div className="bg-amber-50 border border-amber-200 rounded p-2">
+                            <p className="text-xs text-amber-800">
+                              <strong>Atenção:</strong> Você pode editar esta atividade apenas uma vez.
+                            </p>
                           </div>
 
                           <Button
@@ -601,7 +766,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                             ) : (
                               <>
                                 <Wand2 className="w-4 h-4 mr-2" />
-                                Aplicar Edicao
+                                Aplicar Edição
                               </>
                             )}
                           </Button>
@@ -617,7 +782,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-700 mt-6">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-amber-600" />
-                <span className="font-medium">Alfabetizacao ao 9o ano</span>
+                <span className="font-medium">Alfabetização ao 9º ano</span>
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-amber-600" />
@@ -629,7 +794,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-amber-600" />
-                <span className="font-medium">Alinhado a BNCC</span>
+                <span className="font-medium">Alinhado à BNCC</span>
               </div>
               <div className="flex items-center gap-2">
                 <VenetianMask className="w-4 h-4 text-amber-600" />

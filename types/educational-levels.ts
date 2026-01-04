@@ -1,11 +1,11 @@
 export const EDUCATIONAL_LEVELS = {
   alfabetizacao: {
     id: "alfabetizacao",
-    name: "Alfabetizacao",
-    displayName: "Alfabetizacao",
+    name: "Alfabetização",
+    displayName: "Alfabetização",
     grades: ["Pre-1", "Pre-2"],
     ageRange: "4-6 anos",
-    description: "Educacao Infantil - Pre-escola",
+    description: "Educação Infantil - Pré-escola",
     bnccPrefix: "EI",
   },
   fundamental_1: {
@@ -37,9 +37,9 @@ export function getEducationalLevelById(id: string): EducationalLevel | undefine
 
 export function getGradeLabel(levelId: EducationalLevelId, grade: string): string {
   if (levelId === "alfabetizacao") {
-    return grade === "Pre-1" ? "Pre 1" : "Pre 2"
+    return grade === "Pre-1" ? "Pré 1" : "Pré 2"
   }
-  return `${grade}o ano`
+  return `${grade}º ano`
 }
 
 export function getEducationalLevelPromptContext(levelId: EducationalLevelId, grade: string): string {
@@ -48,48 +48,48 @@ export function getEducationalLevelPromptContext(levelId: EducationalLevelId, gr
   switch (levelId) {
     case "alfabetizacao":
       return `
-Nivel: Educacao Infantil - ${grade === "Pre-1" ? "Pre-escola I (4-5 anos)" : "Pre-escola II (5-6 anos)"}
-Foco: Alfabetizacao e letramento inicial, desenvolvimento motor, socializacao
-Diretrizes BNCC: Campos de experiencias (EI)
-- O eu, o outro e o nos
+Nível: Educação Infantil - ${grade === "Pre-1" ? "Pré-escola I (4-5 anos)" : "Pré-escola II (5-6 anos)"}
+Foco: Alfabetização e letramento inicial, desenvolvimento motor, socialização
+Diretrizes BNCC: Campos de experiências (EI)
+- O eu, o outro e o nós
 - Corpo, gestos e movimentos
-- Tracos, sons, cores e formas
-- Escuta, fala, pensamento e imaginacao
-- Espacos, tempos, quantidades, relacoes e transformacoes
+- Traços, sons, cores e formas
+- Escuta, fala, pensamento e imaginação
+- Espaços, tempos, quantidades, relações e transformações
 
 A atividade deve:
-- Usar letras maiusculas e fontes grandes
-- Ter muitas ilustracoes coloridas
-- Incluir atividades de coordenacao motora
-- Ser ludica e divertida
-- Ter instrucoes simples com apoio visual
+- Usar letras maiúsculas e fontes grandes
+- Ter muitas ilustrações coloridas
+- Incluir atividades de coordenação motora
+- Ser lúdica e divertida
+- Ter instruções simples com apoio visual
 `
     case "fundamental_1":
       return `
-Nivel: Ensino Fundamental I - ${grade}o ano (${parseInt(grade) + 5}-${parseInt(grade) + 6} anos)
-Foco: Alfabetizacao, letramento, calculo basico, ciencias naturais e sociais
+Nível: Ensino Fundamental I - ${grade}º ano (${parseInt(grade) + 5}-${parseInt(grade) + 6} anos)
+Foco: Alfabetização, letramento, cálculo básico, ciências naturais e sociais
 Diretrizes BNCC: Habilidades EF (${level.bnccPrefix}${grade.padStart(2, "0")})
 
 A atividade deve:
-- Usar linguagem clara e adequada a idade
-- Incluir ilustracoes educativas
-- Ter exercicios progressivos em dificuldade
-- Seguir as competencias da BNCC para o ano
-- Incluir espacos adequados para respostas
+- Usar linguagem clara e adequada à idade
+- Incluir ilustrações educativas
+- Ter exercícios progressivos em dificuldade
+- Seguir as competências da BNCC para o ano
+- Incluir espaços adequados para respostas
 `
     case "fundamental_2":
       return `
-Nivel: Ensino Fundamental II - ${grade}o ano (${parseInt(grade) + 5}-${parseInt(grade) + 6} anos)
-Foco: Aprofundamento em todas as areas do conhecimento
+Nível: Ensino Fundamental II - ${grade}º ano (${parseInt(grade) + 5}-${parseInt(grade) + 6} anos)
+Foco: Aprofundamento em todas as áreas do conhecimento
 Diretrizes BNCC: Habilidades EF (${level.bnccPrefix}${grade.padStart(2, "0")})
 
 A atividade deve:
-- Usar linguagem formal adequada a faixa etaria
-- Incluir questoes que estimulem o pensamento critico
-- Ter exercicios mais complexos e desafiadores
-- Seguir as competencias da BNCC para o ano
+- Usar linguagem formal adequada à faixa etária
+- Incluir questões que estimulem o pensamento crítico
+- Ter exercícios mais complexos e desafiadores
+- Seguir as competências da BNCC para o ano
 - Permitir respostas dissertativas quando apropriado
-- Incluir contextualizacao e problemas do mundo real
+- Incluir contextualização e problemas do mundo real
 `
     default:
       return ""

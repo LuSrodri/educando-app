@@ -5,27 +5,37 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
 export async function POST(req: Request) {
   try {
-    const { editPrompt, currentImage, mediaType, browserId, parentActivityId } = await req.json()
+    const { editPrompt, currentImage, mediaType, browserId, parentActivityId, originalPrompt } = await req.json()
 
     if (!editPrompt || !currentImage) {
       return Response.json({ error: "Edit prompt and image are required" }, { status: 400 })
     }
 
-    const fullPrompt = `Voce esta editando uma folha de atividade escolar existente.
+    // Construir contexto com o prompt original se disponível
+    const originalContext = originalPrompt
+      ? `
 
-A imagem atual esta anexada. Faca as seguintes modificacoes:
+CONTEXTO ORIGINAL DA ATIVIDADE:
+A atividade foi criada com o seguinte prompt: "${originalPrompt}"
+Use esse contexto para entender o propósito da atividade ao aplicar as edições.`
+      : ""
+
+    const fullPrompt = `Você está editando uma folha de atividade escolar existente.
+${originalContext}
+
+A imagem atual está anexada. Faça as seguintes modificações:
 
 ${editPrompt}
 
-Mantenha o formato de folha de atividade escolar para impressao A4, em portugues brasileiro.
-Preserve os elementos que nao foram mencionados para alteracao.
-A atividade deve continuar sendo visualmente organizada e facil de ler.
-Mantenha a referencia BNCC se existir.`
+Mantenha o formato de folha de atividade escolar para impressão A4, em português brasileiro.
+Preserve os elementos que não foram mencionados para alteração.
+A atividade deve continuar sendo visualmente organizada e fácil de ler.
+Mantenha a referência BNCC se existir.`
 
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-image-preview",
       config: {
-        responseModalities: ["IMAGE", "TEXT"],
+        responseModalities: ["IMAGE"],
         imageConfig: {
           imageSize: "2K",
         },

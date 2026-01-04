@@ -79,7 +79,7 @@ export function EducationalLevelSelector({
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
         <GraduationCap className="w-4 h-4" />
-        Nivel Educacional
+        Nível Educacional
       </div>
 
       {/* Level buttons */}
@@ -124,7 +124,7 @@ export function EducationalLevelSelector({
 
       {/* Age range info */}
       <p className="text-xs text-gray-500">
-        Faixa etaria: {EDUCATIONAL_LEVELS[level].ageRange}
+        Faixa etária: {EDUCATIONAL_LEVELS[level].ageRange}
       </p>
     </div>
   )

@@ -5,9 +5,76 @@ import { getEducationalLevelPromptContext, type EducationalLevelId } from "@/typ
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
+// Interface para os elementos da atividade
+interface ActivityElements {
+  header: boolean
+  title: boolean
+  instructions: boolean
+  illustrations: boolean
+  bncc: boolean
+}
+
+// Função para construir instruções baseadas nos elementos selecionados
+function buildElementsInstructions(elements: ActivityElements, activityType: string): string {
+  const instructions: string[] = []
+
+  if (elements.title) {
+    instructions.push("- Ter um título claro no topo")
+  }
+
+  if (elements.header) {
+    instructions.push("- Incluir espaço para nome do aluno e data")
+  }
+
+  if (elements.instructions) {
+    instructions.push("- Ter instruções/enunciados claros e simples")
+  }
+
+  if (elements.illustrations) {
+    instructions.push("- Ter ilustrações educativas e atraentes")
+    instructions.push("- Os elementos visuais DEVEM SEMPRE ser coerentes com os textos e enunciados")
+  } else {
+    instructions.push("- NÃO incluir ilustrações ou imagens decorativas")
+  }
+
+  if (elements.bncc) {
+    instructions.push("- Incluir referência BNCC no rodapé")
+  } else {
+    instructions.push("- NÃO incluir referência à BNCC")
+  }
+
+  // Instruções comuns
+  instructions.push("- Ser visualmente organizada e fácil de ler")
+  instructions.push("- Ter espaços adequados para as respostas")
+  instructions.push("- Usar fontes legíveis e tamanho apropriado para a faixa etária")
+  instructions.push("- Ser em formato de documento A4 pronto para imprimir")
+  instructions.push("- As tarefas devem ter poucos ou nenhum exemplos, e NUNCA DEVEM induzir ao erro")
+
+  return instructions.join("\n")
+}
+
+// Função para obter contexto baseado no tipo de atividade
+function getActivityTypeContext(activityType: string): string {
+  if (activityType === "teacher_support") {
+    return `
+TIPO DE MATERIAL: Material de Apoio Pedagógico para Professor
+Este material é um RECURSO DE APOIO para uso do professor em sala de aula.
+Deve ser prático e direto, sem necessidade de elementos pedagógicos complexos.
+Exemplos: silabário para recorte, cartões de letras, fichas para montagem, material manipulável.
+O layout deve ser funcional e otimizado para recorte/manipulação quando aplicável.
+NÃO incluir espaços para nome do aluno ou cabeçalhos formais de atividade.`
+  }
+
+  return `
+TIPO DE MATERIAL: Atividade para o Aluno
+Este é um material pedagógico completo para ser entregue ao aluno.
+Deve seguir uma organização pedagógica focada na experiência do aluno.
+Incluir todos os elementos tradicionais de uma atividade escolar brasileira.`
+}
+
 export async function POST(req: Request) {
   try {
-    const { prompt, browserId, educationalLevel, grade, improvedPrompt } = await req.json()
+    const { prompt, browserId, educationalLevel, grade, improvedPrompt, activityType, elements } = await req.json()
 
     if (!browserId) {
       return Response.json({ error: "Browser ID is required" }, { status: 400 })
@@ -27,32 +94,38 @@ export async function POST(req: Request) {
       grade || "1"
     )
 
-    const fullPrompt = `Crie uma atividade escolar pronta para imprimir (em A4), em portugues brasileiro, com o seguinte tema:
+    // Elementos padrão se não fornecidos
+    const activityElements: ActivityElements = elements || {
+      header: true,
+      title: true,
+      instructions: true,
+      illustrations: true,
+      bncc: true,
+    }
+
+    const elementsInstructions = buildElementsInstructions(activityElements, activityType || "student")
+    const activityTypeContext = getActivityTypeContext(activityType || "student")
+
+    const fullPrompt = `FORMATO OBRIGATÓRIO: Documento em formato FOLHA A4 (210mm x 297mm), orientação RETRATO, pronto para impressão.
+
+Crie um material escolar em português brasileiro, com o seguinte tema:
 
 ${levelContext}
+${activityTypeContext}
 
 PROMPT_FROM_USER_START
 ${improvedPrompt || prompt}
 PROMPT_FROM_USER_END
 
-A atividade deve:
-- Ter um titulo claro no topo
-- Incluir espaco para nome do aluno e data
-- Ter instrucoes claras e simples
-- Incluir exercicios apropriados para a idade
-- Ter ilustracoes educativas e atraentes
-- Ser visualmente organizada e facil de ler
-- Ter espacos adequados para as respostas
-- Usar fontes legiveis e tamanho apropriado para a faixa etaria
-- Ser em formato de documento de atividade escolar tradicional brasileira (A4) pronta para imprimir
-- Os elementos visuais DEVEM SEMPRE ser coerentes com os textos e enunciados
-- As tarefas devem ter poucos ou nenhum exemplos, e NUNCA DEVEM induzir ao erro
-- Incluir referencia BNCC no rodape`
+O material deve:
+${elementsInstructions}
+
+IMPORTANTE: O documento DEVE estar em formato A4 retrato, ocupando toda a folha de forma organizada e pronta para imprimir.`
 
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-image-preview",
       config: {
-        responseModalities: ["IMAGE", "TEXT"],
+        responseModalities: ["IMAGE"],
         imageConfig: {
           imageSize: "2K",
         },
