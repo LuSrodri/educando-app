@@ -18,9 +18,16 @@ import {
   BookOpen,
   Zap,
   VenetianMask,
+  History,
 } from "lucide-react"
 import { PaymentModal } from "@/components/payment-modal"
-import { canGenerateFree, getRemainingFree, incrementDailyUsage, FREE_DAILY_LIMIT, getExtraCredits, useExtraCredit, addExtraCredit } from "@/lib/session"
+import { EducationalLevelSelector } from "@/components/educational-level-selector"
+import { useBrowserId } from "@/hooks/useBrowserId"
+import { useCredits } from "@/hooks/useCredits"
+import { FREE_DAILY_LIMIT } from "@/lib/session"
+import { type EducationalLevelId, EDUCATIONAL_LEVELS } from "@/types/educational-levels"
+import type { Activity } from "@/lib/supabase/types"
+import Link from "next/link"
 
 export interface HeroGeneratorRef {
   setPromptValue: (value: string) => void
@@ -30,6 +37,7 @@ export interface HeroGeneratorRef {
 export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator(_, ref) {
   const [prompt, setPrompt] = useState("")
   const [generatedImage, setGeneratedImage] = useState<string | null>(null)
+  const [currentActivity, setCurrentActivity] = useState<Activity | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationStatus, setGenerationStatus] = useState<string | null>(null)
   const [statusPhase, setStatusPhase] = useState<"improving" | "generating">("improving")
@@ -43,18 +51,20 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   const [isApplyingEdit, setIsApplyingEdit] = useState(false)
 
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [remainingFree, setRemainingFree] = useState(FREE_DAILY_LIMIT)
-  const [extraCredits, setExtraCredits] = useState(0)
 
-  useEffect(() => {
-    setRemainingFree(getRemainingFree())
-    setExtraCredits(getExtraCredits())
-  }, [])
+  // Educational level state
+  const [educationalLevel, setEducationalLevel] = useState<EducationalLevelId>("fundamental_1")
+  const [grade, setGrade] = useState("1")
+
+  // Use new hooks
+  const { browserId, isLoading: browserLoading } = useBrowserId()
+  const { remainingFree, extraCredits, canGenerate, refresh: refreshCredits } = useCredits(browserId)
 
   useImperativeHandle(ref, () => ({
     setPromptValue: (value: string) => {
       setPrompt(value)
       setGeneratedImage(null)
+      setCurrentActivity(null)
       setError(null)
     },
     focusPrompt: () => {
@@ -66,8 +76,8 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
   const improvingMessages = [
     "Aprimorando seu prompt com IA...",
-    "Analisando o contexto pedagógico...",
-    "Adaptando para o nível escolar...",
+    "Analisando o contexto pedagogico...",
+    "Adaptando para o nivel escolar...",
     "Alinhando com a BNCC...",
   ]
 
@@ -75,9 +85,9 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
     "Gerando sua atividade...",
     "Criando os elementos visuais...",
     "Organizando o layout...",
-    "Adicionando ilustrações educativas...",
-    "Incluindo referência à BNCC...",
-    "Preparando material para impressão...",
+    "Adicionando ilustracoes educativas...",
+    "Incluindo referencia a BNCC...",
+    "Preparando material para impressao...",
     "Finalizando a atividade...",
     "Quase pronto...",
   ]
@@ -104,29 +114,24 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
     }
   }, [generatedImage])
 
+  const handleEducationalLevelChange = (level: EducationalLevelId, selectedGrade: string) => {
+    setEducationalLevel(level)
+    setGrade(selectedGrade)
+  }
+
   const generateActivity = async () => {
-    if (!prompt.trim()) return
+    if (!prompt.trim() || !browserId) return
 
-    let usedExtraCredit = false
-
-    // Verificar se pode gerar gratuitamente
-    if (!canGenerateFree()) {
-      // Verificar se tem créditos extras
-      const currentExtraCredits = getExtraCredits()
-      if (currentExtraCredits > 0) {
-        // Usar crédito extra
-        useExtraCredit()
-        setExtraCredits(getExtraCredits())
-        usedExtraCredit = true
-      } else {
-        setShowPaymentModal(true)
-        return
-      }
+    // Check if can generate
+    if (!canGenerate) {
+      setShowPaymentModal(true)
+      return
     }
 
     setIsGenerating(true)
     setError(null)
     setGeneratedImage(null)
+    setCurrentActivity(null)
     setIsEditing(false)
     setEditPrompt("")
     setStatusPhase("improving")
@@ -135,7 +140,11 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
       const improveResponse = await fetch("/api/improve-prompt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({
+          prompt,
+          educationalLevel,
+          grade,
+        }),
       })
 
       if (!improveResponse.ok) throw new Error("Erro ao melhorar prompt")
@@ -148,26 +157,34 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
       const response = await fetch("/api/generate-activity", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: finalPrompt }),
+        body: JSON.stringify({
+          prompt,
+          improvedPrompt: finalPrompt,
+          browserId,
+          educationalLevel,
+          grade,
+        }),
       })
 
-      if (!response.ok) throw new Error("Erro ao gerar atividade")
+      if (!response.ok) {
+        const errorData = await response.json()
+        if (response.status === 403) {
+          setShowPaymentModal(true)
+          return
+        }
+        throw new Error(errorData.error || "Erro ao gerar atividade")
+      }
 
       const data = await response.json()
       if (data.image) {
         setGeneratedImage(`data:${data.image.mediaType};base64,${data.image.base64}`)
-        incrementDailyUsage()
-        setRemainingFree(getRemainingFree())
+        setCurrentActivity(data.activity)
+        refreshCredits()
       } else {
         throw new Error("Nenhuma imagem foi gerada")
       }
     } catch (err) {
       setError("Erro ao gerar a atividade. Tente novamente.")
-      // Devolver crédito extra se foi usado
-      if (usedExtraCredit) {
-        addExtraCredit()
-        setExtraCredits(getExtraCredits())
-      }
     } finally {
       setIsGenerating(false)
       setGenerationStatus(null)
@@ -175,7 +192,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   }
 
   const applyEdit = async () => {
-    if (!editPrompt.trim() || !generatedImage) return
+    if (!editPrompt.trim() || !generatedImage || !browserId) return
 
     setIsApplyingEdit(true)
     setError(null)
@@ -191,6 +208,8 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
           editPrompt,
           currentImage: base64Data,
           mediaType,
+          browserId,
+          parentActivityId: currentActivity?.id,
         }),
       })
 
@@ -199,10 +218,13 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
       const data = await response.json()
       if (data.image) {
         setGeneratedImage(`data:${data.image.mediaType};base64,${data.image.base64}`)
+        if (data.activity) {
+          setCurrentActivity(data.activity)
+        }
         setEditPrompt("")
         setIsEditing(false)
       } else {
-        throw new Error("Erro ao aplicar edição")
+        throw new Error("Erro ao aplicar edicao")
       }
     } catch (err) {
       setError("Erro ao editar a atividade. Tente novamente.")
@@ -273,25 +295,52 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   }
 
   const regenerate = () => {
-    // Verificar se pode gerar gratuitamente ou com créditos extras
-    if (!canGenerateFree() && getExtraCredits() === 0) {
+    if (!canGenerate) {
       setShowPaymentModal(true)
       return
     }
     setGeneratedImage(null)
+    setCurrentActivity(null)
     setIsEditing(false)
     setEditPrompt("")
     generateActivity()
   }
 
-  const editSuggestions = ["Remover a imagem do canto", "Adicionar mais linhas", "Trocar o título", "Aumentar espaços"]
+  const editSuggestions = ["Remover a imagem do canto", "Adicionar mais linhas", "Trocar o titulo", "Aumentar espacos"]
 
-  const suggestions = [
-    "Alfabetização fonética para 1º ano",
-    "Fluência leitora para 3º ano",
-    "Tabuada divertida para 2º ano",
-    "Problemas de adição com desenhos",
-  ]
+  // Dynamic suggestions based on educational level
+  const getSuggestions = () => {
+    switch (educationalLevel) {
+      case "alfabetizacao":
+        return [
+          "Reconhecimento de letras do alfabeto",
+          "Contagem de 1 a 10 com desenhos",
+          "Ligar imagens as palavras",
+          "Pintar as vogais",
+        ]
+      case "fundamental_1":
+        return [
+          `Alfabetizacao fonetica para ${grade}o ano`,
+          `Fluencia leitora para ${grade}o ano`,
+          `Tabuada divertida para ${grade}o ano`,
+          "Problemas de adicao com desenhos",
+        ]
+      case "fundamental_2":
+        return [
+          `Interpretacao de texto para ${grade}o ano`,
+          `Equacoes do 1o grau para ${grade}o ano`,
+          `Ciencias: sistema solar para ${grade}o ano`,
+          `Historia do Brasil para ${grade}o ano`,
+        ]
+      default:
+        return [
+          "Alfabetizacao fonetica para 1o ano",
+          "Fluencia leitora para 3o ano",
+          "Tabuada divertida para 2o ano",
+          "Problemas de adicao com desenhos",
+        ]
+    }
+  }
 
   return (
     <>
@@ -313,46 +362,47 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
             <p className="text-base md:text-lg text-gray-600 max-w-xl">
               Digite o tema, clique em{" "}
               <span className="text-amber-600 inline-flex items-center gap-1 text-sm"><Sparkles className="w-3 h-3 inline" /> Gerar Atividade</span> e crie
-              atividades pedagógicas prontas para imprimir.
+              atividades pedagogicas prontas para imprimir.
             </p>
           </header>
 
-          {/* Formulário principal - destaque visual */}
+          {/* Formulario principal - destaque visual */}
           <div className="max-w-2xl mx-auto">
             <Card className="shadow-2xl border-2 border-amber-400 bg-white backdrop-blur">
               <CardContent className="p-5 md:p-6">
                 <div className="space-y-4">
+                  {/* Educational Level Selector */}
+                  <EducationalLevelSelector
+                    defaultLevel={educationalLevel}
+                    defaultGrade={grade}
+                    onChange={handleEducationalLevelChange}
+                  />
+
                   <div className="space-y-2">
-                    <div className="flex items-center justify-center text-sm">
-                      <span className="text-gray-700 font-medium hidden md:inline">
-                        Restam{" "}
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-700 font-medium">
                         <span
                           className={`font-bold ${
                             remainingFree === 3
                               ? "text-green-600"
                               : remainingFree === 2
                                 ? "text-amber-600"
-                                : "text-red-600"
-                          }`}
-                        >
-                          {remainingFree}
-                        </span>{" "}
-                        atividades gratuitas hoje
-                      </span>
-                      <span className="text-gray-700 font-medium md:hidden">
-                        <span
-                          className={`font-bold ${
-                            remainingFree === 3
-                              ? "text-green-600"
-                              : remainingFree === 2
-                                ? "text-amber-600"
-                                : "text-red-600"
+                                : remainingFree <= 1
+                                  ? "text-red-600"
+                                  : "text-gray-600"
                           }`}
                         >
                           {remainingFree}
                         </span>{" "}
                         atividades gratis hoje
                       </span>
+                      <Link
+                        href="/historico"
+                        className="flex items-center gap-1 text-gray-500 hover:text-amber-600 transition-colors"
+                      >
+                        <History className="w-4 h-4" />
+                        <span className="hidden sm:inline">Historico</span>
+                      </Link>
                     </div>
                     <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
                       <div
@@ -372,17 +422,17 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                   <div>
                     <Textarea
                       ref={textareaRef}
-                      placeholder="Ex: Atividade de alfabetização com alfabeto fonético para 1º ano..."
+                      placeholder={`Ex: Atividade de ${EDUCATIONAL_LEVELS[educationalLevel].name.toLowerCase()} para ${grade}o ano...`}
                       value={prompt}
                       onChange={(e) => setPrompt(e.target.value)}
                       className="min-h-[100px] text-base text-gray-900 placeholder:text-gray-500 resize-none border-2 border-amber-300 focus:border-amber-500 focus:ring-amber-500 bg-white"
-                      disabled={isGenerating || isApplyingEdit}
+                      disabled={isGenerating || isApplyingEdit || browserLoading}
                     />
                   </div>
 
-                  {/* Sugestões rápidas */}
+                  {/* Sugestoes rapidas */}
                   <div className="flex flex-wrap gap-2">
-                    {suggestions.map((suggestion, index) => (
+                    {getSuggestions().map((suggestion, index) => (
                       <button
                         key={index}
                         onClick={() => setPrompt(suggestion)}
@@ -394,16 +444,21 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                     ))}
                   </div>
 
-                  {/* Botão principal grande */}
+                  {/* Botao principal grande */}
                   <Button
                     onClick={generateActivity}
-                    disabled={!prompt.trim() || isGenerating || isApplyingEdit}
+                    disabled={!prompt.trim() || isGenerating || isApplyingEdit || browserLoading}
                     className="w-full bg-amber-600 hover:bg-amber-700 text-white h-auto py-4 text-base md:text-lg font-bold shadow-lg hover:shadow-xl transition-all"
                   >
                     {isGenerating ? (
                       <span className="flex items-center justify-center flex-wrap gap-2">
                         <Loader2 className="w-5 h-5 animate-spin" />
                         <span className="text-center">{generationStatus}</span>
+                      </span>
+                    ) : browserLoading ? (
+                      <span className="flex items-center justify-center flex-wrap gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Carregando...</span>
                       </span>
                     ) : (
                       <span className="flex items-center justify-center flex-wrap gap-2">
@@ -413,11 +468,11 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                     )}
                   </Button>
 
-                  {/* Mensagem de créditos extras */}
+                  {/* Mensagem de creditos extras */}
                   {extraCredits > 0 && (
                     <div className="bg-green-50 border border-green-300 rounded-lg p-3 text-center">
                       <p className="text-sm text-green-800 font-medium">
-                        🎉 Você comprou {extraCredits} crédito{extraCredits > 1 ? 's' : ''} extra{extraCredits > 1 ? 's' : ''}, clique no botão acima para gerar a atividade.
+                        Voce tem {extraCredits} credito{extraCredits > 1 ? "s" : ""} extra{extraCredits > 1 ? "s" : ""} disponivel{extraCredits > 1 ? "is" : ""}.
                       </p>
                     </div>
                   )}
@@ -446,7 +501,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                           />
                         </div>
 
-                        {/* Ações */}
+                        {/* Acoes */}
                         <div className="border-t md:border-t-0 md:border-l border-green-300 bg-white p-4 flex flex-col gap-2">
                           <p className="text-sm font-bold text-green-800 mb-2">Atividade pronta!</p>
 
@@ -501,11 +556,11 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                         </div>
                       </div>
 
-                      {/* Edição */}
+                      {/* Edicao */}
                       {isEditing && (
                         <div className="border-t border-green-300 bg-blue-50 p-4 space-y-3">
                           <div className="flex items-center justify-between">
-                            <p className="text-sm font-bold text-blue-900">Descreva as alterações</p>
+                            <p className="text-sm font-bold text-blue-900">Descreva as alteracoes</p>
                             <button onClick={() => setIsEditing(false)} className="text-blue-700 hover:text-blue-900">
                               <X className="w-4 h-4" />
                             </button>
@@ -546,7 +601,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                             ) : (
                               <>
                                 <Wand2 className="w-4 h-4 mr-2" />
-                                Aplicar Edição
+                                Aplicar Edicao
                               </>
                             )}
                           </Button>
@@ -562,7 +617,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-700 mt-6">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-amber-600" />
-                <span className="font-medium">1º ao 5º ano</span>
+                <span className="font-medium">Alfabetizacao ao 9o ano</span>
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-amber-600" />
@@ -574,7 +629,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-amber-600" />
-                <span className="font-medium">Alinhado à BNCC</span>
+                <span className="font-medium">Alinhado a BNCC</span>
               </div>
               <div className="flex items-center gap-2">
                 <VenetianMask className="w-4 h-4 text-amber-600" />
@@ -585,12 +640,11 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
         </div>
       </section>
 
-      <PaymentModal 
-        isOpen={showPaymentModal} 
-        onClose={() => setShowPaymentModal(false)} 
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
         onSuccess={() => {
-          setExtraCredits(getExtraCredits())
-          setRemainingFree(getRemainingFree())
+          refreshCredits()
         }}
       />
     </>

@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { X, Shield, Zap, Loader2, Copy, Check, QrCode } from "lucide-react"
-import { getSessionId, PRICE_PER_ACTIVITY, addExtraCredit } from "@/lib/session"
+import { getOrCreateBrowserId } from "@/lib/browser-id"
+import { PRICE_PER_ACTIVITY } from "@/lib/session"
 
 interface PaymentModalProps {
   isOpen: boolean
@@ -29,9 +30,13 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "checking" | "approved" | "failed">("pending")
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const browserIdRef = useRef<string>("")
 
   useEffect(() => {
-    // Limpar polling quando fechar o modal
+    // Get browser ID on mount
+    browserIdRef.current = getOrCreateBrowserId()
+
+    // Cleanup polling on unmount
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current)
@@ -40,11 +45,11 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
   }, [])
 
   useEffect(() => {
-    // Iniciar polling quando tiver dados do PIX
+    // Start polling when we have PIX data
     if (pixData && paymentStatus === "checking") {
       pollingIntervalRef.current = setInterval(() => {
         checkPaymentStatus(pixData.paymentId)
-      }, 2500) // 2.5 segundos
+      }, 2500)
 
       return () => {
         if (pollingIntervalRef.current) {
@@ -55,7 +60,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
   }, [pixData, paymentStatus])
 
   useEffect(() => {
-    // Atualizar contador de tempo restante
+    // Update remaining time counter
     if (pixData && paymentStatus === "checking") {
       const updateTimer = () => {
         const now = new Date().getTime()
@@ -78,7 +83,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
         }
       }
 
-      updateTimer() // Atualizar imediatamente
+      updateTimer()
       timerIntervalRef.current = setInterval(updateTimer, 1000)
 
       return () => {
@@ -93,7 +98,10 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
 
   const checkPaymentStatus = async (paymentId: string) => {
     try {
-      const response = await fetch(`/api/check-payment?paymentId=${paymentId}`)
+      const browserId = browserIdRef.current
+      const response = await fetch(
+        `/api/check-payment?paymentId=${paymentId}&browserId=${encodeURIComponent(browserId)}`
+      )
       const data = await response.json()
 
       if (data.status === "approved") {
@@ -101,13 +109,10 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current)
         }
-        // Adicionar crédito extra
-        addExtraCredit()
-        // Aguardar 2s para mostrar sucesso, fechar modal e resetar para próximo uso
+        // Wait 2s to show success, close modal and reset for next use
         setTimeout(() => {
           onSuccess?.()
           onClose()
-          // Resetar modal para permitir nova compra quando abrir novamente
           resetModal()
         }, 2000)
       } else if (data.status === "rejected" || data.status === "cancelled") {
@@ -127,14 +132,13 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
   }
 
   const handleCreatePayment = async () => {
-    // Validar email
     if (!email.trim()) {
       setEmailError("Digite seu email")
       return
     }
 
     if (!validateEmail(email)) {
-      setEmailError("Digite um email válido")
+      setEmailError("Digite um email valido")
       return
     }
 
@@ -142,12 +146,12 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
     setIsLoading(true)
 
     try {
-      const sessionId = getSessionId()
+      const browserId = browserIdRef.current
 
       const response = await fetch("/api/create-pix-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, amount: PRICE_PER_ACTIVITY, email: email.trim() }),
+        body: JSON.stringify({ sessionId: browserId, amount: PRICE_PER_ACTIVITY, email: email.trim() }),
       })
 
       const data = await response.json()
@@ -211,7 +215,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                 <Check className="w-8 h-8 text-green-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Pagamento Aprovado!</h2>
-              <p className="text-gray-600">Você ganhou mais 1 atividade</p>
+              <p className="text-gray-600">Voce ganhou mais 1 atividade</p>
             </div>
           )}
 
@@ -222,10 +226,10 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                 <X className="w-8 h-8 text-red-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {timeRemaining === "Expirado" ? "QR Code Expirado" : "Pagamento não Aprovado"}
+                {timeRemaining === "Expirado" ? "QR Code Expirado" : "Pagamento nao Aprovado"}
               </h2>
               <p className="text-gray-600 mb-4">
-                {timeRemaining === "Expirado" 
+                {timeRemaining === "Expirado"
                   ? "O prazo de 30 minutos expirou. Gere um novo QR Code."
                   : "Tente novamente"}
               </p>
@@ -241,7 +245,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">Pague com PIX</h2>
-                  <p className="text-gray-600 text-sm mt-1">Escaneie o QR Code ou copie o código</p>
+                  <p className="text-gray-600 text-sm mt-1">Escaneie o QR Code ou copie o codigo</p>
                 </div>
                 <button
                   onClick={handleBack}
@@ -263,11 +267,9 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                 </div>
               </div>
 
-              {/* Código PIX para copiar */}
+              {/* Codigo PIX para copiar */}
               <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Ou copie o código PIX:
-                </label>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Ou copie o codigo PIX:</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -275,16 +277,8 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                     value={pixData.qrCode}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 font-mono"
                   />
-                  <Button
-                    onClick={handleCopyPix}
-                    variant="outline"
-                    className="px-4"
-                  >
-                    {copied ? (
-                      <Check className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
+                  <Button onClick={handleCopyPix} variant="outline" className="px-4">
+                    {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
                   </Button>
                 </div>
               </div>
@@ -295,9 +289,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                   <Loader2 className="w-5 h-5 text-blue-600 animate-spin flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-blue-900">Aguardando pagamento...</p>
-                    <p className="text-xs text-blue-700 mt-0.5">
-                      Verificando automaticamente a cada 2.5 segundos
-                    </p>
+                    <p className="text-xs text-blue-700 mt-0.5">Verificando automaticamente a cada 2.5 segundos</p>
                   </div>
                   {timeRemaining && timeRemaining !== "Expirado" && (
                     <div className="text-right">
@@ -308,11 +300,11 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                 </div>
               </div>
 
-              {/* Informações */}
+              {/* Informacoes */}
               <div className="space-y-2 text-xs text-gray-600">
-                <p>• QR Code válido por 30 minutos</p>
-                <p>• Confirmação instantânea após o pagamento</p>
-                <p>• Você ganhará +1 atividade após a confirmação</p>
+                <p>QR Code valido por 30 minutos</p>
+                <p>Confirmacao instantanea apos o pagamento</p>
+                <p>Voce ganhara +1 atividade apos a confirmacao</p>
               </div>
             </>
           )}
@@ -322,8 +314,8 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
             <>
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Limite Diário Atingido</h2>
-                  <p className="text-gray-600 text-sm mt-1">Você usou suas 3 atividades gratuitas de hoje</p>
+                  <h2 className="text-xl font-bold text-gray-900">Limite Diario Atingido</h2>
+                  <p className="text-gray-600 text-sm mt-1">Voce usou suas 3 atividades gratuitas de hoje</p>
                 </div>
                 <button
                   onClick={onClose}
@@ -348,7 +340,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                 </div>
               </div>
 
-              {/* Benefícios */}
+              {/* Beneficios */}
               <div className="space-y-3 mb-5">
                 <div className="flex items-center gap-3 text-sm text-gray-700">
                   <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
@@ -360,13 +352,13 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                     <QrCode className="w-4 h-4 text-blue-600" />
                   </div>
-                  <span>Pagamento rápido e seguro via PIX</span>
+                  <span>Pagamento rapido e seguro via PIX</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-gray-700">
                   <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
                     <Shield className="w-4 h-4 text-purple-600" />
                   </div>
-                  <span>Edições ilimitadas após geração</span>
+                  <span>Edicoes ilimitadas apos geracao</span>
                 </div>
               </div>
 
@@ -391,12 +383,10 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                   }`}
                   disabled={isLoading}
                 />
-                {emailError && (
-                  <p className="text-red-600 text-xs mt-1">{emailError}</p>
-                )}
+                {emailError && <p className="text-red-600 text-xs mt-1">{emailError}</p>}
               </div>
 
-              {/* Botão de pagamento */}
+              {/* Botao de pagamento */}
               <Button
                 onClick={handleCreatePayment}
                 disabled={isLoading}
@@ -415,9 +405,9 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                 )}
               </Button>
 
-              {/* Rodapé */}
+              {/* Rodape */}
               <p className="text-xs text-gray-500 text-center mt-4">
-                Amanhã você terá mais 3 atividades gratuitas novamente.
+                Amanha voce tera mais 3 atividades gratuitas novamente.
               </p>
             </>
           )}

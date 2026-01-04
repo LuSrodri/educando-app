@@ -9,65 +9,73 @@ import { Download, Printer, Wand2, Share2, Eye } from "lucide-react"
 
 const examples = [
   {
-    title: "Alfabetização Fonética",
-    description: "Atividade para alfabetizar crianças com alfabeto fonético",
+    title: "Alfabetizacao Fonetica",
+    description: "Atividade para alfabetizar criancas com alfabeto fonetico",
     prompt:
-      "Atividade de alfabetização fonética para 1º ano do ensino fundamental, com exercícios de identificação de sons iniciais, ligação entre desenhos e letras, e formação de sílabas",
-    grade: "1º ano",
-    category: "Português",
+      "Atividade de alfabetizacao fonetica para 1o ano do ensino fundamental, com exercicios de identificacao de sons iniciais, ligacao entre desenhos e letras, e formacao de silabas",
+    grade: "1o ano",
+    category: "Portugues",
+    level: "Fundamental I",
     image: "/images/atividade-escolar-20-282-29.png",
   },
   {
-    title: "Fluência Leitora",
-    description: "Exercícios de leitura para desenvolver fluência",
+    title: "Fluencia Leitora",
+    description: "Exercicios de leitura para desenvolver fluencia",
     prompt:
-      "Atividade de fluência leitora para 3º ano com texto curto sobre animais da fauna brasileira, perguntas de interpretação e espaço para leitura em voz alta",
-    grade: "3º ano",
-    category: "Português",
+      "Atividade de fluencia leitora para 3o ano com texto curto sobre animais da fauna brasileira, perguntas de interpretacao e espaco para leitura em voz alta",
+    grade: "3o ano",
+    category: "Portugues",
+    level: "Fundamental I",
     image: "/images/atividade-escolar-20-283-29.png",
   },
   {
     title: "Tabuada Divertida",
-    description: "Atividade lúdica para praticar multiplicação",
+    description: "Atividade ludica para praticar multiplicacao",
     prompt:
-      "Atividade de tabuada para 2º ano com problemas ilustrados usando animais brasileiros como tucano, capivara e mico-leão-dourado, relacionando adição repetida com multiplicação",
-    grade: "2º ano",
-    category: "Matemática",
+      "Atividade de tabuada para 2o ano com problemas ilustrados usando animais brasileiros como tucano, capivara e mico-leao-dourado, relacionando adicao repetida com multiplicacao",
+    grade: "2o ano",
+    category: "Matematica",
+    level: "Fundamental I",
     image: "/images/atividade-escolar-20-284-29.png",
   },
   {
     title: "Sistema Solar",
     description: "Conhecendo os planetas do nosso sistema solar",
     prompt:
-      "Atividade sobre o Sistema Solar para 4º ano com exercícios de identificação dos planetas, ligação de características e curiosidades espaciais",
-    grade: "4º ano",
-    category: "Ciências",
+      "Atividade sobre o Sistema Solar para 4o ano com exercicios de identificacao dos planetas, ligacao de caracteristicas e curiosidades espaciais",
+    grade: "4o ano",
+    category: "Ciencias",
+    level: "Fundamental I",
     image: "/images/atividade-escolar-20-285-29.png",
   },
   {
-    title: "Consciência Silábica",
-    description: "Separação de sílabas e identificação de sons",
+    title: "Consciencia Silabica",
+    description: "Separacao de silabas e identificacao de sons",
     prompt:
-      "Atividade de consciência silábica para 1º ano com exercícios de separação de sílabas e descoberta do som inicial das palavras, usando elementos da cultura brasileira",
-    grade: "1º ano",
-    category: "Português",
+      "Atividade de consciencia silabica para 1o ano com exercicios de separacao de silabas e descoberta do som inicial das palavras, usando elementos da cultura brasileira",
+    grade: "1o ano",
+    category: "Portugues",
+    level: "Fundamental I",
     image: "/images/atividade-escolar-20-286-29.png",
   },
   {
-    title: "Problemas Matemáticos",
-    description: "Situações-problema do cotidiano brasileiro",
+    title: "Problemas Matematicos",
+    description: "Situacoes-problema do cotidiano brasileiro",
     prompt:
-      "Atividade de problemas matemáticos para 5º ano com situações do cotidiano brasileiro como feira livre, festa junina e passeios turísticos, envolvendo operações com dinheiro e tempo",
-    grade: "5º ano",
-    category: "Matemática",
+      "Atividade de problemas matematicos para 5o ano com situacoes do cotidiano brasileiro como feira livre, festa junina e passeios turisticos, envolvendo operacoes com dinheiro e tempo",
+    grade: "5o ano",
+    category: "Matematica",
+    level: "Fundamental I",
     image: "/images/atividade-escolar-20-287-29.png",
   },
 ]
 
 const categoryColors: Record<string, string> = {
-  Português: "bg-blue-100 text-blue-800",
-  Matemática: "bg-green-100 text-green-800",
-  Ciências: "bg-purple-100 text-purple-800",
+  Portugues: "bg-blue-100 text-blue-800",
+  Matematica: "bg-green-100 text-green-800",
+  Ciencias: "bg-purple-100 text-purple-800",
+  Historia: "bg-orange-100 text-orange-800",
+  Geografia: "bg-teal-100 text-teal-800",
 }
 
 interface ExamplesProps {

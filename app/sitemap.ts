@@ -4,13 +4,19 @@ import { blogPosts } from "@/lib/blog-posts"
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://educando.app"
 
-  // Páginas estáticas principais
+  // Paginas estaticas principais
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1.0,
+    },
+    {
+      url: `${baseUrl}/historico`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/blog`,
