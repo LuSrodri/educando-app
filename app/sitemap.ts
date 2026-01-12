@@ -1,7 +1,8 @@
 import { MetadataRoute } from "next"
 import { blogPosts } from "@/lib/blog-posts"
+import { getSharedActivities } from "@/lib/activities"
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://educando.app"
 
   // Paginas estaticas principais
@@ -34,5 +35,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }))
 
-  return [...staticPages, ...blogPages]
+  // Atividades compartilhadas (limitado a 500 para performance)
+  let activityPages: MetadataRoute.Sitemap = []
+  try {
+    const sharedActivities = await getSharedActivities(500)
+    activityPages = sharedActivities.map((activity) => ({
+      url: `${baseUrl}/atividade/${activity.id}`,
+      lastModified: new Date(activity.shared_at || activity.created_at),
+      changeFrequency: "yearly" as const,
+      priority: 0.5,
+    }))
+  } catch (error) {
+    console.error("Error fetching shared activities for sitemap:", error)
+  }
+
+  return [...staticPages, ...blogPages, ...activityPages]
 }

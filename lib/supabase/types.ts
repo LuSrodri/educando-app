@@ -82,6 +82,7 @@ export type Database = {
           generation_type: "original" | "edit" | "fork"
           version_number: number
           created_at: string
+          shared_at: string | null
         }
         Insert: {
           id?: string
@@ -98,6 +99,7 @@ export type Database = {
           generation_type: "original" | "edit" | "fork"
           version_number?: number
           created_at?: string
+          shared_at?: string | null
         }
         Update: {
           id?: string
@@ -114,6 +116,7 @@ export type Database = {
           generation_type?: "original" | "edit" | "fork"
           version_number?: number
           created_at?: string
+          shared_at?: string | null
         }
       }
     }

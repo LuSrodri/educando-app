@@ -24,7 +24,9 @@ import {
   GitBranch,
   Loader2,
   ArrowLeft,
+  Share2,
 } from "lucide-react"
+import { ShareModal } from "@/components/share-modal"
 import type { Activity } from "@/lib/supabase/types"
 import { EDUCATIONAL_LEVELS, type EducationalLevelId } from "@/types/educational-levels"
 import Link from "next/link"
@@ -34,6 +36,7 @@ export function ActivityHistory() {
   const { activities, isLoading, hasMore, loadMore, refresh } = useActivities(browserId, 20)
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null)
   const [showVersionTree, setShowVersionTree] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
   const [activityImage, setActivityImage] = useState<string | null>(null)
   const [loadingImage, setLoadingImage] = useState(false)
 
@@ -264,6 +267,14 @@ export function ActivityHistory() {
                 </Button>
                 <Button
                   variant="outline"
+                  onClick={() => setShowShareModal(true)}
+                  className="text-pink-700 border-pink-300 hover:bg-pink-50"
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Compartilhar
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => setShowVersionTree(true)}
                   className="ml-auto"
                 >
@@ -300,6 +311,17 @@ export function ActivityHistory() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Share Modal */}
+      {selectedActivity && (
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          activityId={selectedActivity.id}
+          activityTitle={selectedActivity.original_prompt}
+          activityImage={activityImage || undefined}
+        />
+      )}
     </div>
   )
 }

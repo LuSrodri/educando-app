@@ -25,6 +25,7 @@ import {
   Info,
 } from "lucide-react"
 import { PaymentModal } from "@/components/payment-modal"
+import { ShareModal } from "@/components/share-modal"
 import { EducationalLevelSelector } from "@/components/educational-level-selector"
 import { useBrowserId } from "@/hooks/useBrowserId"
 import { useCredits } from "@/hooks/useCredits"
@@ -67,6 +68,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   const [isApplyingEdit, setIsApplyingEdit] = useState(false)
 
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
 
   // Educational level state
   const [educationalLevel, setEducationalLevel] = useState<EducationalLevelId>("fundamental_1")
@@ -303,39 +305,9 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
     }
   }
 
-  const shareImage = async () => {
-    if (!generatedImage) return
-
-    const shareText = "Criei essa atividade em 30 segundos! Professores, usem: https://educando.app"
-
-    try {
-      // Convert data URI to Blob without using fetch (to avoid CSP issues)
-      const [header, base64Data] = generatedImage.split(",")
-      const mimeType = header.match(/data:(.*);base64/)?.[1] || "image/png"
-      const byteCharacters = atob(base64Data)
-      const byteNumbers = new Array(byteCharacters.length)
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i)
-      }
-      const byteArray = new Uint8Array(byteNumbers)
-      const blob = new Blob([byteArray], { type: mimeType })
-      const file = new File([blob], "atividade-escolar.png", { type: mimeType })
-
-      if (navigator.share && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: "Atividade Escolar - educando.app",
-          text: shareText,
-          files: [file],
-        })
-      } else {
-        await navigator.clipboard.writeText(shareText)
-        alert("Link copiado! Cole nas suas redes sociais junto com a imagem baixada.")
-        downloadImage()
-      }
-    } catch (err) {
-      await navigator.clipboard.writeText(shareText)
-      alert("Link copiado! Cole nas suas redes sociais junto com a imagem baixada.")
-    }
+  const shareImage = () => {
+    if (!currentActivity) return
+    setShowShareModal(true)
   }
 
   const regenerate = () => {
@@ -820,6 +792,16 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
           refreshCredits()
         }}
       />
+
+      {currentActivity && (
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          activityId={currentActivity.id}
+          activityTitle={currentActivity.original_prompt}
+          activityImage={generatedImage || undefined}
+        />
+      )}
     </>
   )
 })

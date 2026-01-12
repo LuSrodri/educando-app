@@ -156,3 +156,62 @@ export async function deleteActivity(activityId: string): Promise<void> {
     throw new Error("Failed to delete activity")
   }
 }
+
+export async function shareActivity(activityId: string): Promise<Activity> {
+  const supabase = createServerClient()
+
+  const { data: activity, error } = await supabase
+    .from("activities")
+    .update({ shared_at: new Date().toISOString() })
+    .eq("id", activityId)
+    .select()
+    .single()
+
+  if (error || !activity) {
+    console.error("Error sharing activity:", error)
+    throw new Error("Failed to share activity")
+  }
+
+  return activity
+}
+
+export async function getSharedActivity(activityId: string): Promise<Activity | null> {
+  const supabase = createServerClient()
+
+  const { data } = await supabase
+    .from("activities")
+    .select("*")
+    .eq("id", activityId)
+    .not("shared_at", "is", null)
+    .single()
+
+  return data
+}
+
+export async function getSharedActivities(limit = 100): Promise<Activity[]> {
+  const supabase = createServerClient()
+
+  const { data } = await supabase
+    .from("activities")
+    .select("*")
+    .not("shared_at", "is", null)
+    .order("shared_at", { ascending: false })
+    .limit(limit)
+
+  return data || []
+}
+
+export async function getActivityImageBuffer(imagePath: string): Promise<Blob | null> {
+  const supabase = createServerClient()
+
+  const { data, error } = await supabase.storage
+    .from("activities")
+    .download(imagePath)
+
+  if (error) {
+    console.error("Error downloading image:", error)
+    return null
+  }
+
+  return data
+}
