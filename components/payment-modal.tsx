@@ -138,7 +138,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
     }
 
     if (!validateEmail(email)) {
-      setEmailError("Digite um email valido")
+      setEmailError("Digite um email válido")
       return
     }
 
@@ -215,7 +215,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                 <Check className="w-8 h-8 text-green-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Pagamento Aprovado!</h2>
-              <p className="text-gray-600">Voce ganhou mais 1 atividade</p>
+              <p className="text-gray-600">Você ganhou mais 1 atividade</p>
             </div>
           )}
 
@@ -226,7 +226,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                 <X className="w-8 h-8 text-red-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {timeRemaining === "Expirado" ? "QR Code Expirado" : "Pagamento nao Aprovado"}
+                {timeRemaining === "Expirado" ? "QR Code Expirado" : "Pagamento não Aprovado"}
               </h2>
               <p className="text-gray-600 mb-4">
                 {timeRemaining === "Expirado"
@@ -245,7 +245,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">Pague com PIX</h2>
-                  <p className="text-gray-600 text-sm mt-1">Escaneie o QR Code ou copie o codigo</p>
+                  <p className="text-gray-600 text-sm mt-1">Escaneie o QR Code ou copie o código</p>
                 </div>
                 <button
                   onClick={handleBack}
@@ -269,7 +269,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
 
               {/* Codigo PIX para copiar */}
               <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Ou copie o codigo PIX:</label>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Ou copie o código PIX:</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -302,9 +302,9 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
 
               {/* Informacoes */}
               <div className="space-y-2 text-xs text-gray-600">
-                <p>QR Code valido por 30 minutos</p>
-                <p>Confirmacao instantanea apos o pagamento</p>
-                <p>Voce ganhara +1 atividade apos a confirmacao</p>
+                <p>QR Code válido por 30 minutos</p>
+                <p>Confirmação instantânea após o pagamento</p>
+                <p>Você ganhará +1 atividade após a confirmação</p>
               </div>
             </>
           )}
@@ -314,8 +314,8 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
             <>
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Limite Diario Atingido</h2>
-                  <p className="text-gray-600 text-sm mt-1">Voce usou suas 3 atividades gratuitas de hoje</p>
+                  <h2 className="text-xl font-bold text-gray-900">Limite Diário Atingido</h2>
+                  <p className="text-gray-600 text-sm mt-1">Você usou suas 3 atividades gratuitas de hoje</p>
                 </div>
                 <button
                   onClick={onClose}
@@ -352,13 +352,13 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                     <QrCode className="w-4 h-4 text-blue-600" />
                   </div>
-                  <span>Pagamento rapido e seguro via PIX</span>
+                  <span>Pagamento rápido e seguro via PIX</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-gray-700">
                   <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
                     <Shield className="w-4 h-4 text-purple-600" />
                   </div>
-                  <span>Edicoes ilimitadas apos geracao</span>
+                  <span>Edições ilimitadas após geração</span>
                 </div>
               </div>
 
@@ -407,7 +407,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
 
               {/* Rodape */}
               <p className="text-xs text-gray-500 text-center mt-4">
-                Amanha voce tera mais 3 atividades gratuitas novamente.
+                Amanhã você terá mais 3 atividades gratuitas novamente.
               </p>
             </>
           )}

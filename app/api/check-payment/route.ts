@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const browserId = searchParams.get("browserId")
 
     if (!paymentId) {
-      return NextResponse.json({ error: "ID de pagamento invalido" }, { status: 400 })
+      return NextResponse.json({ error: "ID de pagamento inválido" }, { status: 400 })
     }
 
     const payment = new Payment(client)

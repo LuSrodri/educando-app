@@ -101,7 +101,7 @@ export function ActivityHistory() {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
-        <span className="ml-2 text-gray-600">Carregando historico...</span>
+        <span className="ml-2 text-gray-600">Carregando histórico...</span>
       </div>
     )
   }
@@ -170,7 +170,7 @@ export function ActivityHistory() {
                 <span className="flex items-center gap-1">
                   <GraduationCap className="w-3 h-3" />
                   {getEducationalLevelName(activity.educational_level)}
-                  {activity.grade && ` - ${activity.grade}o`}
+                  {activity.grade && ` - ${activity.grade}º`}
                 </span>
               </div>
 
@@ -209,12 +209,12 @@ export function ActivityHistory() {
               <div className="flex flex-wrap gap-2">
                 <Badge>
                   {getEducationalLevelName(selectedActivity.educational_level)}
-                  {selectedActivity.grade && ` - ${selectedActivity.grade}o ano`}
+                  {selectedActivity.grade && ` - ${selectedActivity.grade}º ano`}
                 </Badge>
                 <Badge variant="secondary">
                   {selectedActivity.generation_type === "original"
                     ? "Original"
-                    : `Versao ${selectedActivity.version_number}`}
+                    : `Versão ${selectedActivity.version_number}`}
                 </Badge>
                 <Badge variant="outline">{formatDate(selectedActivity.created_at)}</Badge>
               </div>
@@ -225,7 +225,7 @@ export function ActivityHistory() {
 
                 {selectedActivity.edit_prompt && (
                   <div className="mt-3 pt-3 border-t">
-                    <h4 className="font-semibold text-sm text-gray-600 mb-2">Edicao Aplicada</h4>
+                    <h4 className="font-semibold text-sm text-gray-600 mb-2">Edição Aplicada</h4>
                     <p className="text-gray-800">{selectedActivity.edit_prompt}</p>
                   </div>
                 )}
@@ -245,7 +245,7 @@ export function ActivityHistory() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  Imagem nao disponivel
+                  Imagem não disponível
                 </div>
               )}
 
@@ -264,7 +264,7 @@ export function ActivityHistory() {
                   className="ml-auto"
                 >
                   <GitBranch className="w-4 h-4 mr-2" />
-                  Ver Versoes
+                  Ver Versões
                 </Button>
               </div>
             </div>
@@ -278,7 +278,7 @@ export function ActivityHistory() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <GitBranch className="w-5 h-5" />
-              Arvore de Versoes
+              Árvore de Versões
             </DialogTitle>
           </DialogHeader>
 
