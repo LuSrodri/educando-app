@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -202,6 +203,9 @@ export function ActivityHistory() {
               <History className="w-5 h-5" />
               Detalhes da Atividade
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Visualize os detalhes da atividade gerada
+            </DialogDescription>
           </DialogHeader>
 
           {selectedActivity && (
@@ -280,6 +284,9 @@ export function ActivityHistory() {
               <GitBranch className="w-5 h-5" />
               Árvore de Versões
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Visualize todas as versões desta atividade
+            </DialogDescription>
           </DialogHeader>
 
           {selectedActivity && (

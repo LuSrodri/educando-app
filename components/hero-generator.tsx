@@ -309,9 +309,17 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
     const shareText = "Criei essa atividade em 30 segundos! Professores, usem: https://educando.app"
 
     try {
-      const response = await fetch(generatedImage)
-      const blob = await response.blob()
-      const file = new File([blob], "atividade-escolar.png", { type: "image/png" })
+      // Convert data URI to Blob without using fetch (to avoid CSP issues)
+      const [header, base64Data] = generatedImage.split(",")
+      const mimeType = header.match(/data:(.*);base64/)?.[1] || "image/png"
+      const byteCharacters = atob(base64Data)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray], { type: mimeType })
+      const file = new File([blob], "atividade-escolar.png", { type: mimeType })
 
       if (navigator.share && navigator.canShare({ files: [file] })) {
         await navigator.share({

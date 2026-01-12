@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Download, Printer, Wand2, Share2, Eye } from "lucide-react"
 
 const examples = [
@@ -244,6 +244,9 @@ export function Examples({ onSelectExample }: ExamplesProps) {
                   </Badge>
                   <Badge variant="outline">{selectedExample.grade}</Badge>
                 </DialogTitle>
+                <DialogDescription className="sr-only">
+                  {selectedExample.description}
+                </DialogDescription>
               </DialogHeader>
 
               <div className="mt-4">
