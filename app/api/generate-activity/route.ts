@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai"
 import { createServerClient } from "@/lib/supabase/server"
-import { incrementDailyUsage, useExtraCredit, canGenerateFree } from "@/lib/credits"
+import { incrementDailyUsage, useExtraCredit, canGenerateFree, getExtraCredits } from "@/lib/credits"
 import { getEducationalLevelPromptContext, type EducationalLevelId } from "@/types/educational-levels"
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
@@ -80,13 +80,14 @@ export async function POST(req: Request) {
       return Response.json({ error: "Browser ID is required" }, { status: 400 })
     }
 
-    // Check if user can generate
-    const canGenerate = await canGenerateFree(browserId)
-    if (!canGenerate) {
-      const usedCredit = await useExtraCredit(browserId)
-      if (!usedCredit) {
-        return Response.json({ error: "No credits available" }, { status: 403 })
-      }
+    // Check if user can generate (free or paid)
+    const canGenerateForFree = await canGenerateFree(browserId)
+    const extraCredits = await getExtraCredits(browserId)
+    const willUsePaidCredit = !canGenerateForFree && extraCredits > 0
+
+    // If no free credits and no paid credits, block generation
+    if (!canGenerateForFree && extraCredits <= 0) {
+      return Response.json({ error: "No credits available" }, { status: 403 })
     }
 
     const levelContext = getEducationalLevelPromptContext(
@@ -197,9 +198,11 @@ IMPORTANTE: O documento DEVE estar em formato A4 retrato, ocupando toda a folha 
       console.error("Error creating activity:", activityError)
     }
 
-    // Increment usage only if we successfully generated
-    if (canGenerate) {
+    // Deduct credits only after successful generation
+    if (canGenerateForFree) {
       await incrementDailyUsage(browserId)
+    } else if (willUsePaidCredit) {
+      await useExtraCredit(browserId)
     }
 
     // Extract text from response
