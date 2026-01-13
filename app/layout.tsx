@@ -10,7 +10,7 @@ const _nunitoSans = Nunito_Sans({ subsets: ["latin"] })
 export const metadata: Metadata = {
   metadataBase: new URL("https://educando.app"),
   title: {
-    default: "Crie atividade escolares alinhadas à BNCC a partir de um tema — prontas para imprimir — em 30 segundos. Sem login. 3 atividades gratuitas por dia. Acesse educando.app",
+    default: "Crie atividades escolares alinhadas à BNCC a partir de um tema — prontas para imprimir — em 30 segundos. Sem login. 3 atividades gratuitas por dia. Acesse educando.app",
     template: "%s | educando.app",
   },
   description:
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     url: "https://educando.app",
     siteName: "educando.app",
-    title: "Crie atividade escolares alinhadas à BNCC a partir de um tema — prontas para imprimir — em 30 segundos. Sem login. 3 atividades gratuitas por dia. Acesse educando.app",
+    title: "Crie atividades escolares alinhadas à BNCC a partir de um tema — prontas para imprimir — em 30 segundos. Sem login. 3 atividades gratuitas por dia. Acesse educando.app",
     description:
       "Com o educando.app, você transforma qualquer tema em atividades pedagógicas completas, com códigos da BNCC e prontas para imprimir. Tudo em segundos, direto no navegador e sem necessidade de login. Recupere seu tempo livre e garanta aulas criativas hoje mesmo!",
     images: [
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Crie atividade escolares alinhadas à BNCC a partir de um tema — prontas para imprimir — em 30 segundos. Sem login. 3 atividades gratuitas por dia. Acesse educando.app",
+    title: "Crie atividades escolares alinhadas à BNCC a partir de um tema — prontas para imprimir — em 30 segundos. Sem login. 3 atividades gratuitas por dia. Acesse educando.app",
     description:
       "Com o educando.app, você transforma qualquer tema em atividades pedagógicas completas, com códigos da BNCC e prontas para imprimir. Tudo em segundos, direto no navegador e sem necessidade de login. Recupere seu tempo livre e garanta aulas criativas hoje mesmo!",
     images: ["/og-image.png"],

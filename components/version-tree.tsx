@@ -17,7 +17,7 @@ export function VersionTree({ activityId, currentId, onSelect }: VersionTreeProp
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
-        <span className="ml-2 text-gray-600">Carregando arvore...</span>
+        <span className="ml-2 text-gray-600">Carregando árvore...</span>
       </div>
     )
   }
@@ -25,7 +25,7 @@ export function VersionTree({ activityId, currentId, onSelect }: VersionTreeProp
   if (error || activities.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        Nenhuma versao encontrada
+        Nenhuma versão encontrada
       </div>
     )
   }
@@ -97,7 +97,7 @@ export function VersionTree({ activityId, currentId, onSelect }: VersionTreeProp
               </span>
               {activity.generation_type === "edit" && (
                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
-                  Edicao
+                  Edição
                 </span>
               )}
               {activity.generation_type === "fork" && (
@@ -127,9 +127,9 @@ export function VersionTree({ activityId, currentId, onSelect }: VersionTreeProp
     <div className="border rounded-lg p-4 bg-white max-h-96 overflow-y-auto">
       <div className="flex items-center gap-2 mb-4 pb-2 border-b">
         <GitBranch className="w-5 h-5 text-gray-600" />
-        <span className="font-semibold text-gray-800">Arvore de Versoes</span>
+        <span className="font-semibold text-gray-800">Árvore de Versões</span>
         <span className="text-xs text-gray-500 ml-auto">
-          {activities.length} versao{activities.length !== 1 ? "oes" : ""}
+          {activities.length} {activities.length !== 1 ? "versões" : "versão"}
         </span>
       </div>
 

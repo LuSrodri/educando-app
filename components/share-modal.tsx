@@ -223,13 +223,13 @@ export function ShareModal({
 
               {/* Preview */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Preview</label>
+                <label className="text-sm font-medium text-gray-700">Visualização</label>
                 <div className="bg-gray-50 rounded-lg border border-gray-200 p-3 overflow-hidden">
                   <div className="flex gap-3">
                     {activityImage && (
                       <img
                         src={activityImage}
-                        alt="Preview"
+                        alt="Visualização"
                         className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded border shrink-0"
                       />
                     )}
