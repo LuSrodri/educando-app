@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { X, Shield, Zap, Loader2, Copy, Check, QrCode } from "lucide-react"
+import { X, Shield, Zap, Loader2, Copy, Check, QrCode, Sparkles, Star } from "lucide-react"
 import { getOrCreateBrowserId } from "@/lib/browser-id"
-import { PRICE_PER_ACTIVITY } from "@/lib/session"
+import { PRICING_PACKAGES, type PricingPackage } from "@/lib/session"
 
 interface PaymentModalProps {
   isOpen: boolean
@@ -28,6 +28,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
   const [emailError, setEmailError] = useState("")
   const [timeRemaining, setTimeRemaining] = useState<string>("")
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "checking" | "approved" | "failed">("pending")
+  const [selectedPackage, setSelectedPackage] = useState<PricingPackage>(PRICING_PACKAGES[1]) // Default to pack_3
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const browserIdRef = useRef<string>("")
@@ -100,7 +101,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
     try {
       const browserId = browserIdRef.current
       const response = await fetch(
-        `/api/check-payment?paymentId=${paymentId}&browserId=${encodeURIComponent(browserId)}`
+        `/api/check-payment?paymentId=${paymentId}&browserId=${encodeURIComponent(browserId)}&packageId=${selectedPackage.id}`
       )
       const data = await response.json()
 
@@ -151,7 +152,12 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
       const response = await fetch("/api/create-pix-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: browserId, amount: PRICE_PER_ACTIVITY, email: email.trim() }),
+        body: JSON.stringify({
+          sessionId: browserId,
+          amount: selectedPackage.price,
+          email: email.trim(),
+          packageId: selectedPackage.id,
+        }),
       })
 
       const data = await response.json()
@@ -198,10 +204,19 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
     setEmailError("")
     setTimeRemaining("")
     setIsLoading(false)
+    setSelectedPackage(PRICING_PACKAGES[1])
   }
 
   const handleBack = () => {
     resetModal()
+  }
+
+  const formatPrice = (price: number) => {
+    return price.toFixed(2).replace(".", ",")
+  }
+
+  const getPricePerActivity = (pkg: PricingPackage) => {
+    return (pkg.price / pkg.credits).toFixed(2).replace(".", ",")
   }
 
   return (
@@ -215,7 +230,9 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                 <Check className="w-8 h-8 text-green-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Pagamento Aprovado!</h2>
-              <p className="text-gray-600">Você ganhou mais 1 atividade</p>
+              <p className="text-gray-600">
+                Você ganhou mais {selectedPackage.credits} atividade{selectedPackage.credits > 1 ? "s" : ""}
+              </p>
             </div>
           )}
 
@@ -304,7 +321,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
               <div className="space-y-2 text-xs text-gray-600">
                 <p>QR Code válido por 30 minutos</p>
                 <p>Confirmação instantânea após o pagamento</p>
-                <p>Você ganhará +1 atividade após a confirmação</p>
+                <p>Você ganhará +{selectedPackage.credits} atividade{selectedPackage.credits > 1 ? "s" : ""} após a confirmação</p>
               </div>
             </>
           )}
@@ -314,8 +331,8 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
             <>
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Limite Diário Atingido</h2>
-                  <p className="text-gray-600 text-sm mt-1">Você usou suas 3 atividades gratuitas de hoje</p>
+                  <h2 className="text-xl font-bold text-gray-900">Limite Semanal Atingido</h2>
+                  <p className="text-gray-600 text-sm mt-1">Você usou suas 3 atividades gratuitas desta semana</p>
                 </div>
                 <button
                   onClick={onClose}
@@ -326,16 +343,58 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                 </button>
               </div>
 
-              {/* Oferta */}
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-5 mb-5 border border-amber-200">
-                <div className="text-center">
-                  <p className="text-sm text-amber-800 font-medium mb-1">Continue criando atividades por apenas</p>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-sm text-gray-600">R$</span>
-                    <span className="text-4xl font-bold text-amber-700">
-                      {PRICE_PER_ACTIVITY.toFixed(2).replace(".", ",")}
-                    </span>
-                    <span className="text-sm text-gray-600">/ atividade</span>
+              {/* Pacotes de Precos */}
+              <div className="space-y-3 mb-5">
+                <p className="text-sm font-medium text-gray-700">Escolha seu pacote:</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {PRICING_PACKAGES.map((pkg) => (
+                    <button
+                      key={pkg.id}
+                      onClick={() => setSelectedPackage(pkg)}
+                      className={`relative p-3 rounded-xl border-2 transition-all ${
+                        selectedPackage.id === pkg.id
+                          ? "border-amber-500 bg-amber-50 shadow-md"
+                          : "border-gray-200 bg-white hover:border-amber-300"
+                      }`}
+                    >
+                      {pkg.badge && (
+                        <div className={`absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
+                          pkg.badge === "Mais popular" ? "bg-amber-500 text-white" : "bg-green-500 text-white"
+                        }`}>
+                          {pkg.badge}
+                        </div>
+                      )}
+                      <div className="text-center pt-1">
+                        <p className="text-lg font-bold text-gray-900">{pkg.credits}x</p>
+                        <p className="text-xs text-gray-500 mb-1">{pkg.credits === 1 ? "atividade" : "atividades"}</p>
+                        <p className="text-base font-bold text-amber-600">
+                          R$ {formatPrice(pkg.price)}
+                        </p>
+                        <p className="text-[10px] text-gray-400">
+                          R$ {getPricePerActivity(pkg)}/cada
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Destaque do pacote selecionado */}
+              <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 mb-5 border border-amber-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-amber-800 font-medium">{selectedPackage.label}</p>
+                    <p className="text-xs text-amber-600">
+                      {selectedPackage.credits > 1 && (
+                        <>Economia de R$ {formatPrice((PRICING_PACKAGES[0].price * selectedPackage.credits) - selectedPackage.price)}</>
+                      )}
+                      {selectedPackage.credits === 1 && "Ideal para experimentar"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-amber-700">
+                      R$ {formatPrice(selectedPackage.price)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -346,7 +405,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                   <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
                     <Zap className="w-4 h-4 text-green-600" />
                   </div>
-                  <span>Atividade gerada instantaneamente</span>
+                  <span>Atividades geradas instantaneamente</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-gray-700">
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
@@ -358,7 +417,7 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                   <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
                     <Shield className="w-4 h-4 text-purple-600" />
                   </div>
-                  <span>Edições ilimitadas após geração</span>
+                  <span>Créditos não expiram</span>
                 </div>
               </div>
 
@@ -400,14 +459,14 @@ export function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModalProps) 
                 ) : (
                   <>
                     <QrCode className="w-5 h-5 mr-2" />
-                    Pagar R$ {PRICE_PER_ACTIVITY.toFixed(2).replace(".", ",")} com PIX
+                    Pagar R$ {formatPrice(selectedPackage.price)} com PIX
                   </>
                 )}
               </Button>
 
               {/* Rodape */}
               <p className="text-xs text-gray-500 text-center mt-4">
-                Amanhã você terá mais 3 atividades gratuitas novamente.
+                Na próxima semana você terá mais 3 atividades gratuitas novamente.
               </p>
             </>
           )}

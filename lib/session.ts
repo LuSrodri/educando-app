@@ -64,12 +64,15 @@ export function getExtraCredits(): number {
   }
 }
 
-export function addExtraCredit(): void {
+export function addExtraCredits(creditCount: number = 1): void {
   if (typeof window === "undefined") return
 
   const currentCredits = getExtraCredits()
-  localStorage.setItem("educando_extra_credits", JSON.stringify({ count: currentCredits + 1 }))
+  localStorage.setItem("educando_extra_credits", JSON.stringify({ count: currentCredits + creditCount }))
 }
+
+// Legacy alias for backwards compatibility
+export const addExtraCredit = () => addExtraCredits(1)
 
 export function useExtraCredit(): boolean {
   if (typeof window === "undefined") return false
@@ -82,8 +85,26 @@ export function useExtraCredit(): boolean {
   return false
 }
 
-export const FREE_DAILY_LIMIT = 3
-export const PRICE_PER_ACTIVITY = 1.99
+export const FREE_WEEKLY_LIMIT = 3
+export const WEEKLY_PERIOD_DAYS = 8
+
+// Legacy exports for backwards compatibility
+export const FREE_DAILY_LIMIT = FREE_WEEKLY_LIMIT
+
+export const PRICING_PACKAGES = [
+  { id: "single", credits: 1, price: 3.90, label: "1 atividade", badge: null },
+  { id: "pack_3", credits: 3, price: 9.90, label: "3 atividades", badge: "Mais popular" },
+  { id: "pack_10", credits: 10, price: 19.90, label: "10 atividades", badge: "Melhor valor" },
+] as const
+
+export type PricingPackage = typeof PRICING_PACKAGES[number]
+
+export function getPackageById(packageId: string): PricingPackage | undefined {
+  return PRICING_PACKAGES.find(pkg => pkg.id === packageId)
+}
+
+// Legacy export
+export const PRICE_PER_ACTIVITY = PRICING_PACKAGES[0].price
 
 export function canGenerateFree(): boolean {
   const usage = getDailyUsage()

@@ -59,14 +59,18 @@ export async function GET(req: Request) {
       return Response.json({ error: "Browser not found" }, { status: 404 })
     }
 
-    // Get today's usage
-    const today = new Date().toISOString().split("T")[0]
-    const { data: usage } = await supabase
+    // Get weekly usage (last 8 days)
+    const eightDaysAgo = new Date()
+    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8)
+    const startDate = eightDaysAgo.toISOString().split("T")[0]
+
+    const { data: usageData } = await supabase
       .from("daily_usage")
       .select("count")
       .eq("browser_id", browserId)
-      .eq("usage_date", today)
-      .single()
+      .gte("usage_date", startDate)
+
+    const weeklyUsage = usageData?.reduce((sum, row) => sum + (row.count || 0), 0) || 0
 
     // Get credits
     const { data: credits } = await supabase
@@ -77,7 +81,9 @@ export async function GET(req: Request) {
 
     return Response.json({
       browser,
-      dailyUsage: usage?.count || 0,
+      weeklyUsage,
+      // Keep dailyUsage for backwards compatibility
+      dailyUsage: weeklyUsage,
       extraCredits: credits?.count || 0,
     })
   } catch (error) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { MercadoPagoConfig, Payment } from "mercadopago"
+import { getPackageById } from "@/lib/credits"
 
 const client = new MercadoPagoConfig({
   accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN || "",
@@ -7,7 +8,7 @@ const client = new MercadoPagoConfig({
 
 export async function POST(request: NextRequest) {
   try {
-    const { sessionId, amount, email } = await request.json()
+    const { sessionId, amount, email, packageId } = await request.json()
 
     if (!sessionId || !amount || !email) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 })
@@ -18,14 +19,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email inválido" }, { status: 400 })
     }
 
+    // Validate package if provided
+    const pkg = packageId ? getPackageById(packageId) : null
+    if (packageId && !pkg) {
+      return NextResponse.json({ error: "Pacote inválido" }, { status: 400 })
+    }
+
+    // Verify amount matches package price
+    if (pkg && Math.abs(pkg.price - amount) > 0.01) {
+      return NextResponse.json({ error: "Valor incorreto para o pacote" }, { status: 400 })
+    }
+
     const payment = new Payment(client)
 
     const expirationDate = new Date()
     expirationDate.setMinutes(expirationDate.getMinutes() + 30)
 
+    const credits = pkg?.credits || 1
+    const description = credits > 1
+      ? `${credits} Atividades Educando.app`
+      : "Atividade Educando.app"
+
     const body = {
       transaction_amount: amount,
-      description: "Atividade Educando.app",
+      description,
       statement_descriptor: "Educando.app",
       payment_method_id: "pix",
       date_of_expiration: expirationDate.toISOString(),
@@ -34,6 +51,8 @@ export async function POST(request: NextRequest) {
       },
       metadata: {
         session_id: sessionId,
+        package_id: packageId || "single",
+        credits: credits,
       },
       installments: 1,
     }

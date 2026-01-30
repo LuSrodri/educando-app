@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { FREE_DAILY_LIMIT, PRICE_PER_ACTIVITY } from "@/lib/session"
+import { FREE_WEEKLY_LIMIT, FREE_DAILY_LIMIT, PRICE_PER_ACTIVITY, PRICING_PACKAGES } from "@/lib/session"
 
 interface CreditsState {
-  dailyUsage: number
+  weeklyUsage: number
   extraCredits: number
   remainingFree: number
   isLoading: boolean
@@ -13,9 +13,9 @@ interface CreditsState {
 
 export function useCredits(browserId: string | null) {
   const [state, setState] = useState<CreditsState>({
-    dailyUsage: 0,
+    weeklyUsage: 0,
     extraCredits: 0,
-    remainingFree: FREE_DAILY_LIMIT,
+    remainingFree: FREE_WEEKLY_LIMIT,
     isLoading: true,
     error: null,
   })
@@ -36,9 +36,9 @@ export function useCredits(browserId: string | null) {
       const data = await response.json()
 
       setState({
-        dailyUsage: data.dailyUsage || 0,
+        weeklyUsage: data.weeklyUsage || data.dailyUsage || 0,
         extraCredits: data.extraCredits || 0,
-        remainingFree: Math.max(0, FREE_DAILY_LIMIT - (data.dailyUsage || 0)),
+        remainingFree: Math.max(0, FREE_WEEKLY_LIMIT - (data.weeklyUsage || data.dailyUsage || 0)),
         isLoading: false,
         error: null,
       })
@@ -63,14 +63,18 @@ export function useCredits(browserId: string | null) {
   }, [fetchCredits])
 
   return {
-    dailyUsage: state.dailyUsage,
+    weeklyUsage: state.weeklyUsage,
+    // Keep dailyUsage for backwards compatibility
+    dailyUsage: state.weeklyUsage,
     extraCredits: state.extraCredits,
     remainingFree: state.remainingFree,
     canGenerate,
     isLoading: state.isLoading,
     error: state.error,
     refresh,
+    FREE_WEEKLY_LIMIT,
     FREE_DAILY_LIMIT,
     PRICE_PER_ACTIVITY,
+    PRICING_PACKAGES,
   }
 }

@@ -29,7 +29,7 @@ import { ShareModal } from "@/components/share-modal"
 import { EducationalLevelSelector } from "@/components/educational-level-selector"
 import { useBrowserId } from "@/hooks/useBrowserId"
 import { useCredits } from "@/hooks/useCredits"
-import { FREE_DAILY_LIMIT } from "@/lib/session"
+import { FREE_WEEKLY_LIMIT } from "@/lib/session"
 import { type EducationalLevelId, EDUCATIONAL_LEVELS } from "@/types/educational-levels"
 import type { Activity } from "@/lib/supabase/types"
 import Link from "next/link"
@@ -62,6 +62,10 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   const imageRef = useRef<HTMLImageElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const resultRef = useRef<HTMLDivElement>(null)
+  const formRef = useRef<HTMLDivElement>(null)
+
+  // Collapsible form state
+  const [isFormExpanded, setIsFormExpanded] = useState(false)
 
   const [isEditing, setIsEditing] = useState(false)
   const [editPrompt, setEditPrompt] = useState("")
@@ -99,8 +103,11 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
       setGeneratedImage(null)
       setCurrentActivity(null)
       setError(null)
+      // Expand the form when a prompt is set externally
+      setIsFormExpanded(true)
     },
     focusPrompt: () => {
+      setIsFormExpanded(true)
       setTimeout(() => {
         textareaRef.current?.focus()
       }, 300)
@@ -146,6 +153,15 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
       resultRef.current.scrollIntoView({ behavior: "smooth", block: "center" })
     }
   }, [generatedImage])
+
+  // Scroll to form when expanded
+  useEffect(() => {
+    if (isFormExpanded && formRef.current) {
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+      }, 100)
+    }
+  }, [isFormExpanded])
 
   const handleEducationalLevelChange = (level: EducationalLevelId, selectedGrade: string) => {
     setEducationalLevel(level)
@@ -376,15 +392,43 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
             </h1>
 
             <p className="text-base md:text-lg text-gray-600 max-w-xl">
-              Digite o tema, clique em{" "}
-              <span className="text-amber-600 inline-flex items-center gap-1 text-sm"><Sparkles className="w-3 h-3 inline" /> Gerar Atividade</span> e crie
-              atividades pedagógicas prontas para imprimir.
+              {isFormExpanded ? (
+                <>
+                  Digite o tema, clique em{" "}
+                  <span className="text-amber-600 inline-flex items-center gap-1 text-sm"><Sparkles className="w-3 h-3 inline" /> Gerar Atividade</span> e crie
+                  atividades pedagógicas prontas para imprimir.
+                </>
+              ) : (
+                <>
+                  Crie atividades pedagógicas para <strong>Alfabetização ao 9º ano</strong>, alinhadas à BNCC e prontas para imprimir.
+                  <br />
+                  <span className="text-amber-600 font-semibold">3 atividades gratuitas por semana!</span>
+                </>
+              )}
             </p>
+
+            {/* CTA Button - shown when form is collapsed */}
+            {!isFormExpanded && (
+              <Button
+                onClick={() => setIsFormExpanded(true)}
+                className="mt-6 bg-amber-600 hover:bg-amber-700 text-white h-auto py-4 px-8 text-lg font-bold shadow-lg hover:shadow-xl transition-all animate-pulse"
+                size="lg"
+              >
+                <Sparkles className="w-5 h-5 mr-2" />
+                Começar a Criar
+              </Button>
+            )}
           </header>
 
           {/* Formulario principal - destaque visual */}
           <div className="max-w-2xl mx-auto">
-            <Card className="shadow-2xl border-2 border-amber-400 bg-white backdrop-blur">
+            {/* Collapsible form container */}
+            <div
+              className={`transition-all duration-500 ease-out overflow-hidden ${
+                isFormExpanded ? "max-h-[3000px] opacity-100" : "max-h-0 opacity-0"
+              }`}
+            >
+            <Card ref={formRef} className="shadow-2xl border-2 border-amber-400 bg-white backdrop-blur">
               <CardContent className="p-5 md:p-6">
                 <div className="space-y-4">
                   {/* Educational Level Selector */}
@@ -513,7 +557,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                         >
                           {remainingFree}
                         </span>{" "}
-                        atividades grátis hoje
+                        atividades grátis esta semana
                       </span>
                       <Link
                         href="/historico"
@@ -532,7 +576,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                               ? "bg-gradient-to-r from-amber-400 to-amber-500"
                               : "bg-gradient-to-r from-red-400 to-red-500"
                         }`}
-                        style={{ width: `${(remainingFree / FREE_DAILY_LIMIT) * 100}%` }}
+                        style={{ width: `${(remainingFree / FREE_WEEKLY_LIMIT) * 100}%` }}
                       />
                     </div>
                   </div>
@@ -757,6 +801,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                 </div>
               </CardContent>
             </Card>
+            </div>
 
             {/* Mini features abaixo do card */}
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-700 mt-6">
