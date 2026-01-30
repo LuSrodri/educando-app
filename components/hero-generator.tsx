@@ -411,7 +411,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
             {!isFormExpanded && (
               <Button
                 onClick={() => setIsFormExpanded(true)}
-                className="mt-6 bg-amber-600 hover:bg-amber-700 text-white h-auto py-4 px-8 text-lg font-bold shadow-lg hover:shadow-xl transition-all animate-pulse"
+                className="mt-6 bg-amber-600 hover:bg-amber-700 text-white h-auto py-4 px-8 text-lg font-bold shadow-lg hover:shadow-xl transition-all"
                 size="lg"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
