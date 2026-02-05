@@ -1,52 +1,91 @@
-# Activity generator for teachers
+# educando.app
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+Gerador de atividades escolares com IA, alinhadas à BNCC e prontas para imprimir.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/lucassrodri08gmailcoms-projects/v0-activity-generator-for-teachers)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/kJKGPRCZs8n)
+## Sobre
 
-## Overview
+O **educando.app** é uma ferramenta para professores criarem atividades pedagógicas de forma rápida e prática. Digite um tema, escolha o nível escolar e receba uma atividade pronta para imprimir em segundos.
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+## Funcionalidades
 
-## Configuração do Pagamento PIX
+- **Geração de atividades com IA** - Crie atividades a partir de qualquer tema
+- **Alinhado à BNCC** - Atividades incluem referências à Base Nacional Comum Curricular
+- **Níveis educacionais** - Alfabetização, Ensino Fundamental I (1º ao 5º ano) e II (6º ao 9º ano)
+- **Tipos de material** - Atividade ao Aluno ou Material de Apoio ao Professor
+- **Edição com IA** - Ajuste a atividade gerada com comandos simples
+- **Download e impressão** - Atividades em alta qualidade, prontas para imprimir
+- **Compartilhamento** - Compartilhe atividades via link
+- **Histórico** - Acesse atividades geradas anteriormente
+- **Comunidade** - Veja atividades compartilhadas por outros professores
+- **Blog** - Conteúdo educacional para professores
+- **Sem login** - Use diretamente no navegador
 
-Este projeto usa o Mercado Pago para processar pagamentos PIX. Para configurar:
+## Créditos
 
-1. Crie uma conta no [Mercado Pago Developers](https://www.mercadopago.com.br/developers)
-2. Crie uma aplicação no [Painel de Aplicações](https://www.mercadopago.com.br/developers/panel/app)
-3. Copie seu Access Token (Credenciais de Produção ou Teste)
-4. Crie um arquivo `.env.local` na raiz do projeto com o seguinte conteúdo:
+- 3 atividades gratuitas por semana
+- Créditos extras disponíveis via pagamento PIX
 
-```env
-MERCADOPAGO_ACCESS_TOKEN=seu_access_token_aqui
+## Stack
+
+- Next.js 16
+- React 19
+- Supabase
+- Google GenAI
+- Mercado Pago
+- Tailwind CSS
+- Vercel
+
+## Configuração
+
+Copie o arquivo `.env.example` para `.env` e preencha as variáveis:
+
+```bash
+cp .env.example .env
 ```
 
-### Funcionamento do Pagamento
+### Variáveis de Ambiente
 
-- O usuário tem 3 atividades gratuitas por dia
-- Após esgotar, pode pagar R$ 1,99 por atividade adicional via PIX
-- O pagamento é processado completamente no client-side
-- QR Code PIX é gerado e exibido no modal
-- Verificação automática do status a cada 2.5 segundos
-- Confirmação instantânea após pagamento aprovado
+#### Supabase (Banco de dados e Storage)
 
-## Deployment
+| Variável | Descrição |
+|----------|-----------|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anônima (pública) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Chave de serviço (privada) |
 
-Your project is live at:
+Obtenha em: [Supabase Dashboard](https://supabase.com/dashboard)
 
-**[https://vercel.com/lucassrodri08gmailcoms-projects/v0-activity-generator-for-teachers](https://vercel.com/lucassrodri08gmailcoms-projects/v0-activity-generator-for-teachers)**
+#### Google Gemini AI (Geração de atividades)
 
-## Build your app
+| Variável | Descrição |
+|----------|-----------|
+| `GEMINI_API_KEY` | Chave da API do Google Gemini |
 
-Continue building your app on:
+Obtenha em: [Google AI Studio](https://aistudio.google.com/app/apikey)
 
-**[https://v0.app/chat/kJKGPRCZs8n](https://v0.app/chat/kJKGPRCZs8n)**
+#### Mercado Pago (Pagamentos PIX)
 
-## How It Works
+| Variável | Descrição |
+|----------|-----------|
+| `MERCADOPAGO_ACCESS_TOKEN` | Access Token (TEST-... para sandbox, APP-... para produção) |
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+Obtenha em: [Mercado Pago Developers](https://www.mercadopago.com.br/developers/panel/app)
+
+#### Aplicação
+
+| Variável | Descrição |
+|----------|-----------|
+| `NEXT_PUBLIC_APP_URL` | URL pública da aplicação |
+
+## Desenvolvimento
+
+```bash
+# Instalar dependências
+npm install
+
+# Rodar em desenvolvimento
+npm run dev
+
+# Build para produção
+npm run build
+```
