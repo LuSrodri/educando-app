@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     const finalPrompt = improvedPrompt || prompt
 
     // Generate image via Replicate seedream-4
-    const output = await replicate.run("bytedance/seedream-4", {
+    const output = await replicate.run("bytedance/seedream-4.5", {
       input: {
         size: "custom",
         width: 2480,
@@ -51,7 +51,6 @@ export async function POST(req: Request) {
         max_images: 1,
         image_input: [],
         aspect_ratio: "match_input_image",
-        enhance_prompt: false,
         sequential_image_generation: "disabled",
       },
     })

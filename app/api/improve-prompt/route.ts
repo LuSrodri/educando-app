@@ -123,13 +123,21 @@ ${activityElements.bncc
     : `**Referência BNCC:**
 - NÃO incluir referência à BNCC neste material.`}
 
-Retorne APENAS o prompt aprimorado, sem explicações. O prompt deve instruir a geração de um material escolar brasileiro em formato A4 retrato.`
+Retorne APENAS o prompt aprimorado, sem explicações. O prompt deve instruir a geração de um material escolar brasileiro em formato A4 retrato.
+DEVE conter quais elementos serão gerados e suas posições na folha, seguindo as diretrizes acima. Seja específico e detalhado para garantir um resultado de alta qualidade.
+DEVE gerar os textos que devem aparecer na atividade, como título, enunciados, BNCC, instruções, e quaisquer outros textos relevantes.
+
+Basicamente você vai detalhar minuciosamente o que deve conter na folha A4, onde cada elemento deve estar posicionado, e como deve ser a aparência geral do material, seguindo as diretrizes fornecidas.
+
+Você DEVE apontar a disposição dos elementos na folha em pixel. Lembrando que a largura da folha A4 é 2480 pixels e a altura é 3508 pixels.
+
+O modelo de geração de imagens é extremamente literal, então seja o mais específico possível para garantir que o resultado final seja exatamente como desejado e coerente.`
 
   const response = await ai.models.generateContentStream({
-    model: "gemini-3-flash-preview",
+    model: "gemini-3-pro-preview",
     config: {
       thinkingConfig: {
-        thinkingLevel: ThinkingLevel.MINIMAL,
+        thinkingLevel: ThinkingLevel.HIGH,
       },
     },
     contents: [
