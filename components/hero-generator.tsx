@@ -239,7 +239,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
   return (
     <>
-      <section id="gerador" className="min-h-screen bg-gradient-to-b from-amber-50 via-amber-50/30 to-background">
+      <section id="gerador" className="bg-gradient-to-b from-amber-50 via-amber-50/30 to-background">
         <div className="container mx-auto px-4 py-6 lg:py-10">
           {/* Header */}
           <header className="flex flex-col items-center text-center max-w-3xl mx-auto mb-8">
@@ -255,7 +255,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
           </header>
 
           {/* Main layout: side-by-side on desktop */}
-          <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto">
+          <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto h-auto">
             {/* Left column: prompt + controls */}
             <div className="flex-1 min-w-0 space-y-4">
               {/* Prompt input */}
@@ -451,7 +451,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
             {/* Right column: generated activity (desktop) / below (mobile) */}
             <div
               ref={resultRef}
-              className={`lg:w-[480px] lg:shrink-0 ${generatedImage ? "block" : "hidden lg:block"}`}
+              className={`lg:w-[480px] ${generatedImage ? "flex" : "hidden lg:flex"}`}
             >
               {generatedImage ? (
                 <div className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto rounded-xl border-2 border-green-400 bg-green-50 overflow-hidden">
@@ -508,7 +508,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                   </div>
                 </div>
               ) : (
-                <div className="hidden lg:flex items-center justify-center h-64 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                <div className="flex-1 hidden lg:flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
                   <div className="text-center text-gray-400">
                     <Sparkles className="w-10 h-10 mx-auto mb-2 opacity-40" />
                     <p className="text-sm">Sua atividade aparecera aqui</p>
