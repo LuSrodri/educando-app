@@ -454,7 +454,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
               className={`lg:w-[480px] ${generatedImage ? "flex" : "hidden lg:flex"}`}
             >
               {generatedImage ? (
-                <div className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto rounded-xl border-2 border-green-400 bg-green-50 overflow-hidden">
+                <div className="lg:sticky lg:top-4 lg:overflow-y-auto rounded-xl border-2 border-green-400 bg-green-50 overflow-hidden">
                   <div className="p-3">
                     <img
                       src={generatedImage}
