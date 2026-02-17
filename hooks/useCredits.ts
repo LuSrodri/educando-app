@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { FREE_WEEKLY_LIMIT, FREE_DAILY_LIMIT, PRICE_PER_ACTIVITY, PRICING_PACKAGES } from "@/lib/session"
+
+const FREE_DAILY_LIMIT = 5
 
 interface CreditsState {
-  weeklyUsage: number
-  extraCredits: number
+  dailyUsage: number
   remainingFree: number
   isLoading: boolean
   error: Error | null
@@ -13,9 +13,8 @@ interface CreditsState {
 
 export function useCredits(browserId: string | null) {
   const [state, setState] = useState<CreditsState>({
-    weeklyUsage: 0,
-    extraCredits: 0,
-    remainingFree: FREE_WEEKLY_LIMIT,
+    dailyUsage: 0,
+    remainingFree: FREE_DAILY_LIMIT,
     isLoading: true,
     error: null,
   })
@@ -34,11 +33,11 @@ export function useCredits(browserId: string | null) {
       }
 
       const data = await response.json()
+      const usage = data.dailyUsage || 0
 
       setState({
-        weeklyUsage: data.weeklyUsage || data.dailyUsage || 0,
-        extraCredits: data.extraCredits || 0,
-        remainingFree: Math.max(0, FREE_WEEKLY_LIMIT - (data.weeklyUsage || data.dailyUsage || 0)),
+        dailyUsage: usage,
+        remainingFree: Math.max(0, FREE_DAILY_LIMIT - usage),
         isLoading: false,
         error: null,
       })
@@ -55,7 +54,7 @@ export function useCredits(browserId: string | null) {
     fetchCredits()
   }, [fetchCredits])
 
-  const canGenerate = state.remainingFree > 0 || state.extraCredits > 0
+  const canGenerate = state.remainingFree > 0
 
   const refresh = useCallback(() => {
     setState((prev) => ({ ...prev, isLoading: true }))
@@ -63,18 +62,12 @@ export function useCredits(browserId: string | null) {
   }, [fetchCredits])
 
   return {
-    weeklyUsage: state.weeklyUsage,
-    // Keep dailyUsage for backwards compatibility
-    dailyUsage: state.weeklyUsage,
-    extraCredits: state.extraCredits,
+    dailyUsage: state.dailyUsage,
     remainingFree: state.remainingFree,
     canGenerate,
     isLoading: state.isLoading,
     error: state.error,
     refresh,
-    FREE_WEEKLY_LIMIT,
     FREE_DAILY_LIMIT,
-    PRICE_PER_ACTIVITY,
-    PRICING_PACKAGES,
   }
 }

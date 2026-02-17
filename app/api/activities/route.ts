@@ -6,7 +6,6 @@ export async function GET(req: Request) {
     const browserId = url.searchParams.get("browserId")
     const limit = parseInt(url.searchParams.get("limit") || "20")
     const offset = parseInt(url.searchParams.get("offset") || "0")
-    const rootOnly = url.searchParams.get("rootOnly") === "true"
 
     if (!browserId) {
       return Response.json({ error: "Browser ID is required" }, { status: 400 })
@@ -14,18 +13,12 @@ export async function GET(req: Request) {
 
     const supabase = createServerClient()
 
-    let query = supabase
+    const { data, error } = await supabase
       .from("activities")
       .select("*")
       .eq("browser_id", browserId)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1)
-
-    if (rootOnly) {
-      query = query.is("parent_id", null)
-    }
-
-    const { data, error } = await query
 
     if (error) {
       console.error("Error fetching activities:", error)

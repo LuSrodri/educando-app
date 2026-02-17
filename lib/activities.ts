@@ -2,7 +2,7 @@ import { createServerClient } from "@/lib/supabase/server"
 import type { Activity, InsertTables } from "@/lib/supabase/types"
 
 export async function createActivity(
-  data: Omit<InsertTables<"activities">, "id" | "created_at" | "version_number" | "root_id">
+  data: Omit<InsertTables<"activities">, "id" | "created_at">
 ): Promise<Activity> {
   const supabase = createServerClient()
 
@@ -49,52 +49,16 @@ export async function getActivitiesByBrowser(
   return data || []
 }
 
-export async function getRootActivities(
-  browserId: string,
-  limit = 50,
-  offset = 0
-): Promise<Activity[]> {
+export async function getAllActivities(limit = 100, offset = 0): Promise<Activity[]> {
   const supabase = createServerClient()
 
   const { data } = await supabase
     .from("activities")
     .select("*")
-    .eq("browser_id", browserId)
-    .is("parent_id", null)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1)
 
   return data || []
-}
-
-export async function getActivityTree(rootId: string): Promise<Activity[]> {
-  const supabase = createServerClient()
-
-  const { data } = await supabase
-    .from("activities")
-    .select("*")
-    .eq("root_id", rootId)
-    .order("version_number", { ascending: true })
-
-  return data || []
-}
-
-export async function getActivityVersionChain(activityId: string): Promise<Activity[]> {
-  const supabase = createServerClient()
-
-  // First, get the root_id of this activity
-  const { data: activity } = await supabase
-    .from("activities")
-    .select("root_id")
-    .eq("id", activityId)
-    .single()
-
-  if (!activity?.root_id) {
-    return []
-  }
-
-  // Then get all activities in this chain
-  return getActivityTree(activity.root_id)
 }
 
 export async function uploadActivityImage(
@@ -128,77 +92,9 @@ export async function getActivityImageUrl(imagePath: string): Promise<string> {
 
   const { data } = await supabase.storage
     .from("activities")
-    .createSignedUrl(imagePath, 3600) // 1 hour expiration
+    .createSignedUrl(imagePath, 3600)
 
   return data?.signedUrl || ""
-}
-
-export async function deleteActivity(activityId: string): Promise<void> {
-  const supabase = createServerClient()
-
-  // Get activity to find image path
-  const { data: activity } = await supabase
-    .from("activities")
-    .select("image_path")
-    .eq("id", activityId)
-    .single()
-
-  if (activity?.image_path) {
-    // Delete image from storage
-    await supabase.storage.from("activities").remove([activity.image_path])
-  }
-
-  // Delete activity record
-  const { error } = await supabase.from("activities").delete().eq("id", activityId)
-
-  if (error) {
-    console.error("Error deleting activity:", error)
-    throw new Error("Failed to delete activity")
-  }
-}
-
-export async function shareActivity(activityId: string): Promise<Activity> {
-  const supabase = createServerClient()
-
-  const { data: activity, error } = await supabase
-    .from("activities")
-    .update({ shared_at: new Date().toISOString() })
-    .eq("id", activityId)
-    .select()
-    .single()
-
-  if (error || !activity) {
-    console.error("Error sharing activity:", error)
-    throw new Error("Failed to share activity")
-  }
-
-  return activity
-}
-
-export async function getSharedActivity(activityId: string): Promise<Activity | null> {
-  const supabase = createServerClient()
-
-  const { data } = await supabase
-    .from("activities")
-    .select("*")
-    .eq("id", activityId)
-    .not("shared_at", "is", null)
-    .single()
-
-  return data
-}
-
-export async function getSharedActivities(limit = 100): Promise<Activity[]> {
-  const supabase = createServerClient()
-
-  const { data } = await supabase
-    .from("activities")
-    .select("*")
-    .not("shared_at", "is", null)
-    .order("shared_at", { ascending: false })
-    .limit(limit)
-
-  return data || []
 }
 
 export async function getActivityImageBuffer(imagePath: string): Promise<Blob | null> {

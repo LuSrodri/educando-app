@@ -28,6 +28,7 @@ export type Database = {
           created_at?: string
           last_seen_at?: string
         }
+        Relationships: []
       }
       daily_usage: {
         Row: {
@@ -48,76 +49,37 @@ export type Database = {
           usage_date?: string
           count?: number
         }
-      }
-      credits: {
-        Row: {
-          id: string
-          browser_id: string
-          count: number
-        }
-        Insert: {
-          id?: string
-          browser_id: string
-          count?: number
-        }
-        Update: {
-          id?: string
-          browser_id?: string
-          count?: number
-        }
+        Relationships: []
       }
       activities: {
         Row: {
           id: string
           browser_id: string
-          parent_id: string | null
-          root_id: string | null
           original_prompt: string
           improved_prompt: string | null
-          edit_prompt: string | null
-          educational_level: string
-          grade: string | null
           image_path: string
           image_media_type: string
-          generation_type: "original" | "edit" | "fork"
-          version_number: number
           created_at: string
-          shared_at: string | null
         }
         Insert: {
           id?: string
           browser_id: string
-          parent_id?: string | null
-          root_id?: string | null
           original_prompt: string
           improved_prompt?: string | null
-          edit_prompt?: string | null
-          educational_level: string
-          grade?: string | null
           image_path: string
           image_media_type?: string
-          generation_type: "original" | "edit" | "fork"
-          version_number?: number
           created_at?: string
-          shared_at?: string | null
         }
         Update: {
           id?: string
           browser_id?: string
-          parent_id?: string | null
-          root_id?: string | null
           original_prompt?: string
           improved_prompt?: string | null
-          edit_prompt?: string | null
-          educational_level?: string
-          grade?: string | null
           image_path?: string
           image_media_type?: string
-          generation_type?: "original" | "edit" | "fork"
-          version_number?: number
           created_at?: string
-          shared_at?: string | null
         }
+        Relationships: []
       }
     }
     Views: {
@@ -127,6 +89,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
       [_ in never]: never
     }
   }
@@ -141,5 +106,4 @@ export type UpdateTables<T extends keyof Database["public"]["Tables"]> =
 
 export type Browser = Tables<"browsers">
 export type DailyUsage = Tables<"daily_usage">
-export type Credits = Tables<"credits">
 export type Activity = Tables<"activities">

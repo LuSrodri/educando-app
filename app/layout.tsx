@@ -1,49 +1,45 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
-import { Nunito, Nunito_Sans } from "next/font/google"
+import { Space_Grotesk, Plus_Jakarta_Sans } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 
-const _nunito = Nunito({ subsets: ["latin"] })
-const _nunitoSans = Nunito_Sans({ subsets: ["latin"] })
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  display: "swap",
+})
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://educando.app"),
   title: {
-    default: "Crie atividades escolares alinhadas à BNCC a partir de um tema — prontas para imprimir — em 30 segundos. Sem login. 3 atividades gratuitas por dia. Acesse educando.app",
+    default: "educando.app — Crie atividades escolares com IA em 30 segundos. 5 por dia, gratis.",
     template: "%s | educando.app",
   },
   description:
-    "Com o educando.app, você transforma qualquer tema em atividades pedagógicas completas, com códigos da BNCC e prontas para imprimir. Tudo em segundos, direto no navegador e sem necessidade de login. Recupere seu tempo livre e garanta aulas criativas hoje mesmo!",
+    "Com o educando.app, voce transforma qualquer tema em atividades pedagogicas completas, com codigos da BNCC e prontas para imprimir. Tudo em segundos, direto no navegador e sem necessidade de login.",
   keywords: [
     "gerador de atividades",
     "atividades escolares",
     "ensino fundamental",
     "BNCC",
-    "alfabetização",
+    "alfabetizacao",
     "atividades para imprimir",
     "professor",
-    "educação",
-    "inteligência artificial",
-    "IA educação",
-    "atividades 1º ano",
-    "atividades 2º ano",
-    "atividades 3º ano",
-    "atividades 4º ano",
-    "atividades 5º ano",
-    "atividades 6º ano",
-    "atividades 7º ano",
-    "atividades 8º ano",
-    "atividades 9º ano",
-    "ensino fundamental I",
-    "ensino fundamental II",
-    "educação infantil",
-    "pré-escola",
-    "material didático",
-    "recurso pedagógico",
+    "educacao",
+    "inteligencia artificial",
+    "IA educacao",
+    "material didatico",
+    "recurso pedagogico",
     "30 segundos",
     "sem login",
-    "histórico de atividades",
+    "gratis",
   ],
   authors: [{ name: "educando.app" }],
   creator: "educando.app",
@@ -64,9 +60,9 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     url: "https://educando.app",
     siteName: "educando.app",
-    title: "Crie atividades escolares alinhadas à BNCC a partir de um tema — prontas para imprimir — em 30 segundos. Sem login. 3 atividades gratuitas por dia. Acesse educando.app",
+    title: "educando.app — Crie atividades escolares com IA em 30 segundos",
     description:
-      "Com o educando.app, você transforma qualquer tema em atividades pedagógicas completas, com códigos da BNCC e prontas para imprimir. Tudo em segundos, direto no navegador e sem necessidade de login. Recupere seu tempo livre e garanta aulas criativas hoje mesmo!",
+      "Transforme qualquer tema em atividades pedagogicas completas, alinhadas a BNCC e prontas para imprimir. 5 atividades gratis por dia!",
     images: [
       {
         url: "/og-image.png",
@@ -78,9 +74,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Crie atividades escolares alinhadas à BNCC a partir de um tema — prontas para imprimir — em 30 segundos. Sem login. 3 atividades gratuitas por dia. Acesse educando.app",
+    title: "educando.app — Crie atividades escolares com IA em 30 segundos",
     description:
-      "Com o educando.app, você transforma qualquer tema em atividades pedagógicas completas, com códigos da BNCC e prontas para imprimir. Tudo em segundos, direto no navegador e sem necessidade de login. Recupere seu tempo livre e garanta aulas criativas hoje mesmo!",
+      "Transforme qualquer tema em atividades pedagogicas completas, alinhadas a BNCC e prontas para imprimir.",
     images: ["/og-image.png"],
   },
   alternates: {
@@ -102,7 +98,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`font-sans antialiased`}>
+      <body className={`${plusJakartaSans.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
         {children}
         <Analytics />
       </body>

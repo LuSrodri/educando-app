@@ -10,7 +10,6 @@ export async function POST(req: Request) {
 
     const supabase = createServerClient()
 
-    // Upsert browser record
     const { data, error } = await supabase
       .from("browsers")
       .upsert(
@@ -48,7 +47,6 @@ export async function GET(req: Request) {
 
     const supabase = createServerClient()
 
-    // Get browser data with usage and credits
     const { data: browser } = await supabase
       .from("browsers")
       .select("*")
@@ -59,32 +57,21 @@ export async function GET(req: Request) {
       return Response.json({ error: "Browser not found" }, { status: 404 })
     }
 
-    // Get weekly usage (last 8 days)
-    const eightDaysAgo = new Date()
-    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8)
-    const startDate = eightDaysAgo.toISOString().split("T")[0]
+    // Get today's usage
+    const today = new Date().toISOString().split("T")[0]
 
     const { data: usageData } = await supabase
       .from("daily_usage")
       .select("count")
       .eq("browser_id", browserId)
-      .gte("usage_date", startDate)
-
-    const weeklyUsage = usageData?.reduce((sum, row) => sum + (row.count || 0), 0) || 0
-
-    // Get credits
-    const { data: credits } = await supabase
-      .from("credits")
-      .select("count")
-      .eq("browser_id", browserId)
+      .eq("usage_date", today)
       .single()
+
+    const dailyUsage = usageData?.count || 0
 
     return Response.json({
       browser,
-      weeklyUsage,
-      // Keep dailyUsage for backwards compatibility
-      dailyUsage: weeklyUsage,
-      extraCredits: credits?.count || 0,
+      dailyUsage,
     })
   } catch (error) {
     console.error("Error in browser API:", error)

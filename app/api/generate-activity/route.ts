@@ -1,180 +1,105 @@
-import { GoogleGenAI } from "@google/genai"
+import Replicate from "replicate"
 import { createServerClient } from "@/lib/supabase/server"
-import { incrementDailyUsage, useExtraCredit, canGenerateFree, getExtraCredits } from "@/lib/credits"
-import { getEducationalLevelPromptContext, type EducationalLevelId } from "@/types/educational-levels"
+import { incrementDailyUsage, canGenerateFree } from "@/lib/credits"
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
-
-// Interface para os elementos da atividade
-interface ActivityElements {
-  header: boolean
-  title: boolean
-  instructions: boolean
-  illustrations: boolean
-  bncc: boolean
-}
-
-// Função para construir instruções baseadas nos elementos selecionados
-function buildElementsInstructions(elements: ActivityElements, activityType: string): string {
-  const instructions: string[] = []
-
-  if (elements.title) {
-    instructions.push("- Ter um título claro no topo")
-  }
-
-  if (elements.header) {
-    instructions.push("- Incluir espaço para nome do aluno e data")
-  }
-
-  if (elements.instructions) {
-    instructions.push("- Ter instruções/enunciados claros e simples")
-  }
-
-  if (elements.illustrations) {
-    instructions.push("- Ter ilustrações educativas e atraentes")
-    instructions.push("- Os elementos visuais DEVEM SEMPRE ser coerentes com os textos e enunciados")
-  } else {
-    instructions.push("- NÃO incluir ilustrações ou imagens decorativas")
-  }
-
-  if (elements.bncc) {
-    instructions.push("- Incluir referência BNCC no rodapé")
-  } else {
-    instructions.push("- NÃO incluir referência à BNCC")
-  }
-
-  // Instruções comuns
-  instructions.push("- Ser visualmente organizada e fácil de ler")
-  instructions.push("- Ter espaços adequados para as respostas")
-  instructions.push("- Usar fontes legíveis e tamanho apropriado para a faixa etária")
-  instructions.push("- Ser em formato de documento A4 pronto para imprimir")
-  instructions.push("- As tarefas devem ter poucos ou nenhum exemplos, e NUNCA DEVEM induzir ao erro")
-
-  return instructions.join("\n")
-}
-
-// Função para obter contexto baseado no tipo de atividade
-function getActivityTypeContext(activityType: string): string {
-  if (activityType === "teacher_support") {
-    return `
-TIPO DE MATERIAL: Material de Apoio Pedagógico para Professor
-Este material é um RECURSO DE APOIO para uso do professor em sala de aula.
-Deve ser prático e direto, sem necessidade de elementos pedagógicos complexos.
-Exemplos: silabário para recorte, cartões de letras, fichas para montagem, material manipulável.
-O layout deve ser funcional e otimizado para recorte/manipulação quando aplicável.
-NÃO incluir espaços para nome do aluno ou cabeçalhos formais de atividade.`
-  }
-
-  return `
-TIPO DE MATERIAL: Atividade para o Aluno
-Este é um material pedagógico completo para ser entregue ao aluno.
-Deve seguir uma organização pedagógica focada na experiência do aluno.
-Incluir todos os elementos tradicionais de uma atividade escolar brasileira.`
-}
+const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN! })
 
 export async function POST(req: Request) {
   try {
-    const { prompt, browserId, educationalLevel, grade, improvedPrompt, activityType, elements } = await req.json()
+    const { prompt, browserId, improvedPrompt } = await req.json()
 
     if (!browserId) {
       return Response.json({ error: "Browser ID is required" }, { status: 400 })
     }
 
-    // Check if user can generate (free or paid)
-    const canGenerateForFree = await canGenerateFree(browserId)
-    const extraCredits = await getExtraCredits(browserId)
-    const willUsePaidCredit = !canGenerateForFree && extraCredits > 0
-
-    // If no free credits and no paid credits, block generation
-    if (!canGenerateForFree && extraCredits <= 0) {
-      return Response.json({ error: "No credits available" }, { status: 403 })
+    // Check daily limit
+    const canGenerate = await canGenerateFree(browserId)
+    if (!canGenerate) {
+      return Response.json({ error: "Limite diário de atividades atingido. Tente novamente amanhã!" }, { status: 403 })
     }
 
-    const levelContext = getEducationalLevelPromptContext(
-      (educationalLevel as EducationalLevelId) || "fundamental_1",
-      grade || "1"
-    )
+    // Safety check
+    try {
+      const safetyResponse = await fetch(new URL("/api/check-prompt-safety", req.url).toString(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      })
 
-    // Elementos padrão se não fornecidos
-    const activityElements: ActivityElements = elements || {
-      header: true,
-      title: true,
-      instructions: true,
-      illustrations: true,
-      bncc: true,
-    }
-
-    const elementsInstructions = buildElementsInstructions(activityElements, activityType || "student")
-    const activityTypeContext = getActivityTypeContext(activityType || "student")
-
-    const fullPrompt = `FORMATO OBRIGATÓRIO: Documento em formato FOLHA A4 (210mm x 297mm), orientação RETRATO, pronto para impressão.
-
-Crie um material escolar em português brasileiro, com o seguinte tema:
-
-${levelContext}
-${activityTypeContext}
-
-PROMPT_FROM_USER_START
-${improvedPrompt || prompt}
-PROMPT_FROM_USER_END
-
-O material deve:
-${elementsInstructions}
-
-IMPORTANTE: O documento DEVE estar em formato A4 retrato, ocupando toda a folha de forma organizada e pronta para imprimir.`
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3-pro-image-preview",
-      config: {
-        responseModalities: ["IMAGE"],
-        imageConfig: {
-          imageSize: "2K",
-        },
-      },
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: fullPrompt }],
-        },
-      ],
-    })
-
-    // Extract image from response
-    let imageData: { base64: string; mediaType: string } | null = null
-
-    if (response.candidates?.[0]?.content?.parts) {
-      for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData) {
-          imageData = {
-            base64: part.inlineData.data || "",
-            mediaType: part.inlineData.mimeType || "image/png",
-          }
-          break
+      if (safetyResponse.ok) {
+        const safetyData = await safetyResponse.json()
+        if (safetyData.isCheating) {
+          return Response.json(
+            { error: "Não foi possível processar sua solicitação. Tente novamente mais tarde.", isSafetyBlock: true },
+            { status: 400 }
+          )
         }
       }
+    } catch (safetyError) {
+      console.error("Safety check error (continuing):", safetyError)
     }
 
-    if (!imageData) {
+    const finalPrompt = improvedPrompt || prompt
+
+    // Generate image via Replicate seedream-4
+    const output = await replicate.run("bytedance/seedream-4", {
+      input: {
+        size: "custom",
+        width: 2480,
+        height: 3508,
+        prompt: finalPrompt,
+        max_images: 1,
+        image_input: [],
+        aspect_ratio: "match_input_image",
+        enhance_prompt: false,
+        sequential_image_generation: "disabled",
+      },
+    })
+
+    // Replicate SDK returns FileOutput objects with .url() method, or plain strings
+    let imageUrl: string | null = null
+
+    if (Array.isArray(output) && output.length > 0) {
+      const item = output[0]
+      if (typeof item === "string") {
+        imageUrl = item
+      } else if (item && typeof item === "object" && typeof item.url === "function") {
+        imageUrl = item.url().href
+      } else {
+        imageUrl = String(item)
+      }
+    } else if (typeof output === "string") {
+      imageUrl = output
+    }
+
+    if (!imageUrl) {
       return Response.json({ error: "Nenhuma imagem gerada" }, { status: 500 })
     }
+
+    // Download image from Replicate URL
+    const imageResponse = await fetch(imageUrl)
+    if (!imageResponse.ok) {
+      return Response.json({ error: "Erro ao baixar imagem gerada" }, { status: 500 })
+    }
+
+    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer())
+    const mediaType = imageResponse.headers.get("content-type") || "image/jpeg"
+    const extension = mediaType.includes("png") ? "png" : "jpg"
 
     // Save to Supabase
     const supabase = createServerClient()
     const activityId = crypto.randomUUID()
-    const imagePath = `${browserId}/${activityId}/activity.png`
+    const imagePath = `${browserId}/${activityId}/activity.${extension}`
 
-    // Upload image to storage
-    const imageBuffer = Buffer.from(imageData.base64, "base64")
     const { error: uploadError } = await supabase.storage
       .from("activities")
       .upload(imagePath, imageBuffer, {
-        contentType: imageData.mediaType,
+        contentType: mediaType,
         upsert: true,
       })
 
     if (uploadError) {
       console.error("Error uploading image:", uploadError)
-      // Continue without saving to storage, just return the image
     }
 
     // Create activity record
@@ -185,11 +110,8 @@ IMPORTANTE: O documento DEVE estar em formato A4 retrato, ocupando toda a folha 
         browser_id: browserId,
         original_prompt: prompt,
         improved_prompt: improvedPrompt || prompt,
-        educational_level: educationalLevel || "fundamental_1",
-        grade: grade || "1",
         image_path: imagePath,
-        image_media_type: imageData.mediaType,
-        generation_type: "original",
+        image_media_type: mediaType,
       })
       .select()
       .single()
@@ -198,30 +120,18 @@ IMPORTANTE: O documento DEVE estar em formato A4 retrato, ocupando toda a folha 
       console.error("Error creating activity:", activityError)
     }
 
-    // Deduct credits only after successful generation
-    if (canGenerateForFree) {
-      await incrementDailyUsage(browserId)
-    } else if (willUsePaidCredit) {
-      await useExtraCredit(browserId)
-    }
+    // Deduct credit
+    await incrementDailyUsage(browserId)
 
-    // Extract text from response
-    let text = ""
-    if (response.candidates?.[0]?.content?.parts) {
-      for (const part of response.candidates[0].content.parts) {
-        if (part.text) {
-          text += part.text
-        }
-      }
-    }
+    // Convert to base64 for client
+    const base64 = imageBuffer.toString("base64")
 
     return Response.json({
-      text,
-      image: imageData,
+      image: { base64, mediaType },
       activity,
     })
   } catch (error) {
     console.error("Error generating activity:", error)
-    return Response.json({ error: "Failed to generate activity" }, { status: 500 })
+    return Response.json({ error: "Erro ao gerar atividade. Tente novamente." }, { status: 500 })
   }
 }

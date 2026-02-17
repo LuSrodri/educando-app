@@ -12,7 +12,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     const supabase = createServerClient()
 
-    // Check if activity exists
     const { data: activity, error: fetchError } = await supabase
       .from("activities")
       .select("*")
@@ -23,27 +22,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return Response.json({ error: "Activity not found" }, { status: 404 })
     }
 
-    // Mark as shared if not already
-    if (!activity.shared_at) {
-      const { error: updateError } = await supabase
-        .from("activities")
-        .update({ shared_at: new Date().toISOString() })
-        .eq("id", id)
-
-      if (updateError) {
-        console.error("Error marking activity as shared:", updateError)
-        return Response.json({ error: "Failed to share activity" }, { status: 500 })
-      }
-    }
-
     const shareUrl = `${BASE_URL}/atividade/${id}`
 
     return Response.json({
       shareUrl,
-      activity: {
-        ...activity,
-        shared_at: activity.shared_at || new Date().toISOString(),
-      },
+      activity,
     })
   } catch (error) {
     console.error("Error in share API:", error)
@@ -71,15 +54,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return Response.json({ error: "Activity not found" }, { status: 404 })
     }
 
-    // Only return data if activity is shared
-    if (!activity.shared_at) {
-      return Response.json({ error: "Activity is not shared" }, { status: 403 })
-    }
-
-    // Get signed URL for image (long expiration since it's shared)
     const { data: signedUrl } = await supabase.storage
       .from("activities")
-      .createSignedUrl(activity.image_path, 3600) // 1 hour, will be proxied anyway
+      .createSignedUrl(activity.image_path, 3600)
 
     return Response.json({
       activity,
