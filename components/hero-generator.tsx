@@ -82,7 +82,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
   const improvingMessages = [
     "Aprimorando seu prompt com IA...",
-    "Analisando o contexto pedagogico...",
+    "Analisando o contexto pedagógico...",
     "Alinhando com a BNCC...",
   ]
 
@@ -90,8 +90,8 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
     "Gerando sua atividade...",
     "Criando os elementos visuais...",
     "Organizando o layout A4...",
-    "Adicionando ilustracoes educativas...",
-    "Preparando material para impressao...",
+    "Adicionando ilustrações educativas...",
+    "Preparando material para impressão...",
     "Finalizando a atividade...",
     "Quase pronto...",
   ]
@@ -125,7 +125,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
     if (!prompt.trim() || !browserId) return
 
     if (!canGenerate) {
-      setError("Limite diario de atividades atingido. Tente novamente amanha!")
+      setError("Limite diário de atividades atingido. Tente novamente amanhã!")
       return
     }
 
@@ -166,11 +166,11 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
       if (!response.ok) {
         const errorData = await response.json()
         if (errorData.isSafetyBlock) {
-          setError("Nao foi possivel processar sua solicitacao. Tente novamente mais tarde.")
+          setError("Não foi possível processar sua solicitação. Tente novamente mais tarde.")
           return
         }
         if (response.status === 403) {
-          setError("Limite diario de atividades atingido. Tente novamente amanha!")
+          setError("Limite diário de atividades atingido. Tente novamente amanhã!")
           return
         }
         throw new Error(errorData.error || "Erro ao gerar atividade")
@@ -231,10 +231,10 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   }
 
   const suggestions = [
-    "Atividade de alfabetizacao com as vogais",
+    "Atividade de alfabetização com as vogais",
     "Tabuada divertida do 2 ao 5",
-    "Interpretacao de texto para 4o ano",
-    "Ciencias: ciclo da agua para 3o ano",
+    "Interpretação de texto para 4º ano",
+    "Ciências: ciclo da água para 3º ano",
   ]
 
   return (
@@ -248,9 +248,9 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
               Crie atividades escolares em <br/><span className="text-amber-600">30 segundos</span>
             </h1>
             <p className="text-base text-gray-600 max-w-xl">
-              Atividades pedagogicas alinhadas a BNCC, prontas para imprimir.
+              Atividades pedagógicas alinhadas à BNCC, prontas para imprimir.
               <br/>
-              <span className="text-amber-600 font-semibold"> 5 atividades gratis por dia!</span>
+              <span className="text-amber-600 font-semibold"> 5 atividades grátis por dia!</span>
             </p>
           </header>
 
@@ -263,7 +263,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                 <CardContent className="p-4 md:p-5 space-y-4">
                   <Textarea
                     ref={textareaRef}
-                    placeholder="Descreva a atividade que deseja gerar... Ex: Atividade de matematica sobre fracoes para 5o ano"
+                    placeholder="Descreva a atividade que deseja gerar... Ex: Atividade de matemática sobre frações para 5º ano"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     className="min-h-[100px] text-base text-gray-900 placeholder:text-gray-400 resize-none border-2 border-amber-200 focus:border-amber-500 focus:ring-amber-500 bg-white"
@@ -292,7 +292,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                       className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
                     >
                       {showAdvancedOptions ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      <span>Opcoes avancadas</span>
+                      <span>Opções avançadas</span>
                     </button>
 
                     {showAdvancedOptions && (
@@ -335,10 +335,10 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                             </p>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                               {[
-                                { key: "header" as const, label: "Cabecalho" },
-                                { key: "title" as const, label: "Titulo" },
+                                { key: "header" as const, label: "Cabeçalho" },
+                                { key: "title" as const, label: "Título" },
                                 { key: "instructions" as const, label: "Enunciado" },
-                                { key: "illustrations" as const, label: "Ilustracoes" },
+                                { key: "illustrations" as const, label: "Ilustrações" },
                                 { key: "bncc" as const, label: "Ref. BNCC" },
                               ].map(({ key, label }) => (
                                 <label key={key} className="flex items-center gap-2 cursor-pointer">
@@ -427,7 +427,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
               <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500">
                 <div className="flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Alfabetizacao ao 9o ano</span>
+                  <span>Alfabetização ao 9º ano</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Zap className="w-3.5 h-3.5 text-amber-600" />
@@ -511,7 +511,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                 <div className="flex-1 hidden lg:flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
                   <div className="text-center text-gray-400">
                     <Sparkles className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                    <p className="text-sm">Sua atividade aparecera aqui</p>
+                    <p className="text-sm">Sua atividade aparecerá aqui</p>
                   </div>
                 </div>
               )}

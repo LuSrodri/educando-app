@@ -95,7 +95,7 @@ export function ActivityHistoryCarousel() {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-gray-900 font-heading flex items-center gap-2">
           <History className="w-5 h-5 text-amber-600" />
-          Seu Historico
+          Seu Histórico
         </h2>
         <div className="flex gap-1">
           <button
@@ -172,7 +172,7 @@ export function ActivityHistoryCarousel() {
                 />
               ) : (
                 <div className="text-center py-8 text-gray-400 text-sm">
-                  Imagem nao disponivel
+                  Imagem não disponível
                 </div>
               )}
 

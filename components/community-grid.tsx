@@ -63,7 +63,7 @@ export function CommunityGrid({ initialActivities }: CommunityGridProps) {
       <div className="text-center py-12">
         <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
         <p className="text-gray-500">
-          Ainda nao ha atividades na comunidade.
+          Ainda não há atividades na comunidade.
         </p>
         <p className="text-gray-400 text-sm mt-1">
           Seja o primeiro a gerar uma atividade!

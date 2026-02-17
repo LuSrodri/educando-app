@@ -19,27 +19,27 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://educando.app"),
   title: {
-    default: "educando.app — Crie atividades escolares com IA em 30 segundos. 5 por dia, gratis.",
+    default: "educando.app — Crie atividades escolares com IA em 30 segundos. 5 por dia, grátis.",
     template: "%s | educando.app",
   },
   description:
-    "Com o educando.app, voce transforma qualquer tema em atividades pedagogicas completas, com codigos da BNCC e prontas para imprimir. Tudo em segundos, direto no navegador e sem necessidade de login.",
+    "Com o educando.app, você transforma qualquer tema em atividades pedagógicas completas, com códigos da BNCC e prontas para imprimir. Tudo em segundos, direto no navegador e sem necessidade de login.",
   keywords: [
     "gerador de atividades",
     "atividades escolares",
     "ensino fundamental",
     "BNCC",
-    "alfabetizacao",
+    "alfabetização",
     "atividades para imprimir",
     "professor",
-    "educacao",
-    "inteligencia artificial",
-    "IA educacao",
-    "material didatico",
-    "recurso pedagogico",
+    "educação",
+    "inteligência artificial",
+    "IA educação",
+    "material didático",
+    "recurso pedagógico",
     "30 segundos",
     "sem login",
-    "gratis",
+    "grátis",
   ],
   authors: [{ name: "educando.app" }],
   creator: "educando.app",
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     siteName: "educando.app",
     title: "educando.app — Crie atividades escolares com IA em 30 segundos",
     description:
-      "Transforme qualquer tema em atividades pedagogicas completas, alinhadas a BNCC e prontas para imprimir. 5 atividades gratis por dia!",
+      "Transforme qualquer tema em atividades pedagógicas completas, alinhadas à BNCC e prontas para imprimir. 5 atividades grátis por dia!",
     images: [
       {
         url: "/og-image.png",
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "educando.app — Crie atividades escolares com IA em 30 segundos",
     description:
-      "Transforme qualquer tema em atividades pedagogicas completas, alinhadas a BNCC e prontas para imprimir.",
+      "Transforme qualquer tema em atividades pedagógicas completas, alinhadas à BNCC e prontas para imprimir.",
     images: ["/og-image.png"],
   },
   alternates: {

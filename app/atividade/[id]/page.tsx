@@ -40,14 +40,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!activity) {
     return {
-      title: "Atividade nao encontrada | educando.app",
-      description: "A atividade solicitada nao foi encontrada.",
+      title: "Atividade não encontrada | educando.app",
+      description: "A atividade solicitada não foi encontrada.",
     }
   }
 
   const promptPreview = truncate(activity.original_prompt, 60)
   const title = `Atividade: ${promptPreview}`
-  const description = `Atividade pedagogica criada com educando.app - Gerador de atividades escolares alinhadas a BNCC.`
+  const description = `Atividade pedagógica criada com educando.app - Gerador de atividades escolares alinhadas à BNCC.`
   const imageUrl = `${BASE_URL}/api/share/${id}/image`
   const pageUrl = `${BASE_URL}/atividade/${id}`
 
@@ -56,9 +56,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     keywords: [
       "atividade escolar",
-      "educacao",
+      "educação",
       "BNCC",
-      "material didatico",
+      "material didático",
       "professor",
       "ensino fundamental",
     ],
@@ -126,7 +126,7 @@ export default async function SharedActivityPage({ params }: PageProps) {
         <div className="container mx-auto px-4 py-3">
           <Link href="/" className="text-amber-700 hover:text-amber-800 text-sm flex items-center gap-1 w-fit">
             <ArrowLeft className="w-4 h-4" />
-            Voltar ao inicio
+            Voltar ao início
           </Link>
         </div>
       </div>
@@ -170,17 +170,17 @@ export default async function SharedActivityPage({ params }: PageProps) {
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2 font-heading">
-                Crie sua propria atividade!
+                Crie sua própria atividade!
               </h2>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Com o educando.app, voce cria atividades pedagogicas personalizadas em apenas 30 segundos.
-                Sem login, sem complicacao.
+                Com o educando.app, você cria atividades pedagógicas personalizadas em apenas 30 segundos.
+                Sem login, sem complicação.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link href="/#gerador">
                   <Button size="lg" className="bg-amber-600 hover:bg-amber-700 text-white font-bold w-full sm:w-auto">
                     <Sparkles className="w-5 h-5 mr-2" />
-                    Gerar Atividade Gratis
+                    Gerar Atividade Grátis
                   </Button>
                 </Link>
                 <Link href="/">
