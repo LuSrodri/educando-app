@@ -1,8 +1,8 @@
-import Replicate from "replicate"
+import { GoogleGenAI } from "@google/genai"
 import { createServerClient } from "@/lib/supabase/server"
 import { incrementDailyUsage, canGenerateFree } from "@/lib/credits"
 
-const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN! })
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
 export async function POST(req: Request) {
   try {
@@ -20,33 +20,25 @@ export async function POST(req: Request) {
 
     const finalPrompt = improvedPrompt || prompt
 
-    // Generate image via Replicate
-    const output = await replicate.run("google/nano-banana-pro", {
-      input: {
-        prompt: finalPrompt,
-        resolution: "4K",
-        image_input: [],
-        aspect_ratio: "3:4",
-        output_format: "png",
-        safety_filter_level: "block_only_high"
+    // Generate image via Google GenAI
+    const response = await ai.models.generateContent({
+      model: "gemini-3-pro-image-preview",
+      contents: finalPrompt,
+      config: {
+        responseModalities: ["IMAGE"],
       },
-    }) as any
+    })
 
-    let imageUrl: string = output.url() || ""
+    const imagePart = response.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData)
 
-    if (!imageUrl) {
+    if (!imagePart?.inlineData?.data) {
       return Response.json({ error: "Nenhuma imagem gerada" }, { status: 500 })
     }
 
-    // Download image from Replicate URL
-    const imageResponse = await fetch(imageUrl)
-    if (!imageResponse.ok) {
-      return Response.json({ error: "Erro ao baixar imagem gerada" }, { status: 500 })
-    }
-
-    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer())
-    const mediaType = imageResponse.headers.get("content-type") || "image/jpeg"
+    const base64 = imagePart.inlineData.data
+    const mediaType = imagePart.inlineData.mimeType || "image/png"
     const extension = mediaType.includes("png") ? "png" : "jpg"
+    const imageBuffer = Buffer.from(base64, "base64")
 
     // Save to Supabase
     const supabase = createServerClient()
@@ -84,9 +76,6 @@ export async function POST(req: Request) {
 
     // Deduct credit
     await incrementDailyUsage(browserId)
-
-    // Convert to base64 for client
-    const base64 = imageBuffer.toString("base64")
 
     return Response.json({
       image: { base64, mediaType },

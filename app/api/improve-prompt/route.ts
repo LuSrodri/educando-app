@@ -29,9 +29,9 @@ function buildHardConstraints(elements: ActivityElements, activityType: Activity
     )
   } else {
     if (!elements.header) {
-      forbidden.push("cabeçalho, linhas para Nome e Data")
+      forbidden.push("cabeçalho, linhas para Nome, Data, e afins")
     } else {
-      required.push('cabeçalho com "Nome: _____________________ Data: ____/____/____"')
+      required.push('cabeçalho, linhas para Nome, Data, e afins"')
     }
 
     if (!elements.title) {
@@ -71,10 +71,10 @@ function buildHardConstraints(elements: ActivityElements, activityType: Activity
 
 const SYSTEM_INSTRUCTION = `Você é um especialista em design de materiais didáticos brasileiros e em engenharia de prompts para modelos de geração de imagem.
 
-Sua função é converter um pedido de atividade escolar em um prompt visual útil para o modelo de imagem google/nano-banana-pro.
+Sua função é converter um pedido de atividade escolar em um prompt visual útil para o modelo de imagem gemini-3-pro-image-preview.
 
 SOBRE O MODELO DE IMAGEM:
-- O google/nano-banana-pro gera exatamente o que o prompt descreve, nada mais, nada menos.
+- O gemini-3-pro-image-preview gera exatamente o que o prompt descreve, nada mais, nada menos.
 - Prompts eficazes descrevem o resultado visual final, mostrando as intenções pedagógicas.
 - Especifique posições na página, cores, textos que devem aparecer, tamanhos relativos dos elementos.
 - O prompt deve ser escrito como uma descrição visual com a real intenção..
@@ -164,11 +164,11 @@ IMPORTANTE: Escreva os textos reais que devem aparecer na atividade, não apenas
 Retorne APENAS o prompt, sem introdução, sem explicação, sem markdown.`
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-3-pro-preview",
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
       thinkingConfig: {
-        thinkingLevel: ThinkingLevel.LOW,
+        thinkingLevel: ThinkingLevel.HIGH,
       },
       tools: [
         {
