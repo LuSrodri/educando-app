@@ -22,8 +22,7 @@ O **educando.app** é uma ferramenta para professores criarem atividades pedagó
 
 ## Créditos
 
-- 3 atividades gratuitas por semana
-- Créditos extras disponíveis via pagamento PIX
+- 5 atividades gratuitas por dia
 
 ## Stack
 
@@ -31,7 +30,6 @@ O **educando.app** é uma ferramenta para professores criarem atividades pedagó
 - React 19
 - Supabase
 - Google GenAI
-- Mercado Pago
 - Tailwind CSS
 - Vercel
 
@@ -62,14 +60,6 @@ Obtenha em: [Supabase Dashboard](https://supabase.com/dashboard)
 | `GEMINI_API_KEY` | Chave da API do Google Gemini |
 
 Obtenha em: [Google AI Studio](https://aistudio.google.com/app/apikey)
-
-#### Mercado Pago (Pagamentos PIX)
-
-| Variável | Descrição |
-|----------|-----------|
-| `MERCADOPAGO_ACCESS_TOKEN` | Access Token (TEST-... para sandbox, APP-... para produção) |
-
-Obtenha em: [Mercado Pago Developers](https://www.mercadopago.com.br/developers/panel/app)
 
 #### Aplicação
 
