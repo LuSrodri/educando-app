@@ -1,4 +1,5 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai"
+import { canGenerateFree } from "@/lib/credits"
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
@@ -10,52 +11,120 @@ interface ActivityElements {
   bncc: boolean
 }
 
-function buildElementsContext(elements: ActivityElements): string {
-  const include: string[] = []
-  const exclude: string[] = []
+type ActivityType = "student" | "teacher_support"
 
-  if (elements.header) include.push("cabeçalho com espaço para nome do aluno e data")
-  else exclude.push("cabeçalho ou espaços para nome/data")
+function buildHardConstraints(elements: ActivityElements, activityType: ActivityType): string {
+  const forbidden: string[] = []
+  const required: string[] = []
 
-  if (elements.title) include.push("título claro e chamativo")
-  else exclude.push("título")
-
-  if (elements.instructions) include.push("enunciados e instruções claras")
-  else exclude.push("enunciados longos ou instruções detalhadas")
-
-  if (elements.illustrations) include.push("ilustrações educativas e atraentes")
-  else exclude.push("ilustrações ou imagens decorativas")
-
-  if (elements.bncc) include.push("referência à BNCC no rodapé")
-  else exclude.push("referência à BNCC")
-
-  let context = ""
-  if (include.length > 0) context += `\n**Elementos a INCLUIR:** ${include.join(", ")}.`
-  if (exclude.length > 0) context += `\n**Elementos a NÃO incluir:** ${exclude.join(", ")}.`
-
-  return context
-}
-
-function getActivityTypeContext(activityType: string): string {
   if (activityType === "teacher_support") {
-    return `
-**TIPO DE MATERIAL: Material de Apoio Pedagógico para Professor**
-Este NÃO é uma atividade para o aluno. É um MATERIAL DE APOIO para uso do professor.
-Exemplos: silabário para recorte, cartões de letras/números, fichas para montagem, material manipulável, jogos pedagógicos para imprimir.
-O material deve ser prático, funcional e otimizado para recorte/manipulação.
-NÃO incluir elementos formais de atividade escolar (cabeçalho, nome do aluno, etc).`
+    forbidden.push(
+      "cabeçalho com nome/data do aluno",
+      "enunciados dirigidos ao aluno",
+      "espaços para resposta individual"
+    )
+    required.push(
+      "layout funcional para recorte ou manipulação",
+      "elementos visuais grandes e bem definidos"
+    )
+  } else {
+    if (!elements.header) {
+      forbidden.push("cabeçalho, linhas para Nome e Data")
+    } else {
+      required.push('cabeçalho com "Nome: _____________________ Data: ____/____/____"')
+    }
+
+    if (!elements.title) {
+      forbidden.push("título da atividade")
+    } else {
+      required.push("título centralizado e chamativo no topo da folha")
+    }
+
+    if (!elements.instructions) {
+      forbidden.push("enunciados, instruções, textos de pergunta ou explicação")
+    } else {
+      required.push("enunciados claros para cada questão ou exercício")
+    }
+
+    if (!elements.illustrations) {
+      forbidden.push("ilustrações, desenhos, imagens decorativas, cliparts, ícones visuais de qualquer tipo")
+    } else {
+      required.push("ilustrações lúdicas e coloridas adequadas à faixa etária")
+    }
+
+    if (!elements.bncc) {
+      forbidden.push("referência à BNCC, código de habilidade BNCC, menção à Base Nacional Comum Curricular")
+    } else {
+      required.push('rodapé com "BNCC: [código exato] - [descrição da habilidade]"')
+    }
   }
 
-  return `
-**TIPO DE MATERIAL: Atividade para o Aluno**
-Este é um material pedagógico COMPLETO e pronto para ser entregue ao aluno.
-Deve seguir a estrutura tradicional de atividade escolar brasileira.`
+  let result = ""
+  if (forbidden.length > 0) {
+    result += `⛔ PROIBIDO — NÃO incluir de forma alguma:\n${forbidden.map((f) => `  • ${f}`).join("\n")}`
+  }
+  if (required.length > 0) {
+    result += `\n\n✅ OBRIGATÓRIO — deve aparecer no material:\n${required.map((r) => `  • ${r}`).join("\n")}`
+  }
+  return result
 }
 
-export async function POST(req: Request) {
-  const { prompt, activityType, elements } = await req.json()
+const SYSTEM_INSTRUCTION = `Você é um especialista em design de materiais didáticos brasileiros e em engenharia de prompts para modelos de geração de imagem.
 
-  const activityElements: ActivityElements = elements || {
+Sua função é converter um pedido de atividade escolar em um prompt visual extremamente específico para o modelo de imagem bytedance/seedream-4.5.
+
+SOBRE O MODELO DE IMAGEM:
+- O google/nano-banana-pro é literal: ele gera exatamente o que o prompt descreve, nada mais, nada menos.
+- Prompts eficazes descrevem o resultado visual final (o que SE VÊ na folha), não intenções pedagógicas.
+- Especifique: posições em pixels na página, cores exatas, textos exatos que devem aparecer, tamanhos relativos dos elementos.
+- O prompt deve ser escrito como uma descrição visual direta, no presente, não como instrução para um humano.
+- Evite termos, verbos, ou adjetivos dúbios, ou que possa ativar o gatilho de "conteúdo sensível" do modelo.
+
+FORMATO FIXO DO MATERIAL:
+- Folha A4 retrato: 2480px × 3508px, fundo branco puro (#FFFFFF)
+- Margem simples e uniforme de 59px em todos os lados
+- Pronto para enviar direto para impressão 300 DPI
+
+IDIOMA: Todo texto visível na atividade DEVE estar em Português do Brasil (PT-BR).
+CONTEXTO: Use nomes brasileiros, cenários e referências culturais do Brasil.`
+
+export async function POST(req: Request) {
+  const { prompt, activityType, elements, browserId } = await req.json()
+
+  // Check daily credit limit before doing anything
+  if (browserId) {
+    const canGenerate = await canGenerateFree(browserId)
+    if (!canGenerate) {
+      return Response.json(
+        { error: "Limite diário de atividades atingido. Tente novamente amanhã!", isCreditLimit: true },
+        { status: 403 }
+      )
+    }
+  }
+
+  // Safety check before improving the prompt
+  try {
+    const safetyResponse = await fetch(new URL("/api/check-prompt-safety", req.url).toString(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    })
+
+    if (safetyResponse.ok) {
+      const safetyData = await safetyResponse.json()
+      if (safetyData.isCheating) {
+        return Response.json(
+          { error: "Não foi possível processar sua solicitação. Tente novamente mais tarde.", isSafetyBlock: true },
+          { status: 400 }
+        )
+      }
+    }
+  } catch (safetyError) {
+    console.error("Safety check error (continuing):", safetyError)
+  }
+
+  const type: ActivityType = activityType || "student"
+  const activityElements: ActivityElements = (type === "student" ? elements : null) ?? {
     header: true,
     title: true,
     instructions: true,
@@ -63,87 +132,44 @@ export async function POST(req: Request) {
     bncc: true,
   }
 
-  const elementsContext = buildElementsContext(activityElements)
-  const activityTypeContext = getActivityTypeContext(activityType || "student")
+  const constraints = buildHardConstraints(activityElements, type)
 
-  const systemPrompt = `Você é um especialista em educação brasileira e em design de materiais didáticos.
+  const materialTypeLabel =
+    type === "teacher_support"
+      ? "Material de Apoio Pedagógico para Professor (silabário, cartões, fichas, jogo para imprimir)"
+      : "Atividade para o Aluno (folha de exercícios pronta para imprimir e entregar)"
 
-Sua tarefa é, de acordo com o seguinte pedido do usuário, gerar um prompt otimizado para uma IA de geração de imagens 
-criar um material pedagogicamente eficaz e útil.
+  const userMessage = `TIPO DE MATERIAL: ${materialTypeLabel}
 
-IMPORTANTE: O nível educacional e a série/ano devem ser inferidos a partir do próprio prompt do usuário. 
-Se o usuário mencionar um ano específico (ex: "3º ano"), uma faixa etária, ou um nível (ex: "alfabetização",
- "ensino fundamental"), use essa informação. Se não mencionar, assuma Ensino Fundamental I (1º ao 5º ano) como padrão.
+RESTRIÇÕES DE ELEMENTOS (seguir rigorosamente):
+${constraints}
 
-${activityTypeContext}
-${elementsContext}
+PEDIDO DO USUÁRIO: "${prompt}"
 
-Pedido original: "${prompt}"
+NÍVEL EDUCACIONAL: Infira do pedido. Se não mencionado, assuma Ensino Fundamental I (1º ao 5º ano).
 
-DIRETRIZES OBRIGATÓRIAS para o aprimoramento:
+---
 
-**FORMATO OBRIGATÓRIO:**
-- O material DEVE ser em formato FOLHA A4 RETRATO (2480px x 3508px)
-- Deve ocupar toda a folha de forma organizada
-- Deve estar pronto para impressão direta
+Gere o prompt visual detalhado para o seedream-4.5. Estruture assim:
 
-${activityElements.illustrations
-      ? `**Elementos Visuais e Estéticos:**
-- Inclua ilustrações lúdicas apropriadas para a faixa etária
-- Sugira ícones, mascotes ou personagens infantis quando apropriado
-- Especifique um layout organizado e limpo, adequado para folha A4`
-      : `**Layout:**
-- NÃO inclua ilustrações ou imagens decorativas
-- Foque em um layout limpo e funcional, adequado para folha A4`}
+1. Descrição geral da folha (esquema de cores, estilo visual, clima da atividade)
+2. De cima para baixo, cada seção com posição aproximada em pixels:
+   - Texto exato que aparece (títulos, enunciados, alternativas, exemplos, etc.)
+   - Estilo visual (cor, negrito, tamanho relativo)
+   - Ilustrações: descreva o que aparece em cada uma
+3. Espaços para resposta: linhas tracejadas, quadradinhos, lacunas — o que for adequado
+4. Rodapé
 
-**Contexto Cultural Brasileiro:**
-- Use referências à cultura brasileira quando relevante
-- Siga as diretrizes da BNCC (Base Nacional Comum Curricular)
-- Inclua nomes e contextos brasileiros nos exemplos
-- Respeite a diversidade cultural do Brasil
+IMPORTANTE: Escreva os textos reais que devem aparecer na atividade, não apenas "um título" — escreva o título completo. Não escreva "enunciados claros" — escreva os enunciados. Crie conteúdo concreto e pedagogicamente correto.
 
-**Língua Portuguesa Brasileira:**
-- Todo o texto DEVE estar em Português do Brasil (PT-BR)
-- Use ortografia oficial conforme o Acordo Ortográfico
-- Linguagem adequada à faixa etária
-- Enunciados claros e objetivos
+Retorne APENAS o prompt, sem introdução, sem explicação, sem markdown.`
 
-${activityType === "teacher_support"
-      ? `**Estrutura do Material de Apoio:**
-- Foque na funcionalidade e praticidade do material
-- Otimize para recorte, montagem ou manipulação quando aplicável
-- Use elementos visuais claros e bem definidos`
-      : `**Estrutura Pedagógica:**
-- Inclua espaços adequados para respostas (linhas, quadrados, lacunas)
-${activityElements.title ? "- Adicione um título e instruções claras" : ""}
-- Considere diferentes níveis de dificuldade quando apropriado`}
-
-${activityElements.bncc
-      ? `**Referência BNCC (OBRIGATÓRIO):**
-- A atividade DEVE incluir referência à BNCC
-- Formato: "BNCC: [Código] - [Habilidade]"
-- Identifique a Competência e Habilidade mais adequada ao conteúdo`
-      : `**Referência BNCC:**
-- NÃO incluir referência à BNCC neste material.`}
-
-Retorne APENAS o prompt aprimorado, sem explicações. O prompt deve instruir a geração de um material escolar brasileiro em formato A4 retrato.
-DEVE conter quais elementos serão gerados e suas posições na folha, seguindo as diretrizes acima. Seja específico e detalhado para garantir um resultado de alta qualidade.
-DEVE gerar os textos que devem aparecer na atividade, como título, enunciados, BNCC, instruções, e quaisquer outros textos relevantes.
-
-Basicamente você vai detalhar minuciosamente o que deve conter na folha A4, onde cada elemento deve estar posicionado, e como deve ser a aparência geral do material, seguindo as diretrizes fornecidas.
-
-Você DEVE apontar a disposição dos elementos na folha. Lembrando que a largura da folha A4 é 2480 pixels e a altura é 3508 pixels.
-
-O modelo de geração de imagens (bytedance/seedream-4.5) é extremamente literal, então seja o mais específico possível para garantir que o resultado final seja exatamente como desejado, coerente, e verdadeiramente útil para o ensino fundamental.
-
-A margem deve ser simples e exatamente de 59 pixels em todos os lados. O conteúdo deve estar dentro dessa margem.
-`
-
-  const response = await ai.models.generateContentStream({
-    model: "gemini-3-pro-preview",
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
     config: {
+      systemInstruction: SYSTEM_INSTRUCTION,
       thinkingConfig: {
-        thinkingLevel: ThinkingLevel.HIGH,
+        thinkingLevel: ThinkingLevel.LOW,
       },
       tools: [
         {
@@ -155,15 +181,12 @@ A margem deve ser simples e exatamente de 59 pixels em todos os lados. O conteú
     contents: [
       {
         role: "user",
-        parts: [{ text: systemPrompt }],
+        parts: [{ text: userMessage }],
       },
     ],
   })
 
-  let improvedPrompt = ""
-  for await (const chunk of response) {
-    improvedPrompt += chunk.text || ""
-  }
+  const improvedPrompt = response.text ?? ""
 
   return Response.json({ improvedPrompt })
 }

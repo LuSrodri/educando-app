@@ -92,7 +92,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
     "Organizando o layout A4...",
     "Adicionando ilustrações educativas...",
     "Preparando material para impressão...",
-    "Finalizando a atividade...",
+    "Polindo a atividade...",
     "Quase pronto...",
   ]
 
@@ -143,10 +143,22 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
           prompt,
           activityType,
           elements: activityType === "student" ? elements : undefined,
+          browserId,
         }),
       })
 
-      if (!improveResponse.ok) throw new Error("Erro ao melhorar prompt")
+      if (!improveResponse.ok) {
+        const improveError = await improveResponse.json()
+        if (improveError.isCreditLimit) {
+          setError("Limite diário de atividades atingido. Tente novamente amanhã!")
+          return
+        }
+        if (improveError.isSafetyBlock) {
+          setError("Não foi possível processar sua solicitação. Tente novamente mais tarde.")
+          return
+        }
+        throw new Error("Erro ao melhorar prompt")
+      }
 
       const improveData = await improveResponse.json()
       const finalPrompt = improveData.improvedPrompt || prompt
@@ -165,10 +177,6 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
       if (!response.ok) {
         const errorData = await response.json()
-        if (errorData.isSafetyBlock) {
-          setError("Não foi possível processar sua solicitação. Tente novamente mais tarde.")
-          return
-        }
         if (response.status === 403) {
           setError("Limite diário de atividades atingido. Tente novamente amanhã!")
           return
@@ -232,7 +240,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
   const suggestions = [
     "Atividade de alfabetização com as vogais",
-    "Tabuada divertida do 2 ao 5",
+    "Tabuada divertida do 7",
     "Interpretação de texto para 4º ano",
     "Ciências: ciclo da água para 3º ano",
   ]

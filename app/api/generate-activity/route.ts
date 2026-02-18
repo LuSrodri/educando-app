@@ -18,58 +18,21 @@ export async function POST(req: Request) {
       return Response.json({ error: "Limite diário de atividades atingido. Tente novamente amanhã!" }, { status: 403 })
     }
 
-    // Safety check
-    try {
-      const safetyResponse = await fetch(new URL("/api/check-prompt-safety", req.url).toString(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      })
-
-      if (safetyResponse.ok) {
-        const safetyData = await safetyResponse.json()
-        if (safetyData.isCheating) {
-          return Response.json(
-            { error: "Não foi possível processar sua solicitação. Tente novamente mais tarde.", isSafetyBlock: true },
-            { status: 400 }
-          )
-        }
-      }
-    } catch (safetyError) {
-      console.error("Safety check error (continuing):", safetyError)
-    }
-
     const finalPrompt = improvedPrompt || prompt
 
-    // Generate image via Replicate seedream-4
-    const output = await replicate.run("bytedance/seedream-4.5", {
+    // Generate image via Replicate
+    const output = await replicate.run("google/nano-banana-pro", {
       input: {
-        size: "custom",
-        width: 2480,
-        height: 3508,
         prompt: finalPrompt,
-        max_images: 1,
+        resolution: "4K",
         image_input: [],
-        aspect_ratio: "match_input_image",
-        sequential_image_generation: "disabled",
+        aspect_ratio: "3:4",
+        output_format: "png",
+        safety_filter_level: "block_only_high"
       },
-    })
+    }) as any
 
-    // Replicate SDK returns FileOutput objects with .url() method, or plain strings
-    let imageUrl: string | null = null
-
-    if (Array.isArray(output) && output.length > 0) {
-      const item = output[0]
-      if (typeof item === "string") {
-        imageUrl = item
-      } else if (item && typeof item === "object" && typeof item.url === "function") {
-        imageUrl = item.url().href
-      } else {
-        imageUrl = String(item)
-      }
-    } else if (typeof output === "string") {
-      imageUrl = output
-    }
+    let imageUrl: string = output.url() || ""
 
     if (!imageUrl) {
       return Response.json({ error: "Nenhuma imagem gerada" }, { status: 500 })
