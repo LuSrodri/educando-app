@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const promptPreview = truncate(activity.original_prompt, 60)
   const title = `Atividade: ${promptPreview}`
-  const description = `Atividade pedagógica criada com educando.app - Gerador de atividades escolares alinhadas à BNCC.`
+  const description = `Atividade pedagógica criada com educando.app - Gerador de atividades escolares alinhadas à BNCC. Descrição: ${activity.original_prompt}`
   const imageUrl = `${BASE_URL}/api/share/${id}/image`
   const pageUrl = `${BASE_URL}/atividade/${id}`
 
