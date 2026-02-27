@@ -31,7 +31,6 @@ export async function POST(req: Request) {
         imageConfig: {
           aspectRatio: "3:4",
           imageSize: "4K",
-          personGeneration: "",
         },
         responseModalities: [
           'IMAGE',
