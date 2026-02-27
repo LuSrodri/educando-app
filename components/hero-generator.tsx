@@ -425,8 +425,9 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                     </div>
                   )}
 
-                  <p className="text-base text-gray-600 max-w-xl">
-                    <Lightbulb className="w-4 h-4 inline mr-1.5 text-amber-600" /> A atividade gerada será de <strong>somente uma (1) página A4</strong>. Module seu pedido de acordo para garantir que tudo caiba bem no layout. 
+                  <p className="text-center text-sm text-gray-400">
+                    <strong className="text-sm text-amber-600">Dica:</strong>&nbsp;
+                    Module seu pedido de acordo para garantir que tudo caiba bem no layout de uma página A4. 
                   </p>
                 </CardContent>
               </Card>
