@@ -53,7 +53,7 @@ Responda true se o prompt for suspeito ou não-educacional. Responda false se fo
       }
     })
 
-    const isCheating = JSON.parse(response.text || "{}").isCheating || true
+    const isCheating = JSON.parse(response.text || "{\"isCheating\": true}").isCheating == true
 
     return Response.json({ isCheating })
   } catch (error) {
