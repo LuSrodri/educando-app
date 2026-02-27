@@ -19,6 +19,7 @@ import {
   Info,
   CheckCircle,
   VenetianMask,
+  Lightbulb,
 } from "lucide-react"
 import { ShareModal } from "@/components/share-modal"
 import { useBrowserId } from "@/hooks/useBrowserId"
@@ -251,13 +252,12 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
         <div className="container mx-auto px-4 py-6 lg:py-10">
           {/* Header */}
           <header className="flex flex-col items-center text-center max-w-3xl mx-auto mb-8">
-            <BookOpen className="w-10 h-10 text-amber-600 mb-3" />
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 leading-tight font-heading">
-              Crie atividades escolares em <br/><span className="text-amber-600">30 segundos</span>
+              Crie atividades escolares em <br /><span className="text-amber-600">30 segundos</span>
             </h1>
             <p className="text-base text-gray-600 max-w-xl">
               Atividades pedagógicas alinhadas à BNCC, prontas para imprimir.
-              <br/>
+              <br />
               <span className="text-amber-600 font-semibold"> 5 atividades grátis por dia!</span>
             </p>
           </header>
@@ -312,22 +312,20 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                             <button
                               type="button"
                               onClick={() => setActivityType("student")}
-                              className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors cursor-pointer ${
-                                activityType === "student"
+                              className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors cursor-pointer ${activityType === "student"
                                   ? "bg-amber-100 border-amber-400 text-amber-800"
                                   : "bg-white border-gray-200 text-gray-700 hover:border-amber-300"
-                              }`}
+                                }`}
                             >
                               <span className="font-medium">Atividade ao Aluno</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => setActivityType("teacher_support")}
-                              className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors cursor-pointer ${
-                                activityType === "teacher_support"
+                              className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors cursor-pointer ${activityType === "teacher_support"
                                   ? "bg-amber-100 border-amber-400 text-amber-800"
                                   : "bg-white border-gray-200 text-gray-700 hover:border-amber-300"
-                              }`}
+                                }`}
                             >
                               <span className="font-medium">Material de Apoio</span>
                             </button>
@@ -371,13 +369,12 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">
                         <span
-                          className={`font-bold ${
-                            remainingFree >= 4
+                          className={`font-bold ${remainingFree >= 4
                               ? "text-green-600"
                               : remainingFree >= 2
                                 ? "text-amber-600"
                                 : "text-red-600"
-                          }`}
+                            }`}
                         >
                           {remainingFree}
                         </span>{" "}
@@ -386,13 +383,12 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                     </div>
                     <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ease-out ${
-                          remainingFree >= 4
+                        className={`h-full rounded-full transition-all duration-500 ease-out ${remainingFree >= 4
                             ? "bg-gradient-to-r from-green-400 to-green-500"
                             : remainingFree >= 2
                               ? "bg-gradient-to-r from-amber-400 to-amber-500"
                               : "bg-gradient-to-r from-red-400 to-red-500"
-                        }`}
+                          }`}
                         style={{ width: `${(remainingFree / FREE_DAILY_LIMIT) * 100}%` }}
                       />
                     </div>
@@ -428,6 +424,10 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                       <p className="text-sm text-red-700">{error}</p>
                     </div>
                   )}
+
+                  <p className="text-base text-gray-600 max-w-xl">
+                    <Lightbulb className="w-4 h-4 inline mr-1.5 text-amber-600" /> A atividade gerada será de <strong>somente uma (1) página A4</strong>. Module seu pedido de acordo para garantir que tudo caiba bem no layout. 
+                  </p>
                 </CardContent>
               </Card>
 

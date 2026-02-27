@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai"
+import { GoogleGenAI, ThinkingLevel } from "@google/genai"
 import { createServerClient } from "@/lib/supabase/server"
 import { incrementDailyUsage, canGenerateFree } from "@/lib/credits"
 
@@ -22,10 +22,26 @@ export async function POST(req: Request) {
 
     // Generate image via Google GenAI
     const response = await ai.models.generateContent({
-      model: "gemini-3-pro-image-preview",
+      model: "gemini-3.1-flash-image-preview",
       contents: finalPrompt,
       config: {
-        responseModalities: ["IMAGE"],
+        thinkingConfig: {
+          thinkingLevel: ThinkingLevel.HIGH,
+        },
+        imageConfig: {
+          aspectRatio: "3:4",
+          imageSize: "4K",
+          personGeneration: "",
+        },
+        responseModalities: [
+          'IMAGE',
+        ],
+        tools: [
+          {
+            googleSearch: {
+            }
+          },
+        ],
       },
     })
 

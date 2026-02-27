@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai"
+import { GoogleGenAI, Type } from "@google/genai"
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
@@ -36,24 +36,27 @@ Responda true se o prompt for suspeito ou não-educacional. Responda false se fo
           ],
         },
       ],
+      config: {
+        thinkingConfig: {
+          thinkingBudget: 0,
+        },
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          required: ["isCheating"],
+          properties: {
+            isCheating: {
+              type: Type.BOOLEAN,
+            },
+          },
+        },
+      }
     })
 
-    const text = response.candidates?.[0]?.content?.parts?.[0]?.text || ""
+    const isCheating = JSON.parse(response.text || "{}").isCheating || true
 
-    try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        const result = JSON.parse(jsonMatch[0])
-        return Response.json({ isCheating: !!result.isCheating })
-      }
-    } catch {
-      // If parsing fails, assume safe
-    }
-
-    return Response.json({ isCheating: false })
+    return Response.json({ isCheating })
   } catch (error) {
-    console.error("Error in safety check:", error)
-    // On error, allow the request through
-    return Response.json({ isCheating: false })
+    return Response.json({ isCheating: true })
   }
 }

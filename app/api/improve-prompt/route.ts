@@ -164,7 +164,7 @@ IMPORTANTE: Escreva os textos reais que devem aparecer na atividade, não apenas
 Retorne APENAS o prompt, sem introdução, sem explicação, sem markdown.`
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-pro-preview",
+    model: "gemini-3.1-pro-preview",
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
       thinkingConfig: {
