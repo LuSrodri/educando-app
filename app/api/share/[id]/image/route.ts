@@ -35,7 +35,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       status: 200,
       headers: {
         "Content-Type": activity.image_media_type || "image/png",
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "public, max-age=31536000, stale-while-revalidate",
         "Content-Length": arrayBuffer.byteLength.toString(),
       },
     })

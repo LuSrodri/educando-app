@@ -76,7 +76,7 @@ export function CommunityGrid({ initialActivities }: CommunityGridProps) {
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {activities.map((activity) => (
-          <Link key={activity.id} href={`/atividade/${activity.id}`}>
+          <Link key={activity.id} href={`/atividade/${activity.id}`} prefetch={false}>
             <Card className="group overflow-hidden border border-gray-100 hover:border-amber-300 transition-colors h-full cursor-pointer">
               <CardContent className="p-0">
                 <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
