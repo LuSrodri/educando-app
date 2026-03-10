@@ -108,7 +108,7 @@ export function ActivityHistoryCarousel() {
               <img
                 src={getActivityThumbnailUrl(activity.image_path, 360)}
                 alt={activity.original_prompt}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover"
                 loading="lazy"
               />
             </div>

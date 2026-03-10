@@ -87,9 +87,9 @@ export function CommunityGrid({ initialActivities }: CommunityGridProps) {
               <CardContent className="p-0">
                 <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
                   <img
-                    src={getActivityThumbnailUrl(activity.image_path, 600)}
+                    src={getActivityThumbnailUrl(activity.image_path, 440)}
                     alt={truncate(activity.original_prompt, 50)}
-                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">

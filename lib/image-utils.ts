@@ -5,5 +5,5 @@ export function getActivityImageUrl(imagePath: string): string {
 }
 
 export function getActivityThumbnailUrl(imagePath: string, width: number): string {
-  return `${SUPABASE_URL}/storage/v1/render/image/public/activities/${imagePath}?width=${width}&quality=75`
+  return `${SUPABASE_URL}/storage/v1/render/image/public/activities/${imagePath}?width=${width}&quality=50&resize=contain`
 }
