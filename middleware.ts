@@ -9,12 +9,15 @@ export function middleware(request: NextRequest) {
 
   const csp = [
     "default-src 'self'",
-    `img-src 'self' data: blob: https://${supabaseHost}`,
+    // Allow all HTTPS images: Supabase image transformation serves via Cloudflare CDN
+    // which uses different hostnames than the project URL, so we can't enumerate them
+    "img-src 'self' data: blob: https:",
     // Next.js App Router requires unsafe-inline for hydration scripts
     "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    `connect-src 'self' https://${supabaseHost} https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
+    // Include wss: for Supabase realtime WebSocket connections
+    `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
