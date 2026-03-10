@@ -1,14 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai"
+import { validatePrompt, ValidationError } from "@/lib/validation"
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
 export async function POST(req: Request) {
   try {
-    const { prompt } = await req.json()
-
-    if (!prompt) {
-      return Response.json({ error: "Prompt is required" }, { status: 400 })
-    }
+    const body = await req.json()
+    const prompt = validatePrompt(body?.prompt)
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-lite",
@@ -26,7 +24,8 @@ Analise o seguinte prompt enviado por um usuário e determine se ele está tenta
 4. Gerar conteúdo ofensivo, discriminatório ou prejudicial
 5. Usar o sistema para qualquer finalidade que não seja criar material pedagógico
 
-Prompt do usuário: "${prompt}"
+Prompt do usuário:
+${JSON.stringify(prompt)}
 
 Responda APENAS com um JSON válido no formato:
 {"isCheating": true/false}
@@ -40,7 +39,7 @@ Responda true se o prompt for suspeito ou não-educacional. Responda false se fo
         thinkingConfig: {
           thinkingBudget: 0,
         },
-        responseMimeType: 'application/json',
+        responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           required: ["isCheating"],
@@ -50,13 +49,16 @@ Responda true se o prompt for suspeito ou não-educacional. Responda false se fo
             },
           },
         },
-      }
+      },
     })
 
-    const isCheating = JSON.parse(response.text || "{\"isCheating\": true}").isCheating == true
+    const isCheating = JSON.parse(response.text || '{"isCheating": true}').isCheating === true
 
     return Response.json({ isCheating })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return Response.json({ isCheating: true })
+    }
     return Response.json({ isCheating: true })
   }
 }

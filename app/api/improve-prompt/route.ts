@@ -1,5 +1,12 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai"
 import { canGenerateFree } from "@/lib/credits"
+import {
+  validatePrompt,
+  validateBrowserId,
+  validateActivityType,
+  validateElements,
+  ValidationError,
+} from "@/lib/validation"
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
@@ -88,10 +95,14 @@ IDIOMA: Todo texto visível na atividade DEVE estar em Português do Brasil (PT-
 CONTEXTO: Use nomes brasileiros, cenários e referências culturais do Brasil.`
 
 export async function POST(req: Request) {
-  const { prompt, activityType, elements, browserId } = await req.json()
+  try {
+    const body = await req.json()
+    const prompt = validatePrompt(body?.prompt)
+    const browserId = validateBrowserId(body?.browserId)
+    const activityType = validateActivityType(body?.activityType)
+    const elements = validateElements(body?.elements)
 
-  // Check daily credit limit before doing anything
-  if (browserId) {
+    // Check daily credit limit before doing anything
     const canGenerate = await canGenerateFree(browserId)
     if (!canGenerate) {
       return Response.json(
@@ -99,51 +110,52 @@ export async function POST(req: Request) {
         { status: 403 }
       )
     }
-  }
 
-  // Safety check before improving the prompt
-  try {
-    const safetyResponse = await fetch(new URL("/api/check-prompt-safety", req.url).toString(), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
-    })
+    // Safety check before improving the prompt
+    try {
+      const safetyResponse = await fetch(new URL("/api/check-prompt-safety", req.url).toString(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      })
 
-    if (safetyResponse.ok) {
-      const safetyData = await safetyResponse.json()
-      if (safetyData.isCheating) {
-        return Response.json(
-          { error: "Não foi possível processar sua solicitação. Tente novamente mais tarde.", isSafetyBlock: true },
-          { status: 400 }
-        )
+      if (safetyResponse.ok) {
+        const safetyData = await safetyResponse.json()
+        if (safetyData.isCheating) {
+          return Response.json(
+            { error: "Não foi possível processar sua solicitação. Tente novamente mais tarde.", isSafetyBlock: true },
+            { status: 400 }
+          )
+        }
       }
+    } catch (safetyError) {
+      console.error("Safety check error (continuing):", safetyError)
     }
-  } catch (safetyError) {
-    console.error("Safety check error (continuing):", safetyError)
-  }
 
-  const type: ActivityType = activityType || "student"
-  const activityElements: ActivityElements = (type === "student" ? elements : null) ?? {
-    header: true,
-    title: true,
-    instructions: true,
-    illustrations: true,
-    bncc: true,
-  }
+    const type: ActivityType = activityType
+    const activityElements: ActivityElements =
+      type === "student" ? elements : {
+        header: true,
+        title: true,
+        instructions: true,
+        illustrations: true,
+        bncc: true,
+      }
 
-  const constraints = buildHardConstraints(activityElements, type)
+    const constraints = buildHardConstraints(activityElements, type)
 
-  const materialTypeLabel =
-    type === "teacher_support"
-      ? "Material de Apoio Pedagógico para Professor (silabário, cartões, fichas, jogo para imprimir)"
-      : "Atividade para o Aluno (folha de exercícios pronta para imprimir e entregar)"
+    const materialTypeLabel =
+      type === "teacher_support"
+        ? "Material de Apoio Pedagógico para Professor (silabário, cartões, fichas, jogo para imprimir)"
+        : "Atividade para o Aluno (folha de exercícios pronta para imprimir e entregar)"
 
-  const userMessage = `TIPO DE MATERIAL: ${materialTypeLabel}
+    const userMessage = `TIPO DE MATERIAL: ${materialTypeLabel}
 
 RESTRIÇÕES DE ELEMENTOS (seguir rigorosamente):
 ${constraints}
 
-PEDIDO DO USUÁRIO: "${prompt}"
+PEDIDO DO USUÁRIO:
+${JSON.stringify(prompt)}
 
 NÍVEL EDUCACIONAL: Infira do pedido. Se não mencionado, assuma Ensino Fundamental I (1º ao 5º ano).
 
@@ -163,29 +175,35 @@ IMPORTANTE: Escreva os textos reais que devem aparecer na atividade, não apenas
 
 Retorne APENAS o prompt, sem introdução, sem explicação, sem markdown.`
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3.1-pro-preview",
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      thinkingConfig: {
-        thinkingLevel: ThinkingLevel.HIGH,
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        thinkingConfig: {
+          thinkingLevel: ThinkingLevel.HIGH,
+        },
+        tools: [
+          {
+            googleSearch: {},
+          },
+        ],
       },
-      tools: [
+      contents: [
         {
-          googleSearch: {
-          }
+          role: "user",
+          parts: [{ text: userMessage }],
         },
       ],
-    },
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: userMessage }],
-      },
-    ],
-  })
+    })
 
-  const improvedPrompt = response.text ?? ""
+    const improvedPrompt = response.text ?? ""
 
-  return Response.json({ improvedPrompt })
+    return Response.json({ improvedPrompt })
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return Response.json({ error: error.message }, { status: 400 })
+    }
+    console.error("Error in improve-prompt:", error)
+    return Response.json({ error: "Erro ao processar sua solicitação." }, { status: 500 })
+  }
 }

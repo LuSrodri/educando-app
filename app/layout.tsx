@@ -2,6 +2,8 @@ import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Space_Grotesk, Plus_Jakarta_Sans } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { ConsentBanner } from "@/components/consent-banner"
+import { ErrorBoundary } from "@/components/error-boundary"
 import "./globals.css"
 
 const spaceGrotesk = Space_Grotesk({
@@ -91,6 +93,20 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "educando.app",
+  url: "https://educando.app",
+  description:
+    "Gerador de atividades escolares com inteligência artificial, alinhadas à BNCC. Grátis, sem login.",
+  publisher: {
+    "@type": "Organization",
+    name: "educando.app",
+    url: "https://educando.app",
+  },
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -98,8 +114,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+      </head>
       <body className={`${plusJakartaSans.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
+        <ConsentBanner />
         <Analytics />
       </body>
     </html>

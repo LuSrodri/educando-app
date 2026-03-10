@@ -1,16 +1,20 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai"
 import { createServerClient } from "@/lib/supabase/server"
 import { incrementDailyUsage, canGenerateFree } from "@/lib/credits"
+import { validateBrowserId, validatePrompt, ValidationError } from "@/lib/validation"
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
 
 export async function POST(req: Request) {
   try {
-    const { prompt, browserId, improvedPrompt } = await req.json()
-
-    if (!browserId) {
-      return Response.json({ error: "Browser ID is required" }, { status: 400 })
-    }
+    const body = await req.json()
+    const browserId = validateBrowserId(body?.browserId)
+    const prompt = validatePrompt(body?.prompt)
+    // improvedPrompt is optional and server-generated, so light validation only
+    const improvedPrompt =
+      typeof body?.improvedPrompt === "string" && body.improvedPrompt.trim()
+        ? body.improvedPrompt.trim()
+        : null
 
     // Check daily limit
     const canGenerate = await canGenerateFree(browserId)
@@ -32,13 +36,10 @@ export async function POST(req: Request) {
           aspectRatio: "3:4",
           imageSize: "4K",
         },
-        responseModalities: [
-          'IMAGE',
-        ],
+        responseModalities: ["IMAGE"],
         tools: [
           {
-            googleSearch: {
-            }
+            googleSearch: {},
           },
         ],
       },
@@ -97,6 +98,9 @@ export async function POST(req: Request) {
       activity,
     })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return Response.json({ error: error.message }, { status: 400 })
+    }
     console.error("Error generating activity:", error)
     return Response.json({ error: "Erro ao gerar atividade. Tente novamente." }, { status: 500 })
   }

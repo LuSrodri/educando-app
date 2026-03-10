@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Eye, Loader2, Users } from "lucide-react"
 import type { Activity } from "@/lib/supabase/types"
+import { getActivityThumbnailUrl } from "@/lib/image-utils"
 
 interface CommunityGridProps {
   initialActivities: Activity[]
@@ -19,11 +20,13 @@ export function CommunityGrid({ initialActivities }: CommunityGridProps) {
   const [activities, setActivities] = useState<Activity[]>(initialActivities)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(initialActivities.length >= 50)
+  const [loadError, setLoadError] = useState(false)
   const observerRef = useRef<HTMLDivElement>(null)
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore) return
     setIsLoadingMore(true)
+    setLoadError(false)
     try {
       const response = await fetch(`/api/community?offset=${activities.length}&limit=50`)
       if (response.ok) {
@@ -32,9 +35,12 @@ export function CommunityGrid({ initialActivities }: CommunityGridProps) {
           setHasMore(false)
         }
         setActivities((prev) => [...prev, ...newActivities])
+      } else {
+        setLoadError(true)
       }
     } catch (error) {
       console.error("Error loading more activities:", error)
+      setLoadError(true)
     } finally {
       setIsLoadingMore(false)
     }
@@ -81,7 +87,7 @@ export function CommunityGrid({ initialActivities }: CommunityGridProps) {
               <CardContent className="p-0">
                 <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
                   <img
-                    src={`/api/share/${activity.id}/image`}
+                    src={getActivityThumbnailUrl(activity.image_path, 600)}
                     alt={truncate(activity.original_prompt, 50)}
                     className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
                     loading="lazy"
@@ -111,8 +117,19 @@ export function CommunityGrid({ initialActivities }: CommunityGridProps) {
       <div ref={observerRef} className="flex justify-center py-4">
         {isLoadingMore && (
           <div className="flex items-center gap-2 text-gray-500 text-sm">
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
             Carregando mais...
+          </div>
+        )}
+        {loadError && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-red-600">Erro ao carregar mais atividades.</span>
+            <button
+              onClick={() => loadMore()}
+              className="text-amber-600 hover:text-amber-700 font-medium underline cursor-pointer"
+            >
+              Tentar novamente
+            </button>
           </div>
         )}
       </div>

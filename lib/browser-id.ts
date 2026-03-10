@@ -5,7 +5,7 @@ export function getOrCreateBrowserId(): string {
 
   let browserId = localStorage.getItem(BROWSER_ID_KEY)
   if (!browserId) {
-    browserId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+    browserId = `session_${crypto.randomUUID()}`
     localStorage.setItem(BROWSER_ID_KEY, browserId)
   }
   return browserId

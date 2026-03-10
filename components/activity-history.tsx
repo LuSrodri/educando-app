@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useRef } from "react"
 import { useBrowserId } from "@/hooks/useBrowserId"
 import { useActivities } from "@/hooks/useActivities"
 import { Button } from "@/components/ui/button"
@@ -9,42 +9,20 @@ import {
   History,
   Download,
   Printer,
-  Loader2,
   Share2,
-  RefreshCw,
   X,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
 import type { Activity } from "@/lib/supabase/types"
+import { getActivityImageUrl, getActivityThumbnailUrl } from "@/lib/image-utils"
 
 export function ActivityHistoryCarousel() {
   const { browserId, isLoading: browserLoading } = useBrowserId()
   const { activities, isLoading } = useActivities(browserId, 20)
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null)
-  const [activityImage, setActivityImage] = useState<string | null>(null)
-  const [loadingImage, setLoadingImage] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const carouselRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (selectedActivity) {
-      loadActivityImage(selectedActivity.id)
-    }
-  }, [selectedActivity])
-
-  const loadActivityImage = async (activityId: string) => {
-    setLoadingImage(true)
-    try {
-      const response = await fetch(`/api/activities/${activityId}`)
-      const data = await response.json()
-      setActivityImage(data.imageUrl)
-    } catch (error) {
-      console.error("Error loading image:", error)
-    } finally {
-      setLoadingImage(false)
-    }
-  }
 
   const scroll = (direction: "left" | "right") => {
     if (carouselRef.current) {
@@ -57,29 +35,28 @@ export function ActivityHistoryCarousel() {
   }
 
   const downloadImage = () => {
-    if (activityImage) {
+    if (selectedActivity) {
       const link = document.createElement("a")
-      link.href = activityImage
-      link.download = `atividade-${selectedActivity?.id}.png`
+      link.href = getActivityImageUrl(selectedActivity.image_path)
+      link.download = `atividade-${selectedActivity.id}.png`
       link.click()
     }
   }
 
   const printImage = () => {
-    if (activityImage) {
-      const printWindow = window.open("", "_blank")
-      if (printWindow) {
-        printWindow.document.write(`
-          <html>
-            <head><title>Atividade Escolar</title></head>
-            <body style="margin:0;display:flex;justify-content:center;">
-              <img src="${activityImage}" style="max-width:100%;height:auto;" onload="window.print();window.close();" />
-            </body>
-          </html>
-        `)
-        printWindow.document.close()
-      }
-    }
+    if (!selectedActivity) return
+    const imageUrl = getActivityImageUrl(selectedActivity.image_path)
+    const printWindow = window.open("", "_blank")
+    if (!printWindow) return
+    const doc = printWindow.document
+    const style = doc.createElement("style")
+    style.textContent = "body{margin:0;display:flex;justify-content:center;}img{max-width:100%;height:auto;}"
+    doc.head.appendChild(style)
+    doc.title = "Atividade Escolar"
+    const img = doc.createElement("img")
+    img.src = imageUrl
+    img.addEventListener("load", () => { printWindow.print(); printWindow.close() })
+    doc.body.appendChild(img)
   }
 
   if (browserLoading || isLoading) {
@@ -101,14 +78,16 @@ export function ActivityHistoryCarousel() {
           <button
             onClick={() => scroll("left")}
             className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors cursor-pointer"
+            aria-label="Rolar histórico para a esquerda"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-4 h-4" aria-hidden="true" />
           </button>
           <button
             onClick={() => scroll("right")}
             className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors cursor-pointer"
+            aria-label="Rolar histórico para a direita"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -127,7 +106,7 @@ export function ActivityHistoryCarousel() {
           >
             <div className="aspect-[3/4] rounded-lg overflow-hidden border-2 border-gray-100 group-hover:border-amber-300 transition-colors bg-gray-100">
               <img
-                src={`/api/share/${activity.id}/image`}
+                src={getActivityThumbnailUrl(activity.image_path, 360)}
                 alt={activity.original_prompt}
                 className="w-full h-full object-cover object-top"
                 loading="lazy"
@@ -142,46 +121,46 @@ export function ActivityHistoryCarousel() {
 
       {/* Popover for selected activity */}
       {selectedActivity && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setSelectedActivity(null)}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          onClick={() => setSelectedActivity(null)}
+          aria-hidden="true"
+        >
           <div
             className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="history-modal-title"
           >
             <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-bold text-gray-900 text-sm font-heading">Detalhes da Atividade</h3>
+              <h3 id="history-modal-title" className="font-bold text-gray-900 text-sm font-heading">
+                Detalhes da Atividade
+              </h3>
               <button
                 onClick={() => setSelectedActivity(null)}
                 className="p-1 rounded-lg hover:bg-gray-100 cursor-pointer"
+                aria-label="Fechar"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
             <div className="p-4 space-y-3">
               <p className="text-sm text-gray-700">{selectedActivity.original_prompt}</p>
 
-              {loadingImage ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
-                </div>
-              ) : activityImage ? (
-                <img
-                  src={activityImage}
-                  alt="Atividade gerada"
-                  className="w-full h-auto rounded-lg border"
-                />
-              ) : (
-                <div className="text-center py-8 text-gray-400 text-sm">
-                  Imagem não disponível
-                </div>
-              )}
+              <img
+                src={getActivityImageUrl(selectedActivity.image_path)}
+                alt="Atividade gerada"
+                className="w-full h-auto rounded-lg border"
+              />
 
               <div className="flex flex-wrap gap-2 pt-2">
-                <Button size="sm" variant="outline" onClick={downloadImage} disabled={!activityImage} className="cursor-pointer">
+                <Button size="sm" variant="outline" onClick={downloadImage} className="cursor-pointer">
                   <Download className="w-4 h-4 mr-1.5" />
                   Baixar
                 </Button>
-                <Button size="sm" variant="outline" onClick={printImage} disabled={!activityImage} className="cursor-pointer">
+                <Button size="sm" variant="outline" onClick={printImage} className="cursor-pointer">
                   <Printer className="w-4 h-4 mr-1.5" />
                   Imprimir
                 </Button>
@@ -206,7 +185,7 @@ export function ActivityHistoryCarousel() {
           onClose={() => setShowShareModal(false)}
           activityId={selectedActivity.id}
           activityTitle={selectedActivity.original_prompt}
-          activityImage={activityImage || undefined}
+          activityImage={getActivityImageUrl(selectedActivity.image_path)}
         />
       )}
     </div>

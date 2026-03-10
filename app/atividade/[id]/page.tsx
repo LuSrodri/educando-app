@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { getActivity } from "@/lib/activities"
+import { getActivityImageUrl } from "@/lib/image-utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -48,7 +49,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const promptPreview = truncate(activity.original_prompt, 60)
   const title = `Atividade: ${promptPreview}`
   const description = `Atividade pedagógica criada com educando.app - Gerador de atividades escolares alinhadas à BNCC. Descrição: ${activity.original_prompt}`
-  const imageUrl = `${BASE_URL}/api/share/${id}/image`
+  const imageUrl = getActivityImageUrl(activity.image_path)
   const pageUrl = `${BASE_URL}/atividade/${id}`
 
   return {
@@ -101,9 +102,39 @@ export default async function SharedActivityPage({ params }: PageProps) {
     notFound()
   }
 
-  const imageUrl = `/api/share/${id}/image`
+  const imageUrl = getActivityImageUrl(activity.image_path)
+  const pageUrl = `${BASE_URL}/atividade/${id}`
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: truncate(activity.original_prompt, 110),
+    description: `Atividade pedagógica gerada com IA pelo educando.app. ${activity.original_prompt}`,
+    image: imageUrl,
+    datePublished: activity.created_at,
+    url: pageUrl,
+    author: {
+      "@type": "Organization",
+      name: "educando.app",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "educando.app",
+      url: BASE_URL,
+    },
+    isPartOf: {
+      "@type": "WebSite",
+      name: "educando.app",
+      url: BASE_URL,
+    },
+  }
 
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
     <main className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
       <header className="border-b border-amber-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -195,5 +226,6 @@ export default async function SharedActivityPage({ params }: PageProps) {
         </div>
       </div>
     </main>
+    </>
   )
 }

@@ -1,12 +1,10 @@
 import { createServerClient } from "@/lib/supabase/server"
+import { validateBrowserId, ValidationError } from "@/lib/validation"
 
 export async function POST(req: Request) {
   try {
-    const { browserId } = await req.json()
-
-    if (!browserId) {
-      return Response.json({ error: "Browser ID is required" }, { status: 400 })
-    }
+    const body = await req.json()
+    const browserId = validateBrowserId(body?.browserId)
 
     const supabase = createServerClient()
 
@@ -31,6 +29,9 @@ export async function POST(req: Request) {
 
     return Response.json({ browser: data })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return Response.json({ error: error.message }, { status: 400 })
+    }
     console.error("Error in browser API:", error)
     return Response.json({ error: "Internal server error" }, { status: 500 })
   }
@@ -39,11 +40,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
-    const browserId = url.searchParams.get("browserId")
-
-    if (!browserId) {
-      return Response.json({ error: "Browser ID is required" }, { status: 400 })
-    }
+    const browserId = validateBrowserId(url.searchParams.get("browserId"))
 
     const supabase = createServerClient()
 
@@ -57,7 +54,6 @@ export async function GET(req: Request) {
       return Response.json({ error: "Browser not found" }, { status: 404 })
     }
 
-    // Get today's usage
     const today = new Date().toISOString().split("T")[0]
 
     const { data: usageData } = await supabase
@@ -69,11 +65,11 @@ export async function GET(req: Request) {
 
     const dailyUsage = usageData?.count || 0
 
-    return Response.json({
-      browser,
-      dailyUsage,
-    })
+    return Response.json({ browser, dailyUsage })
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return Response.json({ error: error.message }, { status: 400 })
+    }
     console.error("Error in browser API:", error)
     return Response.json({ error: "Internal server error" }, { status: 500 })
   }

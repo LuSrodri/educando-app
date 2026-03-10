@@ -22,9 +22,12 @@ import {
   Lightbulb,
 } from "lucide-react"
 import { ShareModal } from "@/components/share-modal"
+import { GenerationConsentModal } from "@/components/generation-consent-modal"
 import { useBrowserId } from "@/hooks/useBrowserId"
 import { useCredits } from "@/hooks/useCredits"
 import type { Activity } from "@/lib/supabase/types"
+
+const GENERATION_CONSENT_KEY = "educando_generation_consent"
 
 interface ActivityElements {
   header: boolean
@@ -53,6 +56,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   const resultRef = useRef<HTMLDivElement>(null)
 
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showConsentModal, setShowConsentModal] = useState(false)
 
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const [activityType, setActivityType] = useState<ActivityType>("student")
@@ -121,6 +125,25 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
       }
     }
   }, [generatedImage])
+
+  const handleGenerateClick = () => {
+    if (!prompt.trim() || !browserId) return
+    if (!canGenerate) {
+      setError("Limite diário de atividades atingido. Tente novamente amanhã!")
+      return
+    }
+    if (!localStorage.getItem(GENERATION_CONSENT_KEY)) {
+      setShowConsentModal(true)
+      return
+    }
+    generateActivity()
+  }
+
+  const handleConsentAccept = () => {
+    localStorage.setItem(GENERATION_CONSENT_KEY, "true")
+    setShowConsentModal(false)
+    generateActivity()
+  }
 
   const generateActivity = async () => {
     if (!prompt.trim() || !browserId) return
@@ -214,23 +237,18 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   const printImage = () => {
     if (!generatedImage) return
     const printWindow = window.open("", "_blank")
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Atividade Escolar</title>
-            <style>
-              body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-              img { max-width: 100%; height: auto; }
-            </style>
-          </head>
-          <body>
-            <img src="${generatedImage}" onload="window.print(); window.close();" />
-          </body>
-        </html>
-      `)
-      printWindow.document.close()
-    }
+    if (!printWindow) return
+    const doc = printWindow.document
+    const style = doc.createElement("style")
+    style.textContent =
+      "body{margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh}" +
+      "img{max-width:100%;height:auto}"
+    doc.head.appendChild(style)
+    doc.title = "Atividade Escolar"
+    const img = doc.createElement("img")
+    img.src = generatedImage
+    img.addEventListener("load", () => { printWindow.print(); printWindow.close() })
+    doc.body.appendChild(img)
   }
 
   const regenerate = () => {
@@ -269,13 +287,19 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
               {/* Prompt input */}
               <Card className="shadow-lg border-2 border-amber-400 bg-white">
                 <CardContent className="p-4 md:p-5 space-y-4">
+                  <label htmlFor="activity-prompt" className="sr-only">
+                    Descreva a atividade que deseja gerar
+                  </label>
                   <Textarea
+                    id="activity-prompt"
                     ref={textareaRef}
                     placeholder="Descreva a atividade que deseja gerar... Ex: Atividade de matemática sobre frações para 5º ano"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     className="min-h-[100px] text-base text-gray-900 placeholder:text-gray-400 resize-none border-2 border-amber-200 focus:border-amber-500 focus:ring-amber-500 bg-white"
                     disabled={isGenerating || browserLoading}
+                    aria-label="Descreva a atividade que deseja gerar"
+                    maxLength={2000}
                   />
 
                   {/* Suggestion pills */}
@@ -286,6 +310,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                         onClick={() => setPrompt(suggestion)}
                         className="text-xs bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full hover:bg-amber-100 hover:border-amber-300 transition-colors text-amber-800 font-medium cursor-pointer"
                         disabled={isGenerating}
+                        aria-label={`Usar sugestão: ${suggestion}`}
                       >
                         {suggestion}
                       </button>
@@ -396,7 +421,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
                   {/* Generate button */}
                   <Button
-                    onClick={generateActivity}
+                    onClick={handleGenerateClick}
                     disabled={!prompt.trim() || isGenerating || browserLoading || !canGenerate}
                     className="w-full bg-amber-600 hover:bg-amber-700 text-white h-auto py-3.5 text-base font-bold shadow-lg hover:shadow-xl transition-all cursor-pointer"
                   >
@@ -536,6 +561,13 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
           activityId={currentActivity.id}
           activityTitle={currentActivity.original_prompt}
           activityImage={generatedImage || undefined}
+        />
+      )}
+
+      {showConsentModal && (
+        <GenerationConsentModal
+          onAccept={handleConsentAccept}
+          onDecline={() => setShowConsentModal(false)}
         />
       )}
     </>
