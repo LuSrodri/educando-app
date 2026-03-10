@@ -11,11 +11,11 @@ interface GenerationConsentModalProps {
 export function GenerationConsentModal({ onAccept, onDecline }: GenerationConsentModalProps) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 max-h-screen overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
       onClick={onDecline}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4"
+        className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 max-h-[calc(100dvh-2rem)] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
