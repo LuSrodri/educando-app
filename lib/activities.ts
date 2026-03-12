@@ -103,7 +103,7 @@ export async function getActivityByIdSuffix(idSuffix: string): Promise<Activity 
   const { data } = await supabase
     .from("activities")
     .select("*")
-    .filter("id::text", "ilike", `%-${idSuffix.toLowerCase()}`)
+    .filter("id::text", "like", `%${idSuffix}`)
     .maybeSingle()
 
   return data ?? null
