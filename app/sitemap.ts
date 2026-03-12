@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next"
 import { createServerClient } from "@/lib/supabase/server"
+import { generateSemanticSlug } from "@/lib/slug"
 
 export const revalidate = 3600
 
@@ -21,12 +22,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const supabase = createServerClient()
     const { data: activities } = await supabase
       .from("activities")
-      .select("id, created_at")
+      .select("id, original_prompt, created_at")
       .order("created_at", { ascending: false })
 
     if (activities) {
       activityPages = activities.map((activity) => ({
-        url: `${baseUrl}/atividade/${activity.id}`,
+        url: `${baseUrl}/atividade/${generateSemanticSlug(activity.original_prompt, activity.id)}`,
         lastModified: new Date(activity.created_at),
         changeFrequency: "yearly" as const,
         priority: 0.5,

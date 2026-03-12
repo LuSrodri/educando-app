@@ -1,8 +1,9 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { getActivity } from "@/lib/activities"
+import { getActivity, getActivityByIdSuffix } from "@/lib/activities"
 import { getActivityImageUrl } from "@/lib/image-utils"
+import { isUUID, extractIdSuffixFromSlug, generateSemanticSlug } from "@/lib/slug"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -14,11 +15,25 @@ import {
   ExternalLink
 } from "lucide-react"
 import { SharedActivityClient } from "./shared-activity-client"
+import type { Activity } from "@/lib/supabase/types"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://educando.app"
 
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
+}
+
+async function resolveActivity(slug: string): Promise<{ activity: Activity | null; id: string | null }> {
+  if (isUUID(slug)) {
+    const activity = await getActivity(slug)
+    return { activity, id: slug }
+  }
+
+  const suffix = extractIdSuffixFromSlug(slug)
+  if (!suffix) return { activity: null, id: null }
+
+  const activity = await getActivityByIdSuffix(suffix)
+  return { activity, id: activity?.id ?? null }
 }
 
 function truncate(str: string, maxLength: number): string {
@@ -36,21 +51,24 @@ function formatDate(dateString: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params
-  const activity = await getActivity(id)
+  const { slug } = await params
+  const { activity, id } = await resolveActivity(slug)
 
-  if (!activity) {
+  if (!activity || !id) {
     return {
       title: "Atividade não encontrada | educando.app",
       description: "A atividade solicitada não foi encontrada.",
     }
   }
 
+  const semanticSlug = generateSemanticSlug(activity.original_prompt, id)
   const promptPreview = truncate(activity.original_prompt, 60)
   const title = `Atividade: ${promptPreview}`
   const description = `Atividade pedagógica criada com educando.app - Gerador de atividades escolares alinhadas à BNCC. Descrição: ${activity.original_prompt}`
   const imageUrl = getActivityImageUrl(activity.image_path)
-  const pageUrl = `${BASE_URL}/atividade/${id}`
+  const pageUrl = isUUID(slug)
+    ? `${BASE_URL}/atividade/${id}`
+    : `${BASE_URL}/atividade/${semanticSlug}`
 
   return {
     title,
@@ -95,15 +113,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function SharedActivityPage({ params }: PageProps) {
-  const { id } = await params
-  const activity = await getActivity(id)
+  const { slug } = await params
+  const { activity, id } = await resolveActivity(slug)
 
-  if (!activity) {
+  if (!activity || !id) {
     notFound()
   }
 
   const imageUrl = getActivityImageUrl(activity.image_path)
-  const pageUrl = `${BASE_URL}/atividade/${id}`
+  const pageUrl = isUUID(slug)
+    ? `${BASE_URL}/atividade/${id}`
+    : `${BASE_URL}/atividade/${generateSemanticSlug(activity.original_prompt, id)}`
 
   const jsonLd = {
     "@context": "https://schema.org",

@@ -97,6 +97,18 @@ export async function getActivityImageUrl(imagePath: string): Promise<string> {
   return data?.signedUrl || ""
 }
 
+export async function getActivityByIdSuffix(idSuffix: string): Promise<Activity | null> {
+  const supabase = createServerClient()
+
+  const { data } = await supabase
+    .from("activities")
+    .select("*")
+    .ilike("id", `%-${idSuffix}`)
+    .maybeSingle()
+
+  return data ?? null
+}
+
 export async function getActivityImageBuffer(imagePath: string): Promise<Blob | null> {
   const supabase = createServerClient()
 
