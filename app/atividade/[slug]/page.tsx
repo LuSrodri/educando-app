@@ -1,9 +1,9 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { getActivity, getActivityByIdSuffix } from "@/lib/activities"
+import { getActivity, getActivityBySlug } from "@/lib/activities"
 import { getActivityImageUrl } from "@/lib/image-utils"
-import { isUUID, extractIdSuffixFromSlug, generateSemanticSlug } from "@/lib/slug"
+import { isUUID, generateSemanticSlug } from "@/lib/slug"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -29,10 +29,7 @@ async function resolveActivity(slug: string): Promise<{ activity: Activity | nul
     return { activity, id: slug }
   }
 
-  const suffix = extractIdSuffixFromSlug(slug)
-  if (!suffix) return { activity: null, id: null }
-
-  const activity = await getActivityByIdSuffix(suffix)
+  const activity = await getActivityBySlug(slug)
   return { activity, id: activity?.id ?? null }
 }
 

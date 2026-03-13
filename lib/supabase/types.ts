@@ -60,6 +60,7 @@ export type Database = {
           image_path: string
           image_media_type: string
           created_at: string
+          semantic_slug: string
         }
         Insert: {
           id?: string

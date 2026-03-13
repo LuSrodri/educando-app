@@ -1,6 +1,7 @@
 /**
- * Generates a semantic slug for an activity.
- * Format: atividade-{first-6-words-of-prompt}-{last-12-hex-chars-of-uuid}
+ * Generates the full semantic slug for an activity URL.
+ * Format: atividade-{first-6-words-of-prompt}-{last-block-of-uuid}
+ * Example: "atividade-exercicio-de-matematica-para-alunos-do-446655440000"
  */
 export function generateSemanticSlug(originalPrompt: string, id: string): string {
   const words = originalPrompt
@@ -14,7 +15,7 @@ export function generateSemanticSlug(originalPrompt: string, id: string): string
     .slice(0, 6)
 
   const wordSlug = words.join("-")
-  const idSuffix = id.replace(/-/g, "").slice(-12)
+  const idSuffix = id.split("-")[4] ?? id.replace(/-/g, "").slice(-12)
 
   return `atividade-${wordSlug}-${idSuffix}`
 }
@@ -27,8 +28,8 @@ export function isUUID(str: string): boolean {
 }
 
 /**
- * Extracts the last 12 hex chars (UUID suffix) from a semantic slug.
- * Returns null if the slug doesn't end with 12 hex chars.
+ * Extracts the last 12 hex chars from a semantic slug.
+ * These correspond to the DB semantic_slug column (last UUID block).
  */
 export function extractIdSuffixFromSlug(slug: string): string | null {
   const match = slug.match(/([0-9a-f]{12})$/i)

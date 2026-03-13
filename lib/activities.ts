@@ -97,13 +97,18 @@ export async function getActivityImageUrl(imagePath: string): Promise<string> {
   return data?.signedUrl || ""
 }
 
-export async function getActivityByIdSuffix(idSuffix: string): Promise<Activity | null> {
+export async function getActivityBySlug(semanticSlug: string): Promise<Activity | null> {
   const supabase = createServerClient()
+
+  // The DB column stores only the last 12 hex chars (last UUID block).
+  // Extract them from the full semantic slug to do an exact eq lookup.
+  const match = semanticSlug.match(/([0-9a-f]{12})$/i)
+  if (!match) return null
 
   const { data } = await supabase
     .from("activities")
     .select("*")
-    .like("id::text", `%${idSuffix}`)
+    .eq("semantic_slug", match[1])
     .maybeSingle()
 
   return data ?? null
