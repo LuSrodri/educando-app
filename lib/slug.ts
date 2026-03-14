@@ -1,7 +1,7 @@
 /**
  * Generates the full semantic slug for an activity URL.
- * Format: atividade-{first-6-words-of-prompt}-{last-block-of-uuid}
- * Example: "atividade-exercicio-de-matematica-para-alunos-do-446655440000"
+ * Format: {first-6-words-of-prompt}-{last-block-of-uuid}
+ * Example: "exercicio-de-matematica-para-alunos-do-446655440000"
  */
 export function generateSemanticSlug(originalPrompt: string, id: string): string {
   const words = originalPrompt
@@ -17,7 +17,7 @@ export function generateSemanticSlug(originalPrompt: string, id: string): string
   const wordSlug = words.join("-")
   const idSuffix = id.split("-")[4] ?? id.replace(/-/g, "").slice(-12)
 
-  return `atividade-${wordSlug}-${idSuffix}`
+  return `${wordSlug}-${idSuffix}`
 }
 
 /**
