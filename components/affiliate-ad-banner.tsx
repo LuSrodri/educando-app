@@ -32,7 +32,7 @@ export function AffiliateAdBanner({ adIndex }: AffiliateAdBannerProps) {
         <img
           src="/ads/amazon-logo.webp"
           alt="Amazon"
-          className="h-3 object-contain opacity-50"
+          className="h-3 object-contain mx-2 my-1"
         />
       </div>
 

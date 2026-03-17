@@ -53,7 +53,7 @@ export function AffiliateAdCard({ ad }: AffiliateAdCardProps) {
               <img
                 src="/ads/amazon-logo.webp"
                 alt="Amazon"
-                className="h-3.5 object-contain opacity-60"
+                className="h-3.5 object-contain mx-2 my-1"
               />
             </div>
           </div>
