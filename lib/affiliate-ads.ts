@@ -40,7 +40,7 @@ export const AFFILIATE_ADS: AffiliateAd[] = [
     affiliateUrl: "https://amzn.to/4lxdz8D",
     category: "Lifestyle",
   },
-]
+].sort(() => Math.random() - 0.5)
 
 /** Returns a deterministically seeded random ad based on a seed value */
 export function getRandomAd(seed?: number): AffiliateAd {

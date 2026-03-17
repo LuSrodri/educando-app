@@ -31,7 +31,7 @@ function buildGridItems(activities: Activity[]): GridItem[] {
   if (activities.length === 0) return []
 
   // Pre-compute insertion points: [6, 13, 21, 30, 38, ...] (intervals cycle 6-10)
-  const intervals = [6, 7, 8, 9, 10]
+  const intervals = [8, 13]
   const adPositions: number[] = []
   let cursor = 0
   let adCount = 0
