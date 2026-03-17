@@ -21,6 +21,7 @@ import {
   Twitter,
   Linkedin,
 } from "lucide-react"
+import { AffiliateAdBanner } from "@/components/affiliate-ad-banner"
 
 interface ShareModalProps {
   isOpen: boolean
@@ -252,6 +253,8 @@ export function ShareModal({
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Abrir link em nova aba
               </Button>
+
+              <AffiliateAdBanner />
             </>
           ) : null}
         </div>

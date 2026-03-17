@@ -15,6 +15,7 @@ import {
   ExternalLink
 } from "lucide-react"
 import { SharedActivityClient } from "./shared-activity-client"
+import { AffiliateAdBanner } from "@/components/affiliate-ad-banner"
 import type { Activity } from "@/lib/supabase/types"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://educando.app"
@@ -211,6 +212,8 @@ export default async function SharedActivityPage({ params }: PageProps) {
               />
             </CardContent>
           </Card>
+
+          <AffiliateAdBanner />
 
           <Card className="mt-8 border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-amber-100">
             <CardContent className="p-6 md:p-8 text-center">
