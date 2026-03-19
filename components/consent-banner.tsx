@@ -26,12 +26,12 @@ export function ConsentBanner() {
       aria-label="Aviso de privacidade"
       className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 border-t border-gray-700 px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
     >
-      <p className="text-sm text-gray-300 max-w-2xl">
+      <p className="text-sm text-gray-300">
         O <span className="text-white font-semibold">educando.app</span> usa{" "}
-        <span className="text-white font-semibold">Vercel Analytics</span> para coletar dados
+        <span className="text-white font-semibold">tecnologias de terceiros</span> para coletar dados
         de uso anônimos (páginas visitadas, tempo de acesso) e melhorar o serviço.{" "}
         <span className="text-gray-400">
-          Ao continuar navegando, você concorda com essa coleta. Para não concordar, feche o site.
+          Ao continuar navegando, você concorda com essa coleta.
         </span>
       </p>
       <button
