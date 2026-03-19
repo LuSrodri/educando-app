@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const response = NextResponse.next()
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""

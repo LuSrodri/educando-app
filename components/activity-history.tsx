@@ -5,6 +5,7 @@ import { useBrowserId } from "@/hooks/useBrowserId"
 import { useActivities } from "@/hooks/useActivities"
 import { Button } from "@/components/ui/button"
 import { ShareModal } from "@/components/share-modal"
+import { PinterestSaveButton } from "@/components/pinterest-save-button"
 import {
   History,
   Download,
@@ -127,7 +128,7 @@ export function ActivityHistoryCarousel() {
           aria-hidden="true"
         >
           <div
-            className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-xl shadow-2xl max-w-[90dvw] w-fit max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -146,16 +147,16 @@ export function ActivityHistoryCarousel() {
               </button>
             </div>
 
-            <div className="p-4 space-y-3">
+            <div className="p-4 space-y-3 flex items-center justify-center flex-col">
               <p className="text-sm text-gray-700">{selectedActivity.original_prompt}</p>
 
               <img
                 src={getActivityImageUrl(selectedActivity.image_path)}
                 alt="Atividade gerada"
-                className="w-full h-auto rounded-lg border"
+                className="w-auto h-[60dvh] min-h-[400px] object-contain rounded-lg border"
               />
 
-              <div className="flex flex-wrap gap-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2 justify-center items-center">
                 <Button size="sm" variant="outline" onClick={downloadImage} className="cursor-pointer">
                   <Download className="w-4 h-4 mr-1.5" />
                   Baixar
@@ -173,6 +174,12 @@ export function ActivityHistoryCarousel() {
                   <Share2 className="w-4 h-4 mr-1.5" />
                   Compartilhar
                 </Button>
+                <PinterestSaveButton
+                  activityUrl={`https://educando.app/atividade/${selectedActivity.id}`}
+                  imageUrl={`${getActivityImageUrl(selectedActivity.image_path)}`}
+                  description={`${selectedActivity.improved_prompt}`}
+                  size="sm"
+                />
               </div>
             </div>
           </div>

@@ -19,13 +19,14 @@ import {
   Info,
   CheckCircle,
   VenetianMask,
-  Lightbulb,
 } from "lucide-react"
 import { ShareModal } from "@/components/share-modal"
 import { GenerationConsentModal } from "@/components/generation-consent-modal"
+import { PinterestSaveButton } from "@/components/pinterest-save-button"
 import { useBrowserId } from "@/hooks/useBrowserId"
 import { useCredits } from "@/hooks/useCredits"
 import type { Activity } from "@/lib/supabase/types"
+import { getActivityImageUrl } from "@/lib/image-utils"
 
 const GENERATION_CONSENT_KEY = "educando_generation_consent"
 
@@ -528,6 +529,13 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                         <Share2 className="w-4 h-4 mr-1.5" />
                         Compartilhar
                       </Button>
+                      {currentActivity && (
+                        <PinterestSaveButton
+                          activityUrl={`https://educando.app/atividade/${currentActivity.id}`}
+                          imageUrl={`${getActivityImageUrl(currentActivity.image_path)}`}
+                          description={`${currentActivity.improved_prompt}`}
+                        />
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"
@@ -544,8 +552,8 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
               ) : (
                 <div className="flex-1 hidden lg:flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
                   <div className="text-center text-gray-400">
-                    <Sparkles className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                    <p className="text-sm">Sua atividade aparecerá aqui</p>
+                    <Sparkles className="w-10 h-10 mx-auto mb-2 opacity-60" />
+                    <p className="text-lg opacity-60 uppercase font-extrabold text-center m-auto">Sua atividade aparecerá aqui</p>
                   </div>
                 </div>
               )}

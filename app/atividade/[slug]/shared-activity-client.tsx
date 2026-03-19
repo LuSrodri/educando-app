@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { PinterestSaveButton } from "@/components/pinterest-save-button"
 import { Download, Printer, Share2, Check, Copy, Loader2 } from "lucide-react"
 
 interface SharedActivityClientProps {
@@ -150,6 +151,11 @@ export function SharedActivityClient({ activityId, imageUrl, activityTitle }: Sh
             </>
           )}
         </Button>
+        <PinterestSaveButton
+          activityUrl={`https://educando.app/atividade/${activityId}`}
+          imageUrl={imageUrl}
+          description={activityTitle}
+        />
       </div>
     </div>
   )
