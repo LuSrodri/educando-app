@@ -1,8 +1,8 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { getActivity, getActivityBySlug } from "@/lib/activities"
-import { getActivityImageUrl } from "@/lib/image-utils"
+import { getActivity, getActivityBySlug, getRandomActivities } from "@/lib/activities"
+import { getActivityImageUrl, getActivityThumbnailUrl } from "@/lib/image-utils"
 import { isUUID, generateSemanticSlug } from "@/lib/slug"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -118,7 +118,10 @@ export default async function SharedActivityPage({ params }: PageProps) {
     notFound()
   }
 
-  const imageUrl = getActivityImageUrl(activity.image_path)
+  const [imageUrl, relatedActivities] = await Promise.all([
+    Promise.resolve(getActivityImageUrl(activity.image_path)),
+    getRandomActivities(id, 3),
+  ])
   const pageUrl = isUUID(slug)
     ? `${BASE_URL}/atividade/${id}`
     : `${BASE_URL}/atividade/${generateSemanticSlug(activity.original_prompt, id)}`
@@ -214,6 +217,41 @@ export default async function SharedActivityPage({ params }: PageProps) {
           </Card>
 
           <AffiliateAdBanner />
+
+          {relatedActivities.length > 0 && (
+            <div className="mt-10">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 font-heading flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-500" />
+                Veja também
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {relatedActivities.map((rel) => {
+                  const relSlug = generateSemanticSlug(rel.original_prompt, rel.id)
+                  const relThumb = getActivityThumbnailUrl(rel.image_path, 400)
+                  return (
+                    <Link key={rel.id} href={`/atividade/${relSlug}`} className="group block">
+                      <Card className="overflow-hidden border border-amber-200 hover:border-amber-400 hover:shadow-md transition-all cursor-pointer h-full">
+                        <CardContent className="p-0">
+                          <div className="aspect-[3/4] overflow-hidden bg-amber-50">
+                            <img
+                              src={relThumb}
+                              alt={rel.original_prompt}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
+                          <div className="p-3">
+                            <p className="text-sm text-gray-700 line-clamp-2 leading-snug">
+                              {rel.original_prompt}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           <Card className="mt-8 border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-amber-100">
             <CardContent className="p-6 md:p-8 text-center">

@@ -114,6 +114,23 @@ export async function getActivityBySlug(semanticSlug: string): Promise<Activity 
   return data ?? null
 }
 
+export async function getRandomActivities(excludeId: string, limit = 3): Promise<Activity[]> {
+  const supabase = createServerClient()
+
+  const { data } = await supabase
+    .from("activities")
+    .select("*")
+    .neq("id", excludeId)
+    .order("created_at", { ascending: false })
+    .limit(30)
+
+  if (!data || data.length === 0) return []
+
+  // Shuffle and return `limit` items
+  const shuffled = data.sort(() => Math.random() - 0.5)
+  return shuffled.slice(0, limit)
+}
+
 export async function getActivityImageBuffer(imagePath: string): Promise<Blob | null> {
   const supabase = createServerClient()
 
