@@ -122,7 +122,6 @@ export async function getRandomActivities(excludeId: string, limit = 3): Promise
     .select("*")
     .neq("id", excludeId)
     .order("created_at", { ascending: false })
-    .limit(30)
 
   if (!data || data.length === 0) return []
 
