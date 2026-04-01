@@ -7,9 +7,6 @@ import { Eye, Loader2, Users } from "lucide-react"
 import type { Activity } from "@/lib/supabase/types"
 import { getActivityThumbnailUrl } from "@/lib/image-utils"
 import { generateSemanticSlug } from "@/lib/slug"
-import { AFFILIATE_ADS } from "@/lib/affiliate-ads"
-import { AffiliateAdCard } from "@/components/affiliate-ad-card"
-
 interface CommunityGridProps {
   initialActivities: Activity[]
 }
@@ -19,44 +16,15 @@ function truncate(str: string, maxLength: number): string {
   return str.slice(0, maxLength - 3) + "..."
 }
 
-type GridItem =
-  | { type: "activity"; activity: Activity }
-  | { type: "ad"; adIndex: number; key: string }
+type GridItem = { type: "activity"; activity: Activity }
 
-/**
- * Builds the interleaved list of activities + ads.
- * Ads appear every 6–10 activities, deterministically based on position.
- */
 function buildGridItems(activities: Activity[]): GridItem[] {
   if (activities.length === 0) return []
 
-  // Pre-compute insertion points: [6, 13, 21, 30, 38, ...] (intervals cycle 6-10)
-  const intervals = [8, 13]
-  const adPositions: number[] = []
-  let cursor = 0
-  let adCount = 0
-  while (cursor < activities.length) {
-    cursor += intervals[adCount % intervals.length]
-    if (cursor < activities.length) {
-      adPositions.push(cursor)
-    }
-    adCount++
-  }
-
   const items: GridItem[] = []
-  let adInserted = 0
 
   for (let i = 0; i < activities.length; i++) {
     items.push({ type: "activity", activity: activities[i] })
-
-    // Insert ad after this activity if its index+1 matches a position
-    if (adInserted < adPositions.length && i + 1 === adPositions[adInserted]) {
-      items.push({
-        type: "ad",
-        adIndex: adInserted % AFFILIATE_ADS.length,
-        key: `ad-${adInserted}`,
-      })
-      adInserted++
     }
   }
 
@@ -131,50 +99,40 @@ export function CommunityGrid({ initialActivities }: CommunityGridProps) {
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {gridItems.map((item) => {
-          if (item.type === "activity") {
-            const activity = item.activity
-            return (
-              <Link
-                key={activity.id}
-                href={`/atividade/${generateSemanticSlug(activity.original_prompt, activity.id)}`}
-                prefetch={false}
-              >
-                <Card className="group overflow-hidden border border-gray-100 hover:border-amber-300 transition-colors h-full cursor-pointer">
-                  <CardContent className="p-0">
-                    <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
-                      <img
-                        src={getActivityThumbnailUrl(activity.image_path, 440)}
-                        alt={truncate(activity.original_prompt, 50)}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <div className="bg-white rounded-full px-3 py-1.5 flex items-center gap-1.5 text-gray-800 text-xs font-medium shadow-lg">
-                            <Eye className="w-3.5 h-3.5" />
-                            Ver
-                          </div>
+          const activity = item.activity
+          return (
+            <Link
+              key={activity.id}
+              href={`/atividade/${generateSemanticSlug(activity.original_prompt, activity.id)}`}
+              prefetch={false}
+            >
+              <Card className="group overflow-hidden border border-gray-100 hover:border-amber-300 transition-colors h-full cursor-pointer">
+                <CardContent className="p-0">
+                  <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
+                    <img
+                      src={getActivityThumbnailUrl(activity.image_path, 440)}
+                      alt={truncate(activity.original_prompt, 50)}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="bg-white rounded-full px-3 py-1.5 flex items-center gap-1.5 text-gray-800 text-xs font-medium shadow-lg">
+                          <Eye className="w-3.5 h-3.5" />
+                          Ver
                         </div>
                       </div>
                     </div>
+                  </div>
 
-                    <div className="p-3">
-                      <p className="text-xs text-gray-600 line-clamp-2">
-                        {activity.original_prompt}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            )
-          }
-
-          // Ad slot
-          return (
-            <AffiliateAdCard
-              key={item.key}
-              ad={AFFILIATE_ADS[item.adIndex]}
-            />
+                  <div className="p-3">
+                    <p className="text-xs text-gray-600 line-clamp-2">
+                      {activity.original_prompt}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           )
         })}
       </div>
