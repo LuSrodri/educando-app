@@ -53,7 +53,7 @@ export function GenerationConsentModal({ onAccept, onDecline }: GenerationConsen
             <div>
               <p className="text-sm font-semibold text-gray-800">ID anônimo do navegador</p>
               <p className="text-xs text-gray-500">
-                Um código único gerado localmente para controlar o limite de 5 atividades por dia.
+                Um código único gerado localmente para controlar o uso das atividades gratuitas.
                 Sem nome, e-mail ou login.
               </p>
             </div>

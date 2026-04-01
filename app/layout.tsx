@@ -21,7 +21,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://educando.app"),
   title: {
-    default: "educando.app — Crie atividades escolares com IA em 30 segundos. 5 por dia, grátis.",
+    default: "educando.app — Crie atividades escolares com IA em 30 segundos. Grátis, sem login.",
     template: "%s | educando.app",
   },
   description:
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     siteName: "educando.app",
     title: "educando.app — Crie atividades escolares com IA em 30 segundos",
     description:
-      "Transforme qualquer tema em atividades pedagógicas completas, alinhadas à BNCC e prontas para imprimir. 5 atividades grátis por dia!",
+      "Transforme qualquer tema em atividades pedagógicas completas, alinhadas à BNCC e prontas para imprimir. Grátis, sem login!",
     images: [
       {
         url: "/og-image.png",

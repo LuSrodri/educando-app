@@ -106,7 +106,7 @@ export async function POST(req: Request) {
     const canGenerate = await canGenerateFree(browserId)
     if (!canGenerate) {
       return Response.json(
-        { error: "Limite diário de atividades atingido. Tente novamente amanhã!", isCreditLimit: true },
+        { error: "Você usou todas as suas atividades gratuitas. Novos créditos em breve!", isCreditLimit: true },
         { status: 403 }
       )
     }

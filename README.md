@@ -22,7 +22,7 @@ O **educando.app** é uma ferramenta para professores criarem atividades pedagó
 
 ## Créditos
 
-- 5 atividades gratuitas por dia
+- 3 atividades gratuitas por quinzena (dias 1–15 e 16–fim do mês)
 
 ## Stack
 

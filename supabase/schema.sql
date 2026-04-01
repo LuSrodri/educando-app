@@ -1,5 +1,6 @@
 -- educando.app - Database Schema
--- Simplified schema: free-only, no credits, no versions
+-- Free model: 3 activities per fortnight (quinzena), no login required
+-- daily_usage.usage_date stores the fortnight start date (YYYY-MM-01 or YYYY-MM-16)
 
 -- Activities table
 CREATE TABLE IF NOT EXISTS activities (

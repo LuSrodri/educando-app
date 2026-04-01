@@ -70,7 +70,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   })
 
   const { browserId, isLoading: browserLoading } = useBrowserId()
-  const { remainingFree, canGenerate, refresh: refreshCredits, FREE_DAILY_LIMIT } = useCredits(browserId)
+  const { remainingFree, canGenerate, refresh: refreshCredits, FREE_FORTNIGHTLY_LIMIT } = useCredits(browserId)
 
   useImperativeHandle(ref, () => ({
     setPromptValue: (value: string) => {
@@ -130,7 +130,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   const handleGenerateClick = () => {
     if (!prompt.trim() || !browserId) return
     if (!canGenerate) {
-      setError("Limite diário de atividades atingido. Tente novamente amanhã!")
+      setError("Você usou todas as suas atividades gratuitas. Novos créditos em breve!")
       return
     }
     if (!localStorage.getItem(GENERATION_CONSENT_KEY)) {
@@ -150,7 +150,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
     if (!prompt.trim() || !browserId) return
 
     if (!canGenerate) {
-      setError("Limite diário de atividades atingido. Tente novamente amanhã!")
+      setError("Você usou todas as suas atividades gratuitas. Novos créditos em breve!")
       return
     }
 
@@ -175,7 +175,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
       if (!improveResponse.ok) {
         const improveError = await improveResponse.json()
         if (improveError.isCreditLimit) {
-          setError("Limite diário de atividades atingido. Tente novamente amanhã!")
+          setError("Você usou todas as suas atividades gratuitas. Novos créditos em breve!")
           return
         }
         if (improveError.isSafetyBlock) {
@@ -203,7 +203,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
       if (!response.ok) {
         const errorData = await response.json()
         if (response.status === 403) {
-          setError("Limite diário de atividades atingido. Tente novamente amanhã!")
+          setError("Você usou todas as suas atividades gratuitas. Novos créditos em breve!")
           return
         }
         throw new Error(errorData.error || "Erro ao gerar atividade")
@@ -277,7 +277,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
             <p className="text-base text-gray-600 max-w-xl">
               Atividades pedagógicas alinhadas à BNCC, prontas para imprimir.
               <br />
-              <span className="text-amber-600 font-semibold"> 5 atividades grátis por dia!</span>
+              <span className="text-amber-600 font-semibold"> 3 atividades grátis para começar.</span>
             </p>
           </header>
 
@@ -395,7 +395,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">
                         <span
-                          className={`font-bold ${remainingFree >= 4
+                          className={`font-bold ${remainingFree >= 3
                               ? "text-green-600"
                               : remainingFree >= 2
                                 ? "text-amber-600"
@@ -404,18 +404,18 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                         >
                           {remainingFree}
                         </span>{" "}
-                        de {FREE_DAILY_LIMIT} atividades restantes hoje
+                        atividades gratuitas para gerar agora
                       </span>
                     </div>
                     <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ease-out ${remainingFree >= 4
+                        className={`h-full rounded-full transition-all duration-500 ease-out ${remainingFree >= 3
                             ? "bg-gradient-to-r from-green-400 to-green-500"
                             : remainingFree >= 2
                               ? "bg-gradient-to-r from-amber-400 to-amber-500"
                               : "bg-gradient-to-r from-red-400 to-red-500"
                           }`}
-                        style={{ width: `${(remainingFree / FREE_DAILY_LIMIT) * 100}%` }}
+                        style={{ width: `${(remainingFree / FREE_FORTNIGHTLY_LIMIT) * 100}%` }}
                       />
                     </div>
                   </div>

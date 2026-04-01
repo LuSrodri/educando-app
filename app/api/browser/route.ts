@@ -54,18 +54,22 @@ export async function GET(req: Request) {
       return Response.json({ error: "Browser not found" }, { status: 404 })
     }
 
-    const today = new Date().toISOString().split("T")[0]
+    const now = new Date()
+    const year = now.getUTCFullYear()
+    const month = String(now.getUTCMonth() + 1).padStart(2, "0")
+    const day = now.getUTCDate()
+    const period = `${year}-${month}-${day <= 15 ? "01" : "16"}`
 
     const { data: usageData } = await supabase
       .from("daily_usage")
       .select("count")
       .eq("browser_id", browserId)
-      .eq("usage_date", today)
+      .eq("usage_date", period)
       .single()
 
-    const dailyUsage = usageData?.count || 0
+    const fortnightlyUsage = usageData?.count || 0
 
-    return Response.json({ browser, dailyUsage })
+    return Response.json({ browser, fortnightlyUsage })
   } catch (error) {
     if (error instanceof ValidationError) {
       return Response.json({ error: error.message }, { status: 400 })

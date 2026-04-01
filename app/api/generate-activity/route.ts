@@ -1,6 +1,6 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai"
 import { createServerClient } from "@/lib/supabase/server"
-import { incrementDailyUsage, canGenerateFree } from "@/lib/credits"
+import { incrementFortnightlyUsage, canGenerateFree } from "@/lib/credits"
 import { validateBrowserId, validatePrompt, ValidationError } from "@/lib/validation"
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
@@ -16,10 +16,10 @@ export async function POST(req: Request) {
         ? body.improvedPrompt.trim()
         : null
 
-    // Check daily limit
+    // Check fortnightly limit
     const canGenerate = await canGenerateFree(browserId)
     if (!canGenerate) {
-      return Response.json({ error: "Limite diário de atividades atingido. Tente novamente amanhã!" }, { status: 403 })
+      return Response.json({ error: "Você usou todas as suas atividades gratuitas. Novos créditos em breve!" }, { status: 403 })
     }
 
     const finalPrompt = improvedPrompt || prompt
@@ -91,7 +91,7 @@ export async function POST(req: Request) {
     }
 
     // Deduct credit
-    await incrementDailyUsage(browserId)
+    await incrementFortnightlyUsage(browserId)
 
     return Response.json({
       image: { base64, mediaType },
