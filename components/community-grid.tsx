@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Eye, Loader2, Users } from "lucide-react"
@@ -16,29 +16,12 @@ function truncate(str: string, maxLength: number): string {
   return str.slice(0, maxLength - 3) + "..."
 }
 
-type GridItem = { type: "activity"; activity: Activity }
-
-function buildGridItems(activities: Activity[]): GridItem[] {
-  if (activities.length === 0) return []
-
-  const items: GridItem[] = []
-
-  for (let i = 0; i < activities.length; i++) {
-    items.push({ type: "activity", activity: activities[i] })
-    }
-  }
-
-  return items
-}
-
 export function CommunityGrid({ initialActivities }: CommunityGridProps) {
   const [activities, setActivities] = useState<Activity[]>(initialActivities)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(initialActivities.length >= 50)
   const [loadError, setLoadError] = useState(false)
   const observerRef = useRef<HTMLDivElement>(null)
-
-  const gridItems = useMemo(() => buildGridItems(activities), [activities])
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore) return
@@ -98,8 +81,7 @@ export function CommunityGrid({ initialActivities }: CommunityGridProps) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {gridItems.map((item) => {
-          const activity = item.activity
+        {activities.map((activity) => {
           return (
             <Link
               key={activity.id}
