@@ -127,23 +127,67 @@ export async function getPaymentStatus(
   externalRef: string
 ): Promise<{ status: string; balance: number } | null> {
   const supabase = createServerClient()
-  const { data } = await supabase
+  const { data: payment } = await supabase
     .from("mercadopago_payments")
-    .select("status, credits_to_grant, browser_id")
+    .select("id, status, credits_to_grant, browser_id, mp_payment_id")
     .eq("mp_external_ref", externalRef)
     .single()
 
-  if (!data) return null
+  if (!payment) return null
 
-  let balance = 0
-  if (data.status === "approved") {
+  // Already approved in our DB — just return current balance
+  if (payment.status === "approved") {
     const { data: credits } = await supabase
       .from("paid_credits")
       .select("balance")
-      .eq("browser_id", data.browser_id)
+      .eq("browser_id", payment.browser_id)
       .single()
-    balance = credits?.balance ?? 0
+    return { status: "approved", balance: credits?.balance ?? 0 }
   }
 
-  return { status: data.status, balance }
+  // Still pending — verify directly with MP API (webhook may be delayed or misconfigured)
+  if (payment.status === "pending" && payment.mp_payment_id) {
+    const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN
+    if (!accessToken) return { status: payment.status, balance: 0 }
+
+    try {
+      const mpRes = await fetch(
+        `https://api.mercadopago.com/v1/payments/${payment.mp_payment_id}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      )
+      if (mpRes.ok) {
+        const mpPayment = await mpRes.json()
+
+        if (mpPayment.status === "approved") {
+          // Grant credits (idempotent — same logic as webhook)
+          const { grantPaidCredits } = await import("@/lib/paid-credits")
+          await grantPaidCredits(payment.browser_id, payment.credits_to_grant)
+          await supabase
+            .from("mercadopago_payments")
+            .update({ status: "approved", approved_at: new Date().toISOString() })
+            .eq("id", payment.id)
+
+          const { data: credits } = await supabase
+            .from("paid_credits")
+            .select("balance")
+            .eq("browser_id", payment.browser_id)
+            .single()
+          return { status: "approved", balance: credits?.balance ?? payment.credits_to_grant }
+        }
+
+        // Sync rejected/cancelled status
+        if (mpPayment.status === "rejected" || mpPayment.status === "cancelled") {
+          await supabase
+            .from("mercadopago_payments")
+            .update({ status: mpPayment.status })
+            .eq("id", payment.id)
+          return { status: mpPayment.status, balance: 0 }
+        }
+      }
+    } catch (err) {
+      console.error("Error verifying payment with MP API:", err)
+    }
+  }
+
+  return { status: payment.status, balance: 0 }
 }
