@@ -55,6 +55,7 @@ export async function getAllActivities(limit = 100, offset = 0): Promise<Activit
   const { data } = await supabase
     .from("activities")
     .select("*")
+    .eq("is_paid", false)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1)
 
@@ -120,6 +121,7 @@ export async function getRandomActivities(excludeId: string, limit = 3): Promise
   const { data } = await supabase
     .from("activities")
     .select("*")
+    .eq("is_paid", false)
     .neq("id", excludeId)
     .order("created_at", { ascending: false })
 

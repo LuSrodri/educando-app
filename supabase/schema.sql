@@ -1,6 +1,8 @@
 -- educando.app - Database Schema
 -- Free model: 3 activities per fortnight (quinzena), no login required
 -- daily_usage.usage_date stores the fortnight start date (YYYY-MM-01 or YYYY-MM-16)
+-- Paid model: R$14,90/10 atividades or R$24,90/20 atividades via Mercado Pago PIX
+-- Paid activities (is_paid=true) are private — not shown in community or posted to Pinterest
 
 -- Activities table
 CREATE TABLE IF NOT EXISTS activities (
@@ -10,6 +12,7 @@ CREATE TABLE IF NOT EXISTS activities (
   improved_prompt TEXT,
   image_path TEXT NOT NULL,
   image_media_type TEXT NOT NULL DEFAULT 'image/png',
+  is_paid BOOLEAN NOT NULL DEFAULT false,  -- true = private, not in community/Pinterest
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -32,6 +35,41 @@ CREATE TABLE IF NOT EXISTS daily_usage (
   count INTEGER NOT NULL DEFAULT 0,
   UNIQUE(browser_id, usage_date)
 );
+
+-- Paid credits table (one row per browser_id)
+CREATE TABLE IF NOT EXISTS paid_credits (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  browser_id   TEXT NOT NULL,
+  balance      INTEGER NOT NULL DEFAULT 0 CHECK (balance >= 0),
+  total_bought INTEGER NOT NULL DEFAULT 0,
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(browser_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_paid_credits_browser_id ON paid_credits(browser_id);
+
+-- Mercado Pago PIX payments
+CREATE TABLE IF NOT EXISTS mercadopago_payments (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  browser_id       TEXT NOT NULL,
+  mp_payment_id    BIGINT UNIQUE,
+  mp_external_ref  TEXT NOT NULL UNIQUE,
+  pack             TEXT NOT NULL,
+  amount_cents     INTEGER NOT NULL,
+  credits_to_grant INTEGER NOT NULL,
+  status           TEXT NOT NULL DEFAULT 'pending'
+                   CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
+  qr_code          TEXT,
+  qr_code_base64   TEXT,
+  pix_expires_at   TIMESTAMPTZ,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  approved_at      TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_mp_payments_browser_id ON mercadopago_payments(browser_id);
+CREATE INDEX IF NOT EXISTS idx_mp_payments_ext_ref    ON mercadopago_payments(mp_external_ref);
+CREATE INDEX IF NOT EXISTS idx_mp_payments_status     ON mercadopago_payments(status);
 
 -- Drop deprecated tables
 DROP TABLE IF EXISTS credits;

@@ -1,5 +1,6 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai"
 import { canGenerateFree } from "@/lib/credits"
+import { hasPaidCredits } from "@/lib/paid-credits"
 import {
   validatePrompt,
   validateBrowserId,
@@ -102,13 +103,16 @@ export async function POST(req: Request) {
     const activityType = validateActivityType(body?.activityType)
     const elements = validateElements(body?.elements)
 
-    // Check daily credit limit before doing anything
-    const canGenerate = await canGenerateFree(browserId)
-    if (!canGenerate) {
-      return Response.json(
-        { error: "Você usou todas as suas atividades gratuitas. Novos créditos em breve!", isCreditLimit: true },
-        { status: 403 }
-      )
+    // Check credit limit — paid users bypass the free limit
+    const hasPaid = await hasPaidCredits(browserId)
+    if (!hasPaid) {
+      const canGenerate = await canGenerateFree(browserId)
+      if (!canGenerate) {
+        return Response.json(
+          { error: "Você usou todas as suas atividades gratuitas.", isCreditLimit: true, isPaywall: true },
+          { status: 403 }
+        )
+      }
     }
 
     // Safety check before improving the prompt

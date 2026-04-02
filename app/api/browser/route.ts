@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { validateBrowserId, ValidationError } from "@/lib/validation"
+import { getPaidBalance } from "@/lib/paid-credits"
 
 export async function POST(req: Request) {
   try {
@@ -68,8 +69,9 @@ export async function GET(req: Request) {
       .single()
 
     const fortnightlyUsage = usageData?.count || 0
+    const paidBalance = await getPaidBalance(browserId)
 
-    return Response.json({ browser, fortnightlyUsage })
+    return Response.json({ browser, fortnightlyUsage, paidBalance })
   } catch (error) {
     if (error instanceof ValidationError) {
       return Response.json({ error: error.message }, { status: 400 })

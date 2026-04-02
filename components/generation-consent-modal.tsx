@@ -1,14 +1,15 @@
 "use client"
 
-import { Shield, Database, ImageIcon, Users, X } from "lucide-react"
+import { Shield, Database, ImageIcon, Users, Lock, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface GenerationConsentModalProps {
   onAccept: () => void
   onDecline: () => void
+  isPaid?: boolean
 }
 
-export function GenerationConsentModal({ onAccept, onDecline }: GenerationConsentModalProps) {
+export function GenerationConsentModal({ onAccept, onDecline, isPaid = false }: GenerationConsentModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
@@ -53,7 +54,7 @@ export function GenerationConsentModal({ onAccept, onDecline }: GenerationConsen
             <div>
               <p className="text-sm font-semibold text-gray-800">ID anônimo do navegador</p>
               <p className="text-xs text-gray-500">
-                Um código único gerado localmente para controlar o uso das atividades gratuitas.
+                Um código único gerado localmente para controlar o uso das atividades.
                 Sem nome, e-mail ou login.
               </p>
             </div>
@@ -68,16 +69,29 @@ export function GenerationConsentModal({ onAccept, onDecline }: GenerationConsen
               </p>
             </div>
           </div>
-          <div className="flex gap-3">
-            <Users className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
-            <div>
-              <p className="text-sm font-semibold text-gray-800">Exibição na galeria pública</p>
-              <p className="text-xs text-gray-500">
-                Sua atividade poderá aparecer na galeria da comunidade do educando.app para inspirar
-                outros professores.
-              </p>
+          {isPaid ? (
+            <div className="flex gap-3">
+              <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Atividade privada</p>
+                <p className="text-xs text-gray-500">
+                  Esta atividade foi gerada com créditos pagos e não aparecerá na galeria
+                  pública nem será compartilhada com outros usuários.
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex gap-3">
+              <Users className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Exibição na galeria pública</p>
+                <p className="text-xs text-gray-500">
+                  Sua atividade poderá aparecer na galeria da comunidade do educando.app para inspirar
+                  outros professores.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <p className="text-xs text-gray-400">

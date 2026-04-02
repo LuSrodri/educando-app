@@ -1,6 +1,8 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai"
 import { createServerClient } from "@/lib/supabase/server"
 import { incrementFortnightlyUsage, canGenerateFree } from "@/lib/credits"
+import { hasPaidCredits, decrementPaidCredits } from "@/lib/paid-credits"
+import { postPin } from "@/lib/pinterest"
 import { validateBrowserId, validatePrompt, ValidationError } from "@/lib/validation"
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
@@ -10,16 +12,21 @@ export async function POST(req: Request) {
     const body = await req.json()
     const browserId = validateBrowserId(body?.browserId)
     const prompt = validatePrompt(body?.prompt)
-    // improvedPrompt is optional and server-generated, so light validation only
     const improvedPrompt =
       typeof body?.improvedPrompt === "string" && body.improvedPrompt.trim()
         ? body.improvedPrompt.trim()
         : null
 
-    // Check fortnightly limit
-    const canGenerate = await canGenerateFree(browserId)
-    if (!canGenerate) {
-      return Response.json({ error: "Você usou todas as suas atividades gratuitas. Novos créditos em breve!" }, { status: 403 })
+    // Determine credit source: paid first, then free
+    const isPaid = await hasPaidCredits(browserId)
+    if (!isPaid) {
+      const canGenerate = await canGenerateFree(browserId)
+      if (!canGenerate) {
+        return Response.json(
+          { error: "Você usou todas as suas atividades gratuitas.", isPaywall: true },
+          { status: 403 }
+        )
+      }
     }
 
     const finalPrompt = improvedPrompt || prompt
@@ -82,6 +89,7 @@ export async function POST(req: Request) {
         improved_prompt: improvedPrompt || prompt,
         image_path: imagePath,
         image_media_type: mediaType,
+        is_paid: isPaid,
       })
       .select()
       .single()
@@ -91,11 +99,20 @@ export async function POST(req: Request) {
     }
 
     // Deduct credit
-    await incrementFortnightlyUsage(browserId)
+    if (isPaid) {
+      await decrementPaidCredits(browserId)
+    } else {
+      await incrementFortnightlyUsage(browserId)
+      // Auto-post to Pinterest (fire-and-forget — never blocks response)
+      if (activity) {
+        void postPin(activity)
+      }
+    }
 
     return Response.json({
       image: { base64, mediaType },
       activity,
+      isPaid,
     })
   } catch (error) {
     if (error instanceof ValidationError) {

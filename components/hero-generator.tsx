@@ -19,9 +19,12 @@ import {
   Info,
   CheckCircle,
   VenetianMask,
+  Lock,
+  CreditCard,
 } from "lucide-react"
 import { ShareModal } from "@/components/share-modal"
 import { GenerationConsentModal } from "@/components/generation-consent-modal"
+import { PaywallModal } from "@/components/paywall-modal"
 import { PinterestSaveButton } from "@/components/pinterest-save-button"
 import { useBrowserId } from "@/hooks/useBrowserId"
 import { useCredits } from "@/hooks/useCredits"
@@ -58,6 +61,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
   const [showShareModal, setShowShareModal] = useState(false)
   const [showConsentModal, setShowConsentModal] = useState(false)
+  const [showPaywallModal, setShowPaywallModal] = useState(false)
 
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const [activityType, setActivityType] = useState<ActivityType>("student")
@@ -70,7 +74,14 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   })
 
   const { browserId, isLoading: browserLoading } = useBrowserId()
-  const { remainingFree, canGenerate, refresh: refreshCredits, FREE_FORTNIGHTLY_LIMIT } = useCredits(browserId)
+  const {
+    remainingFree,
+    paidBalance,
+    hasPaidCredits,
+    canGenerate,
+    refresh: refreshCredits,
+    FREE_FORTNIGHTLY_LIMIT,
+  } = useCredits(browserId)
 
   useImperativeHandle(ref, () => ({
     setPromptValue: (value: string) => {
@@ -120,7 +131,6 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
   useEffect(() => {
     if (generatedImage && resultRef.current) {
-      // On mobile, scroll to result
       if (window.innerWidth < 1024) {
         resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
       }
@@ -130,7 +140,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   const handleGenerateClick = () => {
     if (!prompt.trim() || !browserId) return
     if (!canGenerate) {
-      setError("Você usou todas as suas atividades gratuitas. Novos créditos em breve!")
+      setShowPaywallModal(true)
       return
     }
     if (!localStorage.getItem(GENERATION_CONSENT_KEY)) {
@@ -148,11 +158,6 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
   const generateActivity = async () => {
     if (!prompt.trim() || !browserId) return
-
-    if (!canGenerate) {
-      setError("Você usou todas as suas atividades gratuitas. Novos créditos em breve!")
-      return
-    }
 
     setIsGenerating(true)
     setError(null)
@@ -174,8 +179,8 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
       if (!improveResponse.ok) {
         const improveError = await improveResponse.json()
-        if (improveError.isCreditLimit) {
-          setError("Você usou todas as suas atividades gratuitas. Novos créditos em breve!")
+        if (improveError.isPaywall) {
+          setShowPaywallModal(true)
           return
         }
         if (improveError.isSafetyBlock) {
@@ -202,8 +207,8 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
       if (!response.ok) {
         const errorData = await response.json()
-        if (response.status === 403) {
-          setError("Você usou todas as suas atividades gratuitas. Novos créditos em breve!")
+        if (response.status === 403 && errorData.isPaywall) {
+          setShowPaywallModal(true)
           return
         }
         throw new Error(errorData.error || "Erro ao gerar atividade")
@@ -390,59 +395,93 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                     )}
                   </div>
 
-                  {/* Usage bar */}
+                  {/* Usage display */}
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">
-                        <span
-                          className={`font-bold ${remainingFree >= 3
-                              ? "text-green-600"
-                              : remainingFree >= 2
-                                ? "text-amber-600"
-                                : "text-red-600"
-                            }`}
-                        >
-                          {remainingFree}
-                        </span>{" "}
-                        atividades gratuitas para gerar agora
-                      </span>
-                    </div>
-                    <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ease-out ${remainingFree >= 3
-                            ? "bg-gradient-to-r from-green-400 to-green-500"
-                            : remainingFree >= 2
-                              ? "bg-gradient-to-r from-amber-400 to-amber-500"
-                              : "bg-gradient-to-r from-red-400 to-red-500"
-                          }`}
-                        style={{ width: `${(remainingFree / FREE_FORTNIGHTLY_LIMIT) * 100}%` }}
-                      />
-                    </div>
+                    {hasPaidCredits ? (
+                      // Paid credits display
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600 flex items-center gap-1.5">
+                          <CreditCard className="w-4 h-4 text-amber-600" />
+                          <span>
+                            <span className="font-bold text-amber-600">{paidBalance}</span>{" "}
+                            {paidBalance === 1 ? "crédito pago disponível" : "créditos pagos disponíveis"}
+                          </span>
+                        </span>
+                        {remainingFree > 0 && (
+                          <span className="text-xs text-gray-400">
+                            +{remainingFree} grátis
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      // Free credits display
+                      <>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">
+                            <span
+                              className={`font-bold ${remainingFree >= 3
+                                  ? "text-green-600"
+                                  : remainingFree >= 2
+                                    ? "text-amber-600"
+                                    : "text-red-600"
+                                }`}
+                            >
+                              {remainingFree}
+                            </span>{" "}
+                            atividades gratuitas para gerar agora
+                          </span>
+                        </div>
+                        <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ease-out ${remainingFree >= 3
+                                ? "bg-gradient-to-r from-green-400 to-green-500"
+                                : remainingFree >= 2
+                                  ? "bg-gradient-to-r from-amber-400 to-amber-500"
+                                  : "bg-gradient-to-r from-red-400 to-red-500"
+                              }`}
+                            style={{ width: `${(remainingFree / FREE_FORTNIGHTLY_LIMIT) * 100}%` }}
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Generate button */}
-                  <Button
-                    onClick={handleGenerateClick}
-                    disabled={!prompt.trim() || isGenerating || browserLoading || !canGenerate}
-                    className="w-full bg-amber-600 hover:bg-amber-700 text-white h-auto py-3.5 text-base font-bold shadow-lg hover:shadow-xl transition-all cursor-pointer"
-                  >
-                    {isGenerating ? (
+                  {canGenerate ? (
+                    <Button
+                      onClick={handleGenerateClick}
+                      disabled={!prompt.trim() || isGenerating || browserLoading}
+                      className="w-full bg-amber-600 hover:bg-amber-700 text-white h-auto py-3.5 text-base font-bold shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                    >
+                      {isGenerating ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span className="text-center">{generationStatus}</span>
+                        </span>
+                      ) : browserLoading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Carregando...</span>
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-2">
+                          <Sparkles className="w-5 h-5" />
+                          <span>Gerar Atividade</span>
+                        </span>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => setShowPaywallModal(true)}
+                      disabled={browserLoading}
+                      className="w-full bg-gray-900 hover:bg-gray-800 text-white h-auto py-3.5 text-base font-bold shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                    >
                       <span className="flex items-center justify-center gap-2">
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span className="text-center">{generationStatus}</span>
+                        <Lock className="w-5 h-5" />
+                        <span>Comprar mais atividades</span>
                       </span>
-                    ) : browserLoading ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Carregando...</span>
-                      </span>
-                    ) : (
-                      <span className="flex items-center justify-center gap-2">
-                        <Sparkles className="w-5 h-5" />
-                        <span>Gerar Atividade</span>
-                      </span>
-                    )}
-                  </Button>
+                    </Button>
+                  )}
 
                   {/* Error */}
                   {error && (
@@ -453,7 +492,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
 
                   <p className="text-center text-sm text-gray-400">
                     <strong className="text-sm text-amber-600">Dica:</strong>&nbsp;
-                    Module seu pedido de acordo para garantir que tudo caiba bem no layout de uma página A4. 
+                    Module seu pedido de acordo para garantir que tudo caiba bem no layout de uma página A4.
                   </p>
                 </CardContent>
               </Card>
@@ -529,7 +568,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                         <Share2 className="w-4 h-4 mr-1.5" />
                         Compartilhar
                       </Button>
-                      {currentActivity && (
+                      {currentActivity && !currentActivity.is_paid && (
                         <PinterestSaveButton
                           activityUrl={`https://educando.app/atividade/${currentActivity.id}`}
                           imageUrl={`${getActivityImageUrl(currentActivity.image_path)}`}
@@ -576,6 +615,19 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
         <GenerationConsentModal
           onAccept={handleConsentAccept}
           onDecline={() => setShowConsentModal(false)}
+          isPaid={hasPaidCredits}
+        />
+      )}
+
+      {browserId && (
+        <PaywallModal
+          isOpen={showPaywallModal}
+          onClose={() => setShowPaywallModal(false)}
+          onSuccess={() => {
+            refreshCredits()
+            setShowPaywallModal(false)
+          }}
+          browserId={browserId}
         />
       )}
     </>

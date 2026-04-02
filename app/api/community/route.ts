@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from("activities")
       .select("*")
+      .eq("is_paid", false)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1)
 
