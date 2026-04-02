@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import { track } from "@vercel/analytics"
 import * as Dialog from "@radix-ui/react-dialog"
 import {
   Lock,
@@ -152,6 +153,7 @@ export function PaywallModal({ isOpen, onClose, onSuccess, browserId }: PaywallM
   const handleBuyPack = async (pack: PackId) => {
     setSelectedPack(pack)
     setState("loading")
+    track("checkout_initiated", { pack, credits: PACKS[pack].credits, price: PACKS[pack].price })
     try {
       const res = await fetch("/api/payments/create-pix", {
         method: "POST",

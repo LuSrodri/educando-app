@@ -22,6 +22,7 @@ import {
   Lock,
   CreditCard,
 } from "lucide-react"
+import { track } from "@vercel/analytics"
 import { ShareModal } from "@/components/share-modal"
 import { GenerationConsentModal } from "@/components/generation-consent-modal"
 import { PaywallModal } from "@/components/paywall-modal"
@@ -140,6 +141,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
   const handleGenerateClick = () => {
     if (!prompt.trim() || !browserId) return
     if (!canGenerate) {
+      track("free_limit_reached", { source: "generate_button" })
       setShowPaywallModal(true)
       return
     }
@@ -180,6 +182,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
       if (!improveResponse.ok) {
         const improveError = await improveResponse.json()
         if (improveError.isPaywall) {
+          track("free_limit_reached", { source: "api_403_improve" })
           setShowPaywallModal(true)
           return
         }
@@ -208,6 +211,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
       if (!response.ok) {
         const errorData = await response.json()
         if (response.status === 403 && errorData.isPaywall) {
+          track("free_limit_reached", { source: "api_403_generate" })
           setShowPaywallModal(true)
           return
         }
@@ -218,6 +222,10 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
       if (data.image) {
         setGeneratedImage(`data:${data.image.mediaType};base64,${data.image.base64}`)
         setCurrentActivity(data.activity)
+        track("activity_processed", {
+          activity_type: activityType,
+          is_paid: data.activity?.is_paid ?? false,
+        })
         refreshCredits()
       } else {
         throw new Error("Nenhuma imagem foi gerada")
@@ -472,7 +480,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                     </Button>
                   ) : (
                     <Button
-                      onClick={() => setShowPaywallModal(true)}
+                      onClick={() => { track("free_limit_reached", { source: "locked_button" }); setShowPaywallModal(true) }}
                       disabled={browserLoading}
                       className="w-full bg-gray-900 hover:bg-gray-800 text-white h-auto py-3.5 text-base font-bold shadow-lg hover:shadow-xl transition-all cursor-pointer"
                     >
