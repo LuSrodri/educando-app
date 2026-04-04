@@ -1,88 +1,109 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
-import { Eye, Loader2, Users } from "lucide-react"
+import { Eye, Loader2, Users, ChevronLeft, ChevronRight } from "lucide-react"
 import type { Activity } from "@/lib/supabase/types"
 import { getActivityThumbnailUrl } from "@/lib/image-utils"
 import { generateSemanticSlug } from "@/lib/slug"
-interface CommunityGridProps {
-  initialActivities: Activity[]
-}
+
+const PAGE_SIZE = 12
 
 function truncate(str: string, maxLength: number): string {
   if (str.length <= maxLength) return str
   return str.slice(0, maxLength - 3) + "..."
 }
 
-export function CommunityGrid({ initialActivities }: CommunityGridProps) {
-  const [activities, setActivities] = useState<Activity[]>(initialActivities)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const [hasMore, setHasMore] = useState(initialActivities.length >= 50)
-  const [loadError, setLoadError] = useState(false)
-  const observerRef = useRef<HTMLDivElement>(null)
+function getPaginationPages(current: number, total: number): (number | "...")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
 
-  const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return
-    setIsLoadingMore(true)
-    setLoadError(false)
-    try {
-      const response = await fetch(`/api/community?offset=${activities.length}&limit=50`)
-      if (response.ok) {
-        const newActivities = await response.json()
-        if (newActivities.length < 50) {
-          setHasMore(false)
-        }
-        setActivities((prev) => [...prev, ...newActivities])
-      } else {
-        setLoadError(true)
-      }
-    } catch (error) {
-      console.error("Error loading more activities:", error)
-      setLoadError(true)
-    } finally {
-      setIsLoadingMore(false)
-    }
-  }, [activities.length, isLoadingMore, hasMore])
+  const pages: (number | "...")[] = [1]
 
-  // Infinite scroll with IntersectionObserver
+  if (current > 3) pages.push("...")
+
+  const start = Math.max(2, current - 1)
+  const end = Math.min(total - 1, current + 1)
+  for (let i = start; i <= end; i++) pages.push(i)
+
+  if (current < total - 2) pages.push("...")
+
+  pages.push(total)
+  return pages
+}
+
+export function CommunityGrid() {
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  const totalPages = Math.ceil(total / PAGE_SIZE)
+
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
-          loadMore()
-        }
-      },
-      { threshold: 0.1 }
-    )
+    setIsLoading(true)
+    setError(false)
 
-    if (observerRef.current) {
-      observer.observe(observerRef.current)
-    }
+    fetch(`/api/community?page=${page}&limit=${PAGE_SIZE}`)
+      .then((res) => {
+        if (!res.ok) throw new Error()
+        return res.json()
+      })
+      .then(({ data, total: t }) => {
+        setActivities(data)
+        setTotal(t)
+      })
+      .catch(() => setError(true))
+      .finally(() => setIsLoading(false))
+  }, [page])
 
-    return () => observer.disconnect()
-  }, [loadMore, hasMore, isLoadingMore])
+  const goTo = (p: number) => {
+    if (p < 1 || p > totalPages) return
+    setPage(p)
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
 
-  if (activities.length === 0) {
+  if (!isLoading && !error && activities.length === 0 && page === 1) {
     return (
       <div className="text-center py-12">
         <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-500">
-          Ainda não há atividades na comunidade.
-        </p>
-        <p className="text-gray-400 text-sm mt-1">
-          Seja o primeiro a gerar uma atividade!
-        </p>
+        <p className="text-gray-500">Ainda não há atividades na comunidade.</p>
+        <p className="text-gray-400 text-sm mt-1">Seja o primeiro a gerar uma atividade!</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {activities.map((activity) => {
-          return (
+      {/* Total count */}
+      {total > 0 && (
+        <p className="text-sm text-gray-500">
+          <span className="font-semibold text-gray-700">{total.toLocaleString("pt-BR")}</span>{" "}
+          atividades geradas pela comunidade
+        </p>
+      )}
+
+      {/* Grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+            <div key={i} className="aspect-[3/4] bg-gray-100 rounded-lg animate-pulse" />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="text-center py-12 text-sm text-red-600">
+          Erro ao carregar atividades.{" "}
+          <button
+            onClick={() => goTo(page)}
+            className="text-amber-600 hover:text-amber-700 font-medium underline cursor-pointer"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {activities.map((activity) => (
             <Link
               key={activity.id}
               href={`/atividade/${generateSemanticSlug(activity.original_prompt, activity.id)}`}
@@ -106,39 +127,59 @@ export function CommunityGrid({ initialActivities }: CommunityGridProps) {
                       </div>
                     </div>
                   </div>
-
                   <div className="p-3">
-                    <p className="text-xs text-gray-600 line-clamp-2">
-                      {activity.original_prompt}
-                    </p>
+                    <p className="text-xs text-gray-600 line-clamp-2">{activity.original_prompt}</p>
                   </div>
                 </CardContent>
               </Card>
             </Link>
-          )
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* Infinite scroll trigger */}
-      <div ref={observerRef} className="flex justify-center py-4">
-        {isLoadingMore && (
-          <div className="flex items-center gap-2 text-gray-500 text-sm">
-            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-            Carregando mais...
-          </div>
-        )}
-        {loadError && (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-red-600">Erro ao carregar mais atividades.</span>
-            <button
-              onClick={() => loadMore()}
-              className="text-amber-600 hover:text-amber-700 font-medium underline cursor-pointer"
-            >
-              Tentar novamente
-            </button>
-          </div>
-        )}
-      </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-1 pt-2">
+          <button
+            onClick={() => goTo(page - 1)}
+            disabled={page === 1 || isLoading}
+            className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            aria-label="Página anterior"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {getPaginationPages(page, totalPages).map((p, i) =>
+            p === "..." ? (
+              <span key={`ellipsis-${i}`} className="px-2 text-gray-400 text-sm select-none">
+                …
+              </span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => goTo(p)}
+                disabled={isLoading}
+                className={`min-w-[36px] h-9 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                  p === page
+                    ? "bg-amber-500 text-white"
+                    : "text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                }`}
+              >
+                {p}
+              </button>
+            )
+          )}
+
+          <button
+            onClick={() => goTo(page + 1)}
+            disabled={page === totalPages || isLoading}
+            className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+            aria-label="Próxima página"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

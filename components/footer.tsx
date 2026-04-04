@@ -12,7 +12,7 @@ export function Footer() {
             height={80}
             className="brightness-0 invert"
           />
-          <div className="text-sm text-muted-foreground text-center md:text-right">
+          <div className="text-sm text-muted-foreground text-center md:text-right space-y-1">
             <p>Feito com carinho para professores do Ensino Fundamental</p>
             <p>
               Feito com ❤️ por{" "}
@@ -24,6 +24,9 @@ export function Footer() {
               >
                 Lucas Santos Rodrigues
               </a>
+            </p>
+            <p className="text-xs opacity-60">
+              Lucas Santos Rodrigues Ltda — 65.101.183/0001-87
             </p>
           </div>
         </div>
