@@ -2,12 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react"
 
-const FREE_FORTNIGHTLY_LIMIT = 3
-
 interface CreditsState {
   fortnightlyUsage: number
   remainingFree: number
   paidBalance: number
+  freeLimit: number
   isLoading: boolean
   error: Error | null
 }
@@ -15,8 +14,9 @@ interface CreditsState {
 export function useCredits(browserId: string | null) {
   const [state, setState] = useState<CreditsState>({
     fortnightlyUsage: 0,
-    remainingFree: FREE_FORTNIGHTLY_LIMIT,
+    remainingFree: 0,
     paidBalance: 0,
+    freeLimit: 0,
     isLoading: true,
     error: null,
   })
@@ -37,11 +37,13 @@ export function useCredits(browserId: string | null) {
       const data = await response.json()
       const usage = data.fortnightlyUsage || 0
       const paid = data.paidBalance || 0
+      const limit = data.freeLimit || 0
 
       setState({
         fortnightlyUsage: usage,
-        remainingFree: Math.max(0, FREE_FORTNIGHTLY_LIMIT - usage),
+        remainingFree: Math.max(0, limit - usage),
         paidBalance: paid,
+        freeLimit: limit,
         isLoading: false,
         error: null,
       })
@@ -70,11 +72,11 @@ export function useCredits(browserId: string | null) {
     fortnightlyUsage: state.fortnightlyUsage,
     remainingFree: state.remainingFree,
     paidBalance: state.paidBalance,
+    freeLimit: state.freeLimit,
     hasPaidCredits,
     canGenerate,
     isLoading: state.isLoading,
     error: state.error,
     refresh,
-    FREE_FORTNIGHTLY_LIMIT,
   }
 }

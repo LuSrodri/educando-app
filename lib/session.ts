@@ -9,4 +9,3 @@ export function getSessionId(): string {
   return sessionId
 }
 
-export const FREE_FORTNIGHTLY_LIMIT = 3

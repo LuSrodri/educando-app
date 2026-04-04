@@ -80,8 +80,8 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
     paidBalance,
     hasPaidCredits,
     canGenerate,
+    freeLimit,
     refresh: refreshCredits,
-    FREE_FORTNIGHTLY_LIMIT,
   } = useCredits(browserId)
 
   useImperativeHandle(ref, () => ({
@@ -447,7 +447,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
                                   ? "bg-gradient-to-r from-amber-400 to-amber-500"
                                   : "bg-gradient-to-r from-red-400 to-red-500"
                               }`}
-                            style={{ width: `${(remainingFree / FREE_FORTNIGHTLY_LIMIT) * 100}%` }}
+                            style={{ width: `${freeLimit > 0 ? (remainingFree / freeLimit) * 100 : 0}%` }}
                           />
                         </div>
                       </>
