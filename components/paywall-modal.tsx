@@ -24,7 +24,7 @@ interface PaywallModalProps {
 }
 
 type ModalState = "select_pack" | "loading" | "pix_qr" | "expired" | "success" | "error"
-type PackId = "10" | "20"
+type PackId = "1" | "10" | "20"
 
 interface PixData {
   externalRef: string
@@ -36,6 +36,14 @@ interface PixData {
 }
 
 const PACKS = {
+  "1": {
+    price: "R$\u00a04,90",
+    credits: 1,
+    label: "1 atividade",
+    badge: "Avulso",
+    badgeColor: "bg-gray-200 text-gray-600",
+    perCredit: "R$\u00a04,90 por atividade",
+  },
   "10": {
     price: "R$\u00a014,90",
     credits: 10,
@@ -303,43 +311,79 @@ function SelectPackView({
       </div>
 
       {/* Pack cards */}
-      <div className="grid grid-cols-2 gap-3">
-        {(["10", "20"] as PackId[]).map((packId) => {
-          const pack = PACKS[packId]
-          const isSelected = selectedPack === packId
+      <div className="space-y-2">
+        {/* Avulso — entry option */}
+        {(() => {
+          const pack = PACKS["1"]
+          const isSelected = selectedPack === "1"
           return (
             <button
-              key={packId}
               type="button"
-              onClick={() => onSelect(packId)}
-              className={`relative flex flex-col text-left rounded-xl border-2 p-4 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
+              onClick={() => onSelect("1")}
+              className={`relative w-full flex items-center justify-between text-left rounded-xl border-2 px-4 py-3 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
                 isSelected
                   ? "border-amber-500 bg-amber-50 shadow-md shadow-amber-100"
                   : "border-gray-200 bg-white hover:border-amber-300 hover:bg-amber-50/40"
               }`}
               aria-pressed={isSelected}
             >
-              {/* Badge */}
-              <span className={`self-start text-[10px] font-bold px-2 py-0.5 rounded-full mb-3 ${pack.badgeColor}`}>
-                {pack.badge}
-              </span>
-
-              {/* Price */}
-              <span className="text-2xl font-extrabold text-gray-900 font-heading leading-none">
-                {pack.price}
-              </span>
-              <span className="text-sm font-semibold text-gray-700 mt-1">{pack.label}</span>
-              <span className="text-xs text-gray-400 mt-0.5">{pack.perCredit}</span>
-
-              {/* Selected indicator */}
+              <div className="flex items-center gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-extrabold text-gray-900 font-heading leading-none">
+                      {pack.price}
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${pack.badgeColor}`}>
+                      {pack.badge}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-400 mt-0.5 block">{pack.label}</span>
+                </div>
+              </div>
+              <span className="text-xs text-gray-400">{pack.perCredit}</span>
               {isSelected && (
-                <span className="absolute top-3 right-3 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
+                <span className="absolute top-1/2 -translate-y-1/2 right-3 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
                   <Check className="w-3 h-3 text-white" strokeWidth={3} />
                 </span>
               )}
             </button>
           )
-        })}
+        })()}
+
+        {/* Bundles — 2-col grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {(["10", "20"] as PackId[]).map((packId) => {
+            const pack = PACKS[packId]
+            const isSelected = selectedPack === packId
+            return (
+              <button
+                key={packId}
+                type="button"
+                onClick={() => onSelect(packId)}
+                className={`relative flex flex-col text-left rounded-xl border-2 p-4 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
+                  isSelected
+                    ? "border-amber-500 bg-amber-50 shadow-md shadow-amber-100"
+                    : "border-gray-200 bg-white hover:border-amber-300 hover:bg-amber-50/40"
+                }`}
+                aria-pressed={isSelected}
+              >
+                <span className={`self-start text-[10px] font-bold px-2 py-0.5 rounded-full mb-3 ${pack.badgeColor}`}>
+                  {pack.badge}
+                </span>
+                <span className="text-2xl font-extrabold text-gray-900 font-heading leading-none">
+                  {pack.price}
+                </span>
+                <span className="text-sm font-semibold text-gray-700 mt-1">{pack.label}</span>
+                <span className="text-xs text-gray-400 mt-0.5">{pack.perCredit}</span>
+                {isSelected && (
+                  <span className="absolute top-3 right-3 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* CTA */}

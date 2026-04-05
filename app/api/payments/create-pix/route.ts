@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const pack = body?.pack as PackId
 
     if (!pack || !PACKS[pack]) {
-      return Response.json({ error: "Pacote inválido. Escolha '10' ou '20'." }, { status: 400 })
+      return Response.json({ error: "Pacote inválido. Escolha '1', '10' ou '20'." }, { status: 400 })
     }
 
     const result = await createPixPayment(browserId, pack)

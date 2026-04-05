@@ -2,6 +2,7 @@ import { createServerClient } from "@/lib/supabase/server"
 import { createHmac, timingSafeEqual } from "crypto"
 
 export const PACKS = {
+  "1": { amountCents: 490, credits: 1, label: "1 atividade", amountBRL: 4.9 },
   "10": { amountCents: 1490, credits: 10, label: "10 atividades", amountBRL: 14.9 },
   "20": { amountCents: 2490, credits: 20, label: "20 atividades", amountBRL: 24.9 },
 } as const

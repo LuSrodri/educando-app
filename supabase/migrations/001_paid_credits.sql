@@ -28,9 +28,9 @@ CREATE TABLE IF NOT EXISTS mercadopago_payments (
   browser_id       TEXT NOT NULL,
   mp_payment_id    BIGINT UNIQUE,           -- filled after MP API responds
   mp_external_ref  TEXT NOT NULL UNIQUE,    -- our UUID, sent as external_reference to MP
-  pack             TEXT NOT NULL,           -- '10' or '20'
-  amount_cents     INTEGER NOT NULL,        -- 1490 or 2490
-  credits_to_grant INTEGER NOT NULL,        -- 10 or 20
+  pack             TEXT NOT NULL,           -- '1', '10' or '20'
+  amount_cents     INTEGER NOT NULL,        -- 490, 1490 or 2490
+  credits_to_grant INTEGER NOT NULL,        -- 1, 10 or 20
   status           TEXT NOT NULL DEFAULT 'pending'
                    CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
   qr_code          TEXT,                   -- PIX copia-e-cola string
