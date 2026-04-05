@@ -100,13 +100,28 @@ export function PaywallModal({ isOpen, onClose, onSuccess, browserId }: PaywallM
     }
   }, [isOpen, stopPolling, stopCountdown])
 
-  // Reset when opened
+  // Reset when opened — but preserve an active PIX session
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return
+
+    if (state === "pix_qr" && pixData) {
+      // Modal was closed while PIX was active — check if still valid and resume
+      const remaining = Math.max(0, Math.floor((new Date(pixData.expiresAt).getTime() - Date.now()) / 1000))
+      if (remaining > 0) {
+        startCountdown(pixData.expiresAt)
+        startPolling(pixData.externalRef)
+      } else {
+        setState("expired")
+      }
+      return
+    }
+
+    if (state !== "success") {
       setState("select_pack")
       setPixData(null)
       setErrorMsg("")
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
   const startCountdown = useCallback(
@@ -279,10 +294,10 @@ function SelectPackView({
         </div>
         <div>
           <Dialog.Title className="text-lg font-bold text-gray-900 font-heading leading-tight">
-            Suas atividades gratuitas acabaram
+            Continue criando sem limites
           </Dialog.Title>
           <p className="text-sm text-gray-500 mt-0.5">
-            Compre mais atividades para continuar gerando
+            Sem assinatura — pague só o que usar. Créditos não expiram.
           </p>
         </div>
       </div>

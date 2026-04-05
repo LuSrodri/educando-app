@@ -290,7 +290,7 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
             <p className="text-base text-gray-600 max-w-xl">
               Atividades pedagógicas alinhadas à BNCC, prontas para imprimir.
               <br />
-              <span className="text-amber-600 font-semibold"> 3 atividades grátis para começar.</span>
+              <span className="text-amber-600 font-semibold"> 1 atividade grátis para começar.</span>
             </p>
           </header>
 
@@ -634,6 +634,9 @@ export const HeroGenerator = forwardRef<HeroGeneratorRef>(function HeroGenerator
           onSuccess={() => {
             refreshCredits()
             setShowPaywallModal(false)
+            if (prompt.trim()) {
+              generateActivity()
+            }
           }}
           browserId={browserId}
         />
