@@ -1,6 +1,6 @@
 import { createServerClient } from "@/lib/supabase/server"
 
-export const FREE_FORTNIGHTLY_LIMIT = 1
+export const FREE_FORTNIGHTLY_LIMIT = 3
 
 /**
  * Returns the start date of the current fortnight (quinzena):
