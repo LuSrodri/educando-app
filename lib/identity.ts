@@ -1,15 +1,24 @@
 import { createHash } from "node:crypto"
 import { createServerClient } from "@/lib/supabase/server"
 
-// Phase 7 identity layer. Turns {fp_id from client header, IP from request}
-// into a server-side fingerprint_hash and enforces rotation throttling: the
-// fp_id OR the IP can change once per hour, but never both at once.
+// Identity resolution + anti-abuse.
+//
+// The earlier design kept a single row per (fp_id OR ip_hash) and flagged any
+// change within a 1h window as fraud. That breaks legitimate scenarios: shared
+// household/school networks have many fingerprints behind one IP, and a single
+// teacher may hit the app from home and school on the same day.
+//
+// The model here keeps one row per (fp_id, ip_hash) pair and detects abuse via
+// rate counters on the security_identities log:
+//   - MAX_FPS_PER_IP_PER_HOUR: a single public IP emitting many brand-new
+//     fp_ids in one hour looks like localStorage-wiping automation.
+//   - MAX_IPS_PER_FP_PER_HOUR: a single fp_id popping up from many distinct
+//     IPs in one hour looks like proxy/VPN hopping.
+// Both thresholds are generous enough for classrooms and roaming teachers.
 
-const ROTATION_WINDOW_MS = 60 * 60 * 1000
-// Epoch used for fp_last_changed / ip_last_changed when the identity is first
-// inserted. Using an actual "long ago" timestamp means the first legitimate
-// rotation isn't misread as fraud (now - inserted_at would otherwise be 0s).
-const NEVER_ROTATED_ISO = "1970-01-01T00:00:00Z"
+const WINDOW_MS = 60 * 60 * 1000
+const MAX_FPS_PER_IP_PER_HOUR = 10
+const MAX_IPS_PER_FP_PER_HOUR = 5
 
 export interface ResolvedIdentity {
   fingerprintHash: string | null
@@ -30,10 +39,8 @@ export function extractIp(request: Request): string | null {
   return null
 }
 
-// Collapse IPv4/IPv6 loopback variants into a single "localhost" bucket. This
-// keeps dev sessions stable: a single tab can alternate between 127.0.0.1 and
-// ::1 between requests on different platforms, and that shouldn't look like
-// an IP rotation.
+// Collapse IPv4/IPv6 loopback variants. Keeps dev sessions stable since the
+// same tab can swap between 127.0.0.1 and ::1 between requests.
 function normalizeIp(ip: string): string {
   const trimmed = ip.toLowerCase()
   if (
@@ -91,65 +98,36 @@ export async function resolveIdentity(
     return { fingerprintHash, isFraud: false, ip }
   }
 
-  const [{ data: byFp }, { data: byIp }] = await Promise.all([
-    supabase.from("security_identities").select("*").eq("fp_id", fpId).maybeSingle(),
-    supabase.from("security_identities").select("*").eq("ip_hash", ipHash).maybeSingle(),
+  // Rate-limit the registration of brand-new identities.
+  const windowStart = new Date(Date.now() - WINDOW_MS).toISOString()
+
+  const [{ count: ipFpCount }, { count: fpIpCount }] = await Promise.all([
+    supabase
+      .from("security_identities")
+      .select("id", { count: "exact", head: true })
+      .eq("ip_hash", ipHash)
+      .gt("created_at", windowStart),
+    supabase
+      .from("security_identities")
+      .select("id", { count: "exact", head: true })
+      .eq("fp_id", fpId)
+      .gt("created_at", windowStart),
   ])
 
-  const now = Date.now()
-
-  // Both fp_id and ip_hash already live on different identities: fraud.
-  if (byFp && byIp && byFp.id !== byIp.id) {
+  if ((ipFpCount ?? 0) >= MAX_FPS_PER_IP_PER_HOUR) {
+    return { fingerprintHash, isFraud: true, ip }
+  }
+  if ((fpIpCount ?? 0) >= MAX_IPS_PER_FP_PER_HOUR) {
     return { fingerprintHash, isFraud: true, ip }
   }
 
-  // Same fp_id, different IP → legitimate rotation only if ip_last_changed is
-  // older than the window.
-  if (byFp) {
-    const lastIpChange = new Date(byFp.ip_last_changed).getTime()
-    if (now - lastIpChange < ROTATION_WINDOW_MS) {
-      return { fingerprintHash, isFraud: true, ip }
-    }
-    await supabase
-      .from("security_identities")
-      .update({
-        ip_hash: ipHash,
-        fingerprint_hash: fingerprintHash,
-        ip_last_changed: nowIso,
-        last_seen_at: nowIso,
-      })
-      .eq("id", byFp.id)
-    return { fingerprintHash, isFraud: false, ip }
-  }
-
-  // Same IP, different fp_id → legitimate rotation only if fp hasn't rotated
-  // in the window.
-  if (byIp) {
-    const lastFpChange = new Date(byIp.fp_last_changed).getTime()
-    if (now - lastFpChange < ROTATION_WINDOW_MS) {
-      return { fingerprintHash, isFraud: true, ip }
-    }
-    await supabase
-      .from("security_identities")
-      .update({
-        fp_id: fpId,
-        fingerprint_hash: fingerprintHash,
-        fp_last_changed: nowIso,
-        last_seen_at: nowIso,
-      })
-      .eq("id", byIp.id)
-    return { fingerprintHash, isFraud: false, ip }
-  }
-
-  // First encounter — never seen fp_id nor this ip_hash. Seed rotation
-  // timestamps with the epoch so the first legitimate rotation isn't
-  // misclassified as fraud.
   await supabase.from("security_identities").insert({
     fingerprint_hash: fingerprintHash,
     fp_id: fpId,
     ip_hash: ipHash,
-    fp_last_changed: NEVER_ROTATED_ISO,
-    ip_last_changed: NEVER_ROTATED_ISO,
+    fp_last_changed: nowIso,
+    ip_last_changed: nowIso,
   })
+
   return { fingerprintHash, isFraud: false, ip }
 }

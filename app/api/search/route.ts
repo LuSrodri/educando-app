@@ -4,6 +4,7 @@ import { enrichFromTavily } from "@/lib/external-enrichment"
 import { resolveIdentity } from "@/lib/identity"
 import { rateLimit } from "@/lib/rate-limit"
 import { verifyTurnstileToken } from "@/lib/turnstile"
+import { moderateSearchQuery } from "@/lib/moderation"
 import type { Activity } from "@/lib/supabase/types"
 
 export const runtime = "nodejs"
@@ -54,6 +55,13 @@ export async function GET(request: NextRequest) {
   const rateKey = identity.fingerprintHash ?? identity.ip ?? "anon"
   const allowed = await rateLimit("search", rateKey, SEARCH_LIMIT_PER_MIN, 60)
   if (!allowed) return tooMany()
+
+  // Moderate the query BEFORE touching the DB. A rejected query short-circuits
+  // the request: no DB read, no telemetry write, no enrichment, no budget spent.
+  if (q.length > 0) {
+    const moderation = await moderateSearchQuery(q)
+    if (!moderation.accept) return unauthorized(`query_${moderation.reason}`)
+  }
 
   const supabase = createServerClient()
   try {

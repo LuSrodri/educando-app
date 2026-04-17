@@ -32,13 +32,15 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
   const router = useRouter()
   const fpId = useFingerprint()
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
-  const [query, setQuery] = useState("")
+
+  const [inputValue, setInputValue] = useState("")
+  const [submittedQuery, setSubmittedQuery] = useState("")
   const [activities, setActivities] = useState<Activity[]>(initialActivities)
   const [total, setTotal] = useState(initialTotal)
   const [page, setPage] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [errorReason, setErrorReason] = useState<string | null>(null)
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const sectionRef = useRef<HTMLElement | null>(null)
   const fetchSeqRef = useRef(0)
 
@@ -48,6 +50,7 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
     async (nextQuery: string, nextPage: number) => {
       const seq = ++fetchSeqRef.current
       setIsLoading(true)
+      setErrorReason(null)
       try {
         const params = new URLSearchParams({
           page: String(nextPage),
@@ -57,9 +60,24 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
         const headers: Record<string, string> = { Accept: "application/json" }
         if (fpId) headers["x-fp-id"] = fpId
         if (turnstileToken) headers["x-cf-turnstile-token"] = turnstileToken
+
         const res = await fetch(`/api/search?${params.toString()}`, { headers })
         if (res.status === 401) {
+          const body = await res.json().catch(() => ({ reason: "unauthorized" }))
+          if (seq !== fetchSeqRef.current) return
+          // Moderation rejections stay on page and surface the reason; identity
+          // fraud triggers a hard redirect to /401.
+          if (typeof body.reason === "string" && body.reason.startsWith("query_")) {
+            setErrorReason(body.reason.replace(/^query_/, ""))
+            setActivities([])
+            setTotal(0)
+            return
+          }
           router.push("/401")
+          return
+        }
+        if (res.status === 429) {
+          setErrorReason("rate_limited")
           return
         }
         if (!res.ok) throw new Error("search_failed")
@@ -69,6 +87,7 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
         setTotal(t ?? 0)
       } catch {
         if (seq !== fetchSeqRef.current) return
+        setErrorReason("unknown")
         setActivities([])
         setTotal(0)
       } finally {
@@ -78,23 +97,31 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
     [fpId, turnstileToken, router],
   )
 
+  // Reset to the full directory snapshot whenever the user clears the query.
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (!query.trim() && page === 1) {
+    if (!submittedQuery && page === 1) {
       setActivities(initialActivities)
       setTotal(initialTotal)
+      setErrorReason(null)
       setIsLoading(false)
       return
     }
-    debounceRef.current = setTimeout(() => runFetch(query, page), query ? 300 : 0)
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-  }, [query, page, initialActivities, initialTotal, runFetch])
+    runFetch(submittedQuery, page)
+    // runFetch is stable-ish; include it to satisfy the linter.
+  }, [submittedQuery, page, initialActivities, initialTotal, runFetch])
 
-  useEffect(() => {
+  const handleSubmit = useCallback((value: string) => {
+    const q = value.trim()
+    setSubmittedQuery(q)
     setPage(1)
-  }, [query])
+  }, [])
+
+  const handleClear = useCallback(() => {
+    setInputValue("")
+    setSubmittedQuery("")
+    setPage(1)
+    setErrorReason(null)
+  }, [])
 
   const goTo = useCallback(
     (p: number) => {
@@ -107,10 +134,24 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
 
   const subheading = useMemo(() => {
     const count = total.toLocaleString("pt-BR")
-    return query.trim()
-      ? `${count} ${total === 1 ? "resultado" : "resultados"} para "${query}".`
+    if (errorReason) {
+      const messages: Record<string, string> = {
+        irrelevant: "Essa busca parece fora do escopo pedagógico. Tente um tema escolar.",
+        nonsense: "Não entendi essa busca. Tente palavras-chave escolares, tema ou código BNCC.",
+        injection: "Essa busca não foi aceita.",
+        illegal: "Essa busca não foi aceita.",
+        sexual: "Essa busca não foi aceita.",
+        abuse: "Essa busca não foi aceita.",
+        too_long: "A busca é longa demais — use no máximo 160 caracteres.",
+        rate_limited: "Muitas buscas em pouco tempo. Aguarde um minuto e tente novamente.",
+        unknown: "Erro ao buscar. Tente novamente.",
+      }
+      return messages[errorReason] ?? messages.unknown
+    }
+    return submittedQuery
+      ? `${count} ${total === 1 ? "resultado" : "resultados"} para "${submittedQuery}".`
       : `São ${count} atividades e materiais de apoio para te auxiliar no plano de aula.`
-  }, [total, query])
+  }, [total, submittedQuery, errorReason])
 
   return (
     <section id="materiais" ref={sectionRef} className="container mx-auto px-4 py-14 sm:py-16">
@@ -125,10 +166,19 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
           <h2 className="font-heading text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl md:text-4xl">
             Busque o material ideal para sua próxima aula
           </h2>
-          <p className="text-sm text-gray-600 sm:text-base md:text-lg">{subheading}</p>
+          <p className={`text-sm sm:text-base md:text-lg ${errorReason ? "text-red-600" : "text-gray-600"}`}>
+            {subheading}
+          </p>
         </div>
 
-        <DirectorySearch value={query} onChange={setQuery} isLoading={isLoading} />
+        <DirectorySearch
+          value={inputValue}
+          onChange={setInputValue}
+          onSubmit={handleSubmit}
+          onClear={handleClear}
+          isLoading={isLoading}
+          hasActiveQuery={Boolean(submittedQuery || inputValue)}
+        />
 
         <DirectoryGrid
           activities={activities}
@@ -136,7 +186,7 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
           fpId={fpId}
         />
 
-        {totalPages > 1 && (
+        {totalPages > 1 && !errorReason && (
           <div className="flex items-center justify-center gap-1 pt-2">
             <button
               onClick={() => goTo(page - 1)}
