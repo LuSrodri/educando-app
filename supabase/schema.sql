@@ -1,8 +1,8 @@
--- educando.app - Database Schema (directory pivot, 2026-04-17)
--- This file reflects the current live schema. Migrations are the source of truth
--- under supabase/migrations/.
+-- educando.app - Database Schema (post-identity simplification)
+-- Source of truth lives under supabase/migrations/. This file is a snapshot.
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS unaccent;
 
 -- Core directory table.
 CREATE TABLE IF NOT EXISTS activities (
@@ -32,48 +32,34 @@ CREATE INDEX IF NOT EXISTS idx_activities_bncc_codes    ON activities USING GIN 
 CREATE INDEX IF NOT EXISTS idx_activities_type          ON activities (type);
 CREATE INDEX IF NOT EXISTS idx_activities_created_at    ON activities (created_at DESC);
 
--- Search telemetry
+-- Search telemetry (no per-user identifier; aggregate only).
 CREATE TABLE IF NOT EXISTS search_queries (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   query             TEXT NOT NULL,
   normalized_query  TEXT NOT NULL,
-  fingerprint_hash  TEXT,
   results_count     INTEGER NOT NULL DEFAULT 0,
   external_fetched  INTEGER NOT NULL DEFAULT 0,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Click telemetry
+-- Click telemetry.
 CREATE TABLE IF NOT EXISTS activity_clicks (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   activity_id       UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
-  fingerprint_hash  TEXT,
   referrer          TEXT,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Saved (replaces the old per-browser history concept)
-CREATE TABLE IF NOT EXISTS saved_activities (
-  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  fingerprint_hash  TEXT NOT NULL,
-  activity_id       UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
-  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (fingerprint_hash, activity_id)
+-- Fixed-window rate limiter backed by RPC public.rate_limit_check.
+CREATE TABLE IF NOT EXISTS rate_limit_counters (
+  bucket      TEXT NOT NULL,
+  key         TEXT NOT NULL,
+  count       INTEGER NOT NULL DEFAULT 1,
+  expires_at  TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (bucket, key)
 );
 
--- Security identities (Phase 7: fingerprint+IP with rotation throttling)
-CREATE TABLE IF NOT EXISTS security_identities (
-  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  fingerprint_hash  TEXT UNIQUE NOT NULL,
-  fp_id             TEXT NOT NULL,
-  ip_hash           TEXT NOT NULL,
-  fp_last_changed   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  ip_last_changed   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
-  last_seen_at      TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- Storage bucket (public read)
+-- Storage bucket (public read).
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('activities', 'activities', true)
 ON CONFLICT (id) DO NOTHING;

@@ -1,0 +1,29 @@
+// Extracts the caller's IP, normalising loopback variants so dev sessions
+// stay stable across IPv4/IPv6 transitions.
+
+export function extractClientIp(request: Request): string | null {
+  const xff = request.headers.get("x-forwarded-for")
+  if (xff) {
+    const first = xff.split(",")[0]?.trim()
+    if (first) return normalize(first)
+  }
+  const real = request.headers.get("x-real-ip")
+  if (real) return normalize(real.trim())
+  const cfIp = request.headers.get("cf-connecting-ip")
+  if (cfIp) return normalize(cfIp.trim())
+  return null
+}
+
+function normalize(ip: string): string {
+  const trimmed = ip.toLowerCase()
+  if (
+    trimmed === "::1" ||
+    trimmed === "127.0.0.1" ||
+    trimmed === "0:0:0:0:0:0:0:1" ||
+    trimmed.startsWith("::ffff:127.") ||
+    trimmed.startsWith("127.")
+  ) {
+    return "loopback"
+  }
+  return trimmed
+}

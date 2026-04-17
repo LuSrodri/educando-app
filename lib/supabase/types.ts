@@ -66,7 +66,6 @@ export type Database = {
           id: string
           query: string
           normalized_query: string
-          fingerprint_hash: string | null
           results_count: number
           external_fetched: number
           created_at: string
@@ -75,7 +74,6 @@ export type Database = {
           id?: string
           query: string
           normalized_query: string
-          fingerprint_hash?: string | null
           results_count?: number
           external_fetched?: number
           created_at?: string
@@ -84,7 +82,6 @@ export type Database = {
           id?: string
           query?: string
           normalized_query?: string
-          fingerprint_hash?: string | null
           results_count?: number
           external_fetched?: number
           created_at?: string
@@ -95,77 +92,20 @@ export type Database = {
         Row: {
           id: string
           activity_id: string
-          fingerprint_hash: string | null
           referrer: string | null
           created_at: string
         }
         Insert: {
           id?: string
           activity_id: string
-          fingerprint_hash?: string | null
           referrer?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           activity_id?: string
-          fingerprint_hash?: string | null
           referrer?: string | null
           created_at?: string
-        }
-        Relationships: []
-      }
-      saved_activities: {
-        Row: {
-          id: string
-          fingerprint_hash: string
-          activity_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          fingerprint_hash: string
-          activity_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          fingerprint_hash?: string
-          activity_id?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      security_identities: {
-        Row: {
-          id: string
-          fingerprint_hash: string
-          fp_id: string
-          ip_hash: string
-          fp_last_changed: string
-          ip_last_changed: string
-          created_at: string
-          last_seen_at: string
-        }
-        Insert: {
-          id?: string
-          fingerprint_hash: string
-          fp_id: string
-          ip_hash: string
-          fp_last_changed?: string
-          ip_last_changed?: string
-          created_at?: string
-          last_seen_at?: string
-        }
-        Update: {
-          id?: string
-          fingerprint_hash?: string
-          fp_id?: string
-          ip_hash?: string
-          fp_last_changed?: string
-          ip_last_changed?: string
-          created_at?: string
-          last_seen_at?: string
         }
         Relationships: []
       }
@@ -211,5 +151,3 @@ export type UpdateTables<T extends keyof Database["public"]["Tables"]> =
 export type Activity = Tables<"activities">
 export type SearchQuery = Tables<"search_queries">
 export type ActivityClick = Tables<"activity_clicks">
-export type SavedActivity = Tables<"saved_activities">
-export type SecurityIdentity = Tables<"security_identities">

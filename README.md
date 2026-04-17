@@ -85,11 +85,14 @@ npm run lint
 
 ## Segurança
 
-Três camadas de proteção defendem o diretório e o pipeline de enriquecimento (Tavily + OpenAI + Replicate), que custa dinheiro por imagem nova:
+Quatro camadas cobrem abuso e protegem o pipeline de enriquecimento (Tavily + OpenAI + Replicate), que gasta dinheiro por imagem nova:
 
-1. **Identidade fingerprint+IP** — `@fingerprintjs/fingerprintjs` gera um `visitorId` no cliente, persistido em localStorage e enviado no header `x-fp-id`. No servidor, `lib/identity.ts` combina com o IP (`sha256(fp_id:sha256(ip:IDENTITY_SALT))`) e grava em `public.security_identities`. Regra de rotação: `fp_id` **ou** `ip_hash` pode mudar uma vez por hora — nunca os dois na mesma janela. Se a regra é quebrada, a API responde `401 fraud_detected` e o cliente redireciona para `/401`.
-2. **Rate limit** — RPC `public.rate_limit_check(bucket, key, limit, window_seconds)` com janela fixa. Limites atuais por fingerprint: busca 30/min, cliques 120/min, enrichment 10/hora.
-3. **Cloudflare Turnstile invisível** — widget com `appearance: "interaction-only"` na seção de materiais; token vai no header `x-cf-turnstile-token`. A API só exige o token quando a busca dispararia enriquecimento — protege o pipeline pago sem estorvar UX.
+1. **Moderação GPT-5.4-nano** — `lib/moderation.ts` classifica toda busca antes de ler o banco ou chamar APIs pagas. Rejeita `irrelevant`, `nonsense`, `injection`, `illegal`, `sexual`, `abuse`, `too_long`. Rejeição devolve `401` com o motivo e **não** grava nada nem consome nenhum recurso.
+2. **Rate limit (por IP)** — RPC `public.rate_limit_check(bucket, key, limit, window_seconds)` com janela fixa. Key é o IP extraído por `lib/client-ip.ts` (atrás do Cloudflare usa `cf-connecting-ip`). Limites: busca 30/min, cliques 120/min, enrichment 10/hora.
+3. **Cloudflare Turnstile invisível** — widget com `appearance: "interaction-only"` na seção de materiais; token vai no header `x-cf-turnstile-token`. Só é exigido quando a busca dispararia o enriquecimento externo — protege o pipeline pago sem estorvar UX normal.
+4. **Cloudflare WAF** — configuração recomendada abaixo.
+
+Identidade por usuário volta como `user_id` quando o plano pago + auth chegar (junto com a feature "Salvos").
 
 ### Keys do Turnstile em desenvolvimento
 

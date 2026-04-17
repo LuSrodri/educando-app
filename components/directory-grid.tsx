@@ -11,7 +11,6 @@ import { generateMaterialSlug } from "@/lib/slug"
 interface DirectoryGridProps {
   activities: Activity[]
   isLoading: boolean
-  fpId?: string | null
 }
 
 function truncate(str: string, maxLength: number): string {
@@ -19,7 +18,7 @@ function truncate(str: string, maxLength: number): string {
   return str.slice(0, maxLength - 3) + "..."
 }
 
-export function DirectoryGrid({ activities, isLoading, fpId = null }: DirectoryGridProps) {
+export function DirectoryGrid({ activities, isLoading }: DirectoryGridProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
@@ -52,7 +51,6 @@ export function DirectoryGrid({ activities, isLoading, fpId = null }: DirectoryG
             const payload = JSON.stringify({
               activityId: activity.id,
               referrer: window.location.href,
-              fpId: fpId ?? undefined,
             })
             const blob = new Blob([payload], { type: "application/json" })
             if (navigator.sendBeacon) {

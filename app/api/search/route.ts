@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
 import { enrichFromTavily } from "@/lib/external-enrichment"
-import { resolveIdentity } from "@/lib/identity"
 import { rateLimit } from "@/lib/rate-limit"
 import { verifyTurnstileToken } from "@/lib/turnstile"
 import { moderateSearchQuery } from "@/lib/moderation"
+import { extractClientIp } from "@/lib/client-ip"
 import type { Activity } from "@/lib/supabase/types"
 
 export const runtime = "nodejs"
@@ -15,7 +15,6 @@ const MAX_PAGE_SIZE = 60
 const MIN_RESULTS_THRESHOLD = 5
 const MAX_ENRICHMENT = 5
 
-// Rate limits (per fingerprint_hash).
 const SEARCH_LIMIT_PER_MIN = 30
 const ENRICHMENT_LIMIT_PER_HOUR = 10
 
@@ -48,16 +47,12 @@ export async function GET(request: NextRequest) {
   )
   const offset = (page - 1) * limit
   const turnstileToken = request.headers.get("x-cf-turnstile-token")
+  const ip = extractClientIp(request)
+  const rateKey = ip ?? "anon"
 
-  const identity = await resolveIdentity(request)
-  if (identity.isFraud) return unauthorized("fraud_detected")
-
-  const rateKey = identity.fingerprintHash ?? identity.ip ?? "anon"
   const allowed = await rateLimit("search", rateKey, SEARCH_LIMIT_PER_MIN, 60)
   if (!allowed) return tooMany()
 
-  // Moderate the query BEFORE touching the DB. A rejected query short-circuits
-  // the request: no DB read, no telemetry write, no enrichment, no budget spent.
   if (q.length > 0) {
     const moderation = await moderateSearchQuery(q)
     if (!moderation.accept) return unauthorized(`query_${moderation.reason}`)
@@ -79,9 +74,7 @@ export async function GET(request: NextRequest) {
     const shouldEnrich =
       q.length > 0 && page === 1 && parsed.total < MIN_RESULTS_THRESHOLD
     if (shouldEnrich) {
-      // Enrichment is expensive — require a valid Turnstile token and an extra
-      // hourly budget per fingerprint to prevent wallet attacks.
-      const tokenOk = await verifyTurnstileToken(turnstileToken, identity.ip)
+      const tokenOk = await verifyTurnstileToken(turnstileToken, ip)
       if (!tokenOk) return unauthorized("turnstile_required")
       const enrichmentAllowed = await rateLimit(
         "enrichment",
@@ -109,13 +102,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Telemetry — fire-and-forget.
     supabase
       .from("search_queries")
       .insert({
         query: q,
         normalized_query: normalizeQuery(q),
-        fingerprint_hash: identity.fingerprintHash,
         results_count: payload.total,
         external_fetched: externalFetched,
       })

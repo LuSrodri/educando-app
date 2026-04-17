@@ -1,13 +1,11 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
 import { ChevronLeft, ChevronRight, GraduationCap } from "lucide-react"
 import type { Activity } from "@/lib/supabase/types"
 import { DirectorySearch } from "@/components/directory-search"
 import { DirectoryGrid } from "@/components/directory-grid"
 import { TurnstileWidget } from "@/components/turnstile-widget"
-import { useFingerprint } from "@/hooks/useFingerprint"
 
 const PAGE_SIZE = 24
 
@@ -29,8 +27,6 @@ function getPaginationPages(current: number, total: number): (number | "...")[] 
 }
 
 export function MaterialsSection({ initialActivities, initialTotal }: MaterialsSectionProps) {
-  const router = useRouter()
-  const fpId = useFingerprint()
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
 
   const [inputValue, setInputValue] = useState("")
@@ -58,22 +54,19 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
         })
         if (nextQuery.trim()) params.set("q", nextQuery.trim())
         const headers: Record<string, string> = { Accept: "application/json" }
-        if (fpId) headers["x-fp-id"] = fpId
         if (turnstileToken) headers["x-cf-turnstile-token"] = turnstileToken
 
         const res = await fetch(`/api/search?${params.toString()}`, { headers })
         if (res.status === 401) {
           const body = await res.json().catch(() => ({ reason: "unauthorized" }))
           if (seq !== fetchSeqRef.current) return
-          // Moderation rejections stay on page and surface the reason; identity
-          // fraud triggers a hard redirect to /401.
-          if (typeof body.reason === "string" && body.reason.startsWith("query_")) {
-            setErrorReason(body.reason.replace(/^query_/, ""))
-            setActivities([])
-            setTotal(0)
-            return
-          }
-          router.push("/401")
+          const reason =
+            typeof body.reason === "string"
+              ? body.reason.replace(/^query_/, "")
+              : "unauthorized"
+          setErrorReason(reason)
+          setActivities([])
+          setTotal(0)
           return
         }
         if (res.status === 429) {
@@ -94,7 +87,7 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
         if (seq === fetchSeqRef.current) setIsLoading(false)
       }
     },
-    [fpId, turnstileToken, router],
+    [turnstileToken],
   )
 
   // Reset to the full directory snapshot whenever the user clears the query.
@@ -143,7 +136,10 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
         sexual: "Essa busca não foi aceita.",
         abuse: "Essa busca não foi aceita.",
         too_long: "A busca é longa demais — use no máximo 160 caracteres.",
+        turnstile_required:
+          "Verificação antibot ainda carregando ou indisponível. Aguarde alguns segundos e tente novamente.",
         rate_limited: "Muitas buscas em pouco tempo. Aguarde um minuto e tente novamente.",
+        unauthorized: "Busca bloqueada. Tente outra formulação.",
         unknown: "Erro ao buscar. Tente novamente.",
       }
       return messages[errorReason] ?? messages.unknown
@@ -183,7 +179,6 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
         <DirectoryGrid
           activities={activities}
           isLoading={isLoading && activities.length === 0}
-          fpId={fpId}
         />
 
         {totalPages > 1 && !errorReason && (
