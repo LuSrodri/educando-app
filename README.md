@@ -79,3 +79,18 @@ npm run dev
 # Build para produção
 npm run build
 ```
+
+### Integração com Claude Code (opcional)
+
+O projeto inclui um `.mcp.json` com o servidor MCP do Supabase para dar ao Claude Code acesso direto ao banco (schemas, queries, migrations).
+
+Para ativar:
+
+1. Crie um Personal Access Token em [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens)
+2. Adicione ao `.env`:
+   ```
+   SUPABASE_ACCESS_TOKEN=seu-pat-aqui
+   ```
+3. Reabra o Claude Code e aprove o MCP `supabase` quando solicitado
+
+O servidor está configurado com acesso read-write. Para restringir a read-only, adicione `"--read-only"` aos `args` em `.mcp.json`.
