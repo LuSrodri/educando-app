@@ -1,15 +1,11 @@
 {
   "mcpServers": {
     "supabase": {
-      "command": "npx",
+      "command": "bash",
       "args": [
-        "-y",
-        "@supabase/mcp-server-supabase@latest",
-        "--project-ref=gmcwswcdftnlllwesfeh"
-      ],
-      "env": {
-        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
-      }
+        "-c",
+        "v=$(grep -E '^SUPABASE_ACCESS_TOKEN=' ./.env 2>/dev/null | head -1 | cut -d= -f2-); [ -n \"$v\" ] && export SUPABASE_ACCESS_TOKEN=\"$v\"; exec npx -y @supabase/mcp-server-supabase@latest --project-ref=gmcwswcdftnlllwesfeh"
+      ]
     }
   }
 }
