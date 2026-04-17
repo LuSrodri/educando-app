@@ -87,10 +87,21 @@ O projeto inclui um `.mcp.json` com o servidor MCP do Supabase para dar ao Claud
 Para ativar:
 
 1. Crie um Personal Access Token em [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens)
-2. Adicione ao `.env`:
+2. Adicione ao `.env` na raiz do projeto:
    ```
    SUPABASE_ACCESS_TOKEN=seu-pat-aqui
    ```
 3. Reabra o Claude Code e aprove o MCP `supabase` quando solicitado
 
-O servidor está configurado com acesso read-write. Para restringir a read-only, adicione `"--read-only"` aos `args` em `.mcp.json`.
+### Como o token chega ao MCP
+
+O `.mcp.json` chama `node scripts/start-supabase-mcp.mjs`, um wrapper cross-platform que:
+
+1. Resolve a raiz do projeto a partir do próprio arquivo (`import.meta.url`), não do cwd — então funciona mesmo que o Claude Code invoque de outro diretório.
+2. Lê **apenas** a linha `SUPABASE_ACCESS_TOKEN=` do `.env` (regex), exporta no ambiente e faz `spawn` do `@supabase/mcp-server-supabase`.
+3. Nenhuma outra variável do `.env` vaza, nenhum secret é hardcoded no `.mcp.json` (que é versionado).
+
+Pré-requisitos:
+- `node` no PATH (qualquer versão ≥ 18). Já é requisito do projeto.
+
+O servidor está configurado com acesso read-write. Para restringir a read-only, adicione `"--read-only"` à lista de args no `spawn(...)` dentro de `scripts/start-supabase-mcp.mjs`.
