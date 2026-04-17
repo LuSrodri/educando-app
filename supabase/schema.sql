@@ -1,130 +1,79 @@
--- educando.app - Database Schema
--- Free model: 3 activities per fortnight (quinzena), no login required
--- daily_usage.usage_date stores the fortnight start date (YYYY-MM-01 or YYYY-MM-16)
--- Paid model: R$14,90/10 atividades or R$24,90/20 atividades via Mercado Pago PIX
--- Paid activities (is_paid=true) are private — not shown in community or posted to Pinterest
+-- educando.app - Database Schema (directory pivot, 2026-04-17)
+-- This file reflects the current live schema. Migrations are the source of truth
+-- under supabase/migrations/.
 
--- Activities table
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- Core directory table.
 CREATE TABLE IF NOT EXISTS activities (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  browser_id TEXT NOT NULL,
-  original_prompt TEXT NOT NULL,
-  improved_prompt TEXT,
-  image_path TEXT NOT NULL,
-  image_media_type TEXT NOT NULL DEFAULT 'image/png',
-  is_paid BOOLEAN NOT NULL DEFAULT false,  -- true = private, not in community/Pinterest
-  created_at TIMESTAMPTZ DEFAULT now()
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  image_path        TEXT NOT NULL,
+  image_media_type  TEXT NOT NULL DEFAULT 'image/png',
+  created_at        TIMESTAMPTZ DEFAULT now(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  title             TEXT,
+  theme             TEXT,
+  short_description TEXT,
+  long_description  TEXT,
+  bncc_codes        TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
+  type              TEXT NOT NULL DEFAULT 'activity'
+                       CHECK (type IN ('activity', 'support_material')),
+  source_url        TEXT,
+  source_provider   TEXT NOT NULL DEFAULT 'internal'
+                       CHECK (source_provider IN ('internal', 'tavily')),
+  quality_score     REAL,
+  search_vector     tsvector
 );
 
-CREATE INDEX IF NOT EXISTS idx_activities_browser_id ON activities(browser_id);
-CREATE INDEX IF NOT EXISTS idx_activities_created_at ON activities(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_activities_search_vector ON activities USING GIN (search_vector);
+CREATE INDEX IF NOT EXISTS idx_activities_title_trgm    ON activities USING GIN (title  gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_activities_theme_trgm    ON activities USING GIN (theme  gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_activities_bncc_codes    ON activities USING GIN (bncc_codes);
+CREATE INDEX IF NOT EXISTS idx_activities_type          ON activities (type);
+CREATE INDEX IF NOT EXISTS idx_activities_created_at    ON activities (created_at DESC);
 
--- Browsers table
-CREATE TABLE IF NOT EXISTS browsers (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  browser_id TEXT UNIQUE NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  last_seen_at TIMESTAMPTZ DEFAULT now()
+-- Search telemetry
+CREATE TABLE IF NOT EXISTS search_queries (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  query             TEXT NOT NULL,
+  normalized_query  TEXT NOT NULL,
+  fingerprint_hash  TEXT,
+  results_count     INTEGER NOT NULL DEFAULT 0,
+  external_fetched  INTEGER NOT NULL DEFAULT 0,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Daily usage table
-CREATE TABLE IF NOT EXISTS daily_usage (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  browser_id TEXT NOT NULL,
-  usage_date DATE NOT NULL DEFAULT CURRENT_DATE,
-  count INTEGER NOT NULL DEFAULT 0,
-  UNIQUE(browser_id, usage_date)
+-- Click telemetry
+CREATE TABLE IF NOT EXISTS activity_clicks (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  activity_id       UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
+  fingerprint_hash  TEXT,
+  referrer          TEXT,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Paid credits table (one row per browser_id)
-CREATE TABLE IF NOT EXISTS paid_credits (
-  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  browser_id   TEXT NOT NULL,
-  balance      INTEGER NOT NULL DEFAULT 0 CHECK (balance >= 0),
-  total_bought INTEGER NOT NULL DEFAULT 0,
-  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE(browser_id)
+-- Saved (replaces the old per-browser history concept)
+CREATE TABLE IF NOT EXISTS saved_activities (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  fingerprint_hash  TEXT NOT NULL,
+  activity_id       UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (fingerprint_hash, activity_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_paid_credits_browser_id ON paid_credits(browser_id);
-
--- Mercado Pago PIX payments
-CREATE TABLE IF NOT EXISTS mercadopago_payments (
-  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  browser_id       TEXT NOT NULL,
-  mp_payment_id    BIGINT UNIQUE,
-  mp_external_ref  TEXT NOT NULL UNIQUE,
-  pack             TEXT NOT NULL,
-  amount_cents     INTEGER NOT NULL,
-  credits_to_grant INTEGER NOT NULL,
-  status           TEXT NOT NULL DEFAULT 'pending'
-                   CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled')),
-  qr_code          TEXT,
-  qr_code_base64   TEXT,
-  pix_expires_at   TIMESTAMPTZ,
-  created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
-  approved_at      TIMESTAMPTZ
+-- Security identities (Phase 7: fingerprint+IP with rotation throttling)
+CREATE TABLE IF NOT EXISTS security_identities (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  fingerprint_hash  TEXT UNIQUE NOT NULL,
+  fp_id             TEXT NOT NULL,
+  ip_hash           TEXT NOT NULL,
+  fp_last_changed   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ip_last_changed   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_seen_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_mp_payments_browser_id ON mercadopago_payments(browser_id);
-CREATE INDEX IF NOT EXISTS idx_mp_payments_ext_ref    ON mercadopago_payments(mp_external_ref);
-CREATE INDEX IF NOT EXISTS idx_mp_payments_status     ON mercadopago_payments(status);
-
--- Drop deprecated tables
-DROP TABLE IF EXISTS credits;
-
--- =========================================
--- STORAGE
--- =========================================
--- Bucket para armazenar imagens das atividades
--- Caminho: {browser_id}/{activity_id}/activity.png
+-- Storage bucket (public read)
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('activities', 'activities', true)
 ON CONFLICT (id) DO NOTHING;
-
--- Politica: qualquer um pode ler (imagens sao publicas)
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE policyname = 'Public read access' AND tablename = 'objects'
-  ) THEN
-    CREATE POLICY "Public read access"
-      ON storage.objects FOR SELECT
-      USING (bucket_id = 'activities');
-  END IF;
-END $$;
-
--- Politica: service role pode inserir/atualizar/deletar
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE policyname = 'Service role insert' AND tablename = 'objects'
-  ) THEN
-    CREATE POLICY "Service role insert"
-      ON storage.objects FOR INSERT
-      WITH CHECK (bucket_id = 'activities');
-  END IF;
-END $$;
-
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE policyname = 'Service role update' AND tablename = 'objects'
-  ) THEN
-    CREATE POLICY "Service role update"
-      ON storage.objects FOR UPDATE
-      USING (bucket_id = 'activities');
-  END IF;
-END $$;
-
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE policyname = 'Service role delete' AND tablename = 'objects'
-  ) THEN
-    CREATE POLICY "Service role delete"
-      ON storage.objects FOR DELETE
-      USING (bucket_id = 'activities');
-  END IF;
-END $$;

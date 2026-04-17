@@ -6,11 +6,11 @@ export function Footer() {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <Image
-            src="/images/logo-educando.png"
+            src="/images/educando-app-logo.png"
             alt="educando.app"
-            width={120}
+            width={80}
             height={80}
-            className="brightness-0 invert"
+            className="h-16 w-16 rounded-lg object-contain"
           />
           <div className="text-sm text-muted-foreground text-center md:text-right space-y-1">
             <p>Feito com carinho para professores do Ensino Fundamental</p>

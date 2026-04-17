@@ -1,23 +1,29 @@
 /**
- * Generates the full semantic slug for an activity URL.
- * Format: {first-6-words-of-prompt}-{last-block-of-uuid}
- * Example: "exercicio-de-matematica-para-alunos-do-446655440000"
+ * Generates the slug for a material URL.
+ * Format: {normalized-theme}-{last-block-of-uuid}
+ * Example: "matematica-tabuada-do-7-446655440000"
  */
-export function generateSemanticSlug(originalPrompt: string, id: string): string {
-  const words = originalPrompt
+export function generateMaterialSlug(theme: string | null | undefined, id: string): string {
+  const words = (theme ?? "material")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "") // remove diacritics
-    .replace(/[^a-z0-9\s]/g, "")    // remove special chars
+    .replace(/[^a-z0-9\s-]/g, " ")    // keep letters/digits/hyphens
+    .replace(/-+/g, " ")
     .trim()
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 6)
 
-  const wordSlug = words.join("-")
+  const wordSlug = words.join("-") || "material"
   const idSuffix = id.split("-")[4] ?? id.replace(/-/g, "").slice(-12)
 
   return `${wordSlug}-${idSuffix}`
+}
+
+/** @deprecated use generateMaterialSlug */
+export function generateSemanticSlug(_text: string, id: string): string {
+  return generateMaterialSlug(_text, id)
 }
 
 /**

@@ -1,107 +1,135 @@
 # educando.app
 
-Gerador de atividades escolares com IA, alinhadas à BNCC e prontas para imprimir.
+**O seu plano de aula a 1-click.** Diretório de atividades e materiais de apoio pedagógicos alinhados à Base Nacional Comum Curricular (BNCC).
 
 ## Sobre
 
-O **educando.app** é uma ferramenta para professores criarem atividades pedagógicas de forma rápida e prática. Digite um tema, escolha o nível escolar e receba uma atividade pronta para imprimir em segundos.
+O **educando.app** é um diretório inteligente para professores do ensino brasileiro. Pesquise por tema, palavra-chave ou código BNCC e abra em 1 click a atividade ou material de apoio ideal para a próxima aula. Quando o diretório não cobre a busca, um pipeline de enriquecimento externo busca, avalia e limpa materiais adicionais automaticamente.
 
 ## Funcionalidades
 
-- **Geração de atividades com IA** - Crie atividades a partir de qualquer tema
-- **Alinhado à BNCC** - Atividades incluem referências à Base Nacional Comum Curricular
-- **Níveis educacionais** - Alfabetização, Ensino Fundamental I (1º ao 5º ano) e II (6º ao 9º ano)
-- **Tipos de material** - Atividade ao Aluno ou Material de Apoio ao Professor
-- **Edição com IA** - Ajuste a atividade gerada com comandos simples
-- **Download e impressão** - Atividades em alta qualidade, prontas para imprimir
-- **Compartilhamento** - Compartilhe atividades via link
-- **Histórico** - Acesse atividades geradas anteriormente
-- **Comunidade** - Veja atividades compartilhadas por outros professores
-- **Blog** - Conteúdo educacional para professores
-- **Sem login** - Use diretamente no navegador
-
-## Créditos
-
-- 3 atividades gratuitas por quinzena (dias 1–15 e 16–fim do mês)
+- **Busca inteligente** com full-text search (stemming pt-BR), fuzzy em título/tema, match exato em códigos BNCC. Insensível a acentos.
+- **Enriquecimento externo sob demanda** — se a busca interna traz menos de 5 resultados, o sistema consulta Tavily, classifica cada candidato com GPT-5.4 nano (portrait + qualidade + tipo), limpa watermarks com Replicate (`qwen/qwen-image-2-pro`) e persiste o material no diretório.
+- **Metadados ricos** — cada material tem título, tema, descrição curta e longa, códigos BNCC aplicáveis e tipo (atividade | material de apoio).
+- **Directório 100% público** — click em qualquer card abre o material em nova aba.
+- **Telemetria** — toda busca e clique são registrados (para orientar melhorias futuras do diretório).
+- **Segurança** — identidade fingerprint+IP com throttling de rotação, rate limit por fingerprint e Cloudflare Turnstile invisível protegendo o pipeline externo de ataques de carteira. Ver seção [Segurança](#segurança).
+- **Sem login, sem pagamento, sem geração por prompt** — a versão ≥ 0.3 é puramente um diretório curado.
 
 ## Stack
 
-- Next.js 16
-- React 19
-- Supabase
-- Google GenAI
-- Tailwind CSS
-- Vercel
+- **Next.js 16** (App Router, Turbopack, Node runtime)
+- **React 19** + **TypeScript** + **Tailwind CSS 4**
+- **Supabase** — Postgres (FTS + trigram + unaccent) + Storage
+- **OpenAI** GPT-5.4 nano com Structured Outputs (classificação + metadados)
+- **Replicate** `qwen/qwen-image-2-pro` (limpeza de imagens externas)
+- **Tavily** (busca de imagens na web)
+- **Cloudflare Turnstile** + WAF (proteção anti-bot)
+- **FingerprintJS** open-source (visitorId no cliente)
+- Deploy: **Vercel**
 
 ## Configuração
-
-Copie o arquivo `.env.example` para `.env` e preencha as variáveis:
 
 ```bash
 cp .env.example .env
 ```
 
-### Variáveis de Ambiente
+### Variáveis de ambiente
 
-#### Supabase (Banco de dados e Storage)
-
-| Variável | Descrição |
-|----------|-----------|
+| Variável | Uso |
+|----------|-----|
 | `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anônima (pública) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Chave de serviço (privada) |
-
-Obtenha em: [Supabase Dashboard](https://supabase.com/dashboard)
-
-#### Google Gemini AI (Geração de atividades)
-
-| Variável | Descrição |
-|----------|-----------|
-| `GEMINI_API_KEY` | Chave da API do Google Gemini |
-
-Obtenha em: [Google AI Studio](https://aistudio.google.com/app/apikey)
-
-#### Aplicação
-
-| Variável | Descrição |
-|----------|-----------|
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anônima do Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY` | Chave de serviço do Supabase (server-only) |
+| `OPENAI_API_KEY` | Backfill de metadados + classificação de candidatos externos |
+| `TAVILY_API_KEY` | Busca de imagens na web |
+| `REPLICATE_API_TOKEN` | Limpeza de watermarks com `qwen/qwen-image-2-pro` |
+| `NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY` | Site key do Turnstile (client) |
+| `CLOUDFLARE_TURNSTILE_SECRET_KEY` | Secret key do Turnstile (server) |
+| `IDENTITY_SALT` | Salt para hashear IP + fingerprint |
 | `NEXT_PUBLIC_APP_URL` | URL pública da aplicação |
+| `SUPABASE_ACCESS_TOKEN` | PAT do Supabase, usado apenas pelo MCP do Claude Code |
+
+## Banco de dados
+
+```bash
+# O schema atual está em supabase/schema.sql (snapshot), e cada mudança
+# incremental em supabase/migrations/<order>_<name>.sql.
+# Aplicar no Supabase: via Dashboard → SQL Editor, ou via MCP (veja seção Claude Code).
+```
+
+Tabelas principais:
+
+- `activities` — diretório. Inclui `search_vector tsvector` mantido por trigger + índices GIN (FTS, trigram em título/tema, array BNCC).
+- `search_queries` — toda busca feita, com contagem de resultados e enriquecimento.
+- `activity_clicks` — cliques nas cards da home.
+- `saved_activities` — materiais salvos por professor (via fingerprint).
+- `security_identities` — rastreamento de fingerprint + IP com campos de rotação.
+- `rate_limit_counters` — contadores de janela fixa usados pela RPC `rate_limit_check`.
+- `activities_backup_20260417` — snapshot preservado do banco antes da pivotagem.
 
 ## Desenvolvimento
 
 ```bash
-# Instalar dependências
 npm install
-
-# Rodar em desenvolvimento
-npm run dev
-
-# Build para produção
+npm run dev     # http://localhost:3000
 npm run build
+npm run lint
 ```
 
-### Integração com Claude Code (opcional)
+## Scripts
 
-O projeto inclui um `.mcp.json` com o servidor MCP do Supabase para dar ao Claude Code acesso direto ao banco (schemas, queries, migrations).
+- `scripts/start-supabase-mcp.mjs` — wrapper que injeta apenas `SUPABASE_ACCESS_TOKEN` do `.env` no MCP server (ver seção Claude Code).
+- `scripts/backfill-directory-metadata.mjs` — reclassifica atividades existentes via GPT-5.4 nano para preencher `title/theme/bncc_codes/...`. Suporta `--limit=N --concurrency=N --dry-run`.
+- `scripts/cleanup-orphan-storage.mjs` — remove do Storage imagens órfãs (que não têm mais linha em `activities`).
 
-Para ativar:
+## Segurança
 
-1. Crie um Personal Access Token em [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens)
-2. Adicione ao `.env` na raiz do projeto:
-   ```
-   SUPABASE_ACCESS_TOKEN=seu-pat-aqui
-   ```
-3. Reabra o Claude Code e aprove o MCP `supabase` quando solicitado
+Três camadas de proteção defendem o diretório e o pipeline de enriquecimento (Tavily + OpenAI + Replicate), que custa dinheiro por imagem nova:
+
+1. **Identidade fingerprint+IP** — `@fingerprintjs/fingerprintjs` gera um `visitorId` no cliente, persistido em localStorage e enviado no header `x-fp-id`. No servidor, `lib/identity.ts` combina com o IP (`sha256(fp_id:sha256(ip:IDENTITY_SALT))`) e grava em `public.security_identities`. Regra de rotação: `fp_id` **ou** `ip_hash` pode mudar uma vez por hora — nunca os dois na mesma janela. Se a regra é quebrada, a API responde `401 fraud_detected` e o cliente redireciona para `/401`.
+2. **Rate limit** — RPC `public.rate_limit_check(bucket, key, limit, window_seconds)` com janela fixa. Limites atuais por fingerprint: busca 30/min, cliques 120/min, enrichment 10/hora.
+3. **Cloudflare Turnstile invisível** — widget com `appearance: "interaction-only"` na seção de materiais; token vai no header `x-cf-turnstile-token`. A API só exige o token quando a busca dispararia enriquecimento — protege o pipeline pago sem estorvar UX.
+
+### Keys do Turnstile em desenvolvimento
+
+As chaves de produção requerem que o domínio esteja registrado no dashboard. Para rodar em `localhost`, adicione `localhost` / `127.0.0.1` aos Hostnames em [Cloudflare → Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile), **ou** use as test keys "sempre aprova":
+
+```
+NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=1x00000000000000000000AA
+CLOUDFLARE_TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+```
+
+Se `CLOUDFLARE_TURNSTILE_SECRET_KEY` não estiver setado, a verificação é ignorada (modo dev). **Não faça isso em produção.**
+
+### Cloudflare WAF
+
+Recomendação para produção (domínio atrás do Cloudflare com proxy laranja ativo):
+
+- **Managed Rules**: OWASP Core Ruleset em modo `Block`.
+- **Rate Limiting Rules**: 500 req / 10 min por IP em `/api/*`.
+- **Bot Fight Mode** ativado (free); `Super Bot Fight Mode` no plano Pro.
+- **Security Level**: `Medium`.
+- **Browser Integrity Check**: `On`.
+- **IP Access Rules**: Challenge para acessos fora do Brasil, se o público-alvo for pt-BR.
+- **Firewall Custom Rule**: `http.request.uri.path eq "/api/search" and http.request.method eq "GET" and cf.threat_score gt 20` → `Managed Challenge`.
+
+`lib/identity.ts` extrai o IP correto de `cf-connecting-ip` quando atrás do Cloudflare.
+
+## Integração com Claude Code (opcional)
+
+O projeto inclui um `.mcp.json` que inicia o MCP do Supabase automaticamente.
+
+1. Crie um Personal Access Token em [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens).
+2. Adicione ao `.env`: `SUPABASE_ACCESS_TOKEN=seu-pat-aqui`.
+3. Reabra o Claude Code e aprove o MCP `supabase` quando solicitado.
 
 ### Como o token chega ao MCP
 
-O `.mcp.json` chama `node scripts/start-supabase-mcp.mjs`, um wrapper cross-platform que:
+`.mcp.json` chama `node scripts/start-supabase-mcp.mjs`, um wrapper cross-platform que:
 
-1. Resolve a raiz do projeto a partir do próprio arquivo (`import.meta.url`), não do cwd — então funciona mesmo que o Claude Code invoque de outro diretório.
+1. Resolve a raiz do projeto via `import.meta.url` (funciona independente do cwd).
 2. Lê **apenas** a linha `SUPABASE_ACCESS_TOKEN=` do `.env` (regex), exporta no ambiente e faz `spawn` do `@supabase/mcp-server-supabase`.
-3. Nenhuma outra variável do `.env` vaza, nenhum secret é hardcoded no `.mcp.json` (que é versionado).
+3. Nenhuma outra variável do `.env` vaza ao MCP; nenhum secret é hardcoded no `.mcp.json` (versionado).
 
-Pré-requisitos:
-- `node` no PATH (qualquer versão ≥ 18). Já é requisito do projeto.
-
-O servidor está configurado com acesso read-write. Para restringir a read-only, adicione `"--read-only"` à lista de args no `spawn(...)` dentro de `scripts/start-supabase-mcp.mjs`.
+Requisito: `node` no PATH (já é requisito do projeto). Para restringir a read-only, adicione `"--read-only"` à lista de args em `scripts/start-supabase-mcp.mjs`.

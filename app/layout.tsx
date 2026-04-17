@@ -18,34 +18,41 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: "swap",
 })
 
+const SITE_URL = "https://educando.app"
+const SITE_NAME = "educando.app"
+const TITLE = "educando.app — O seu plano de aula a 1-click"
+const DESCRIPTION =
+  "Diretório de atividades e materiais de apoio pedagógicos alinhados à BNCC. Encontre em 1 click o material ideal para a sua próxima aula."
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://educando.app"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "educando.app — Crie atividades escolares com IA em 30 segundos. Grátis, sem login.",
+    default: TITLE,
     template: "%s | educando.app",
   },
-  description:
-    "Com o educando.app, você transforma qualquer tema em atividades pedagógicas completas, com códigos da BNCC e prontas para imprimir. Tudo em segundos, direto no navegador e sem necessidade de login.",
+  description: DESCRIPTION,
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "education",
   keywords: [
-    "gerador de atividades",
     "atividades escolares",
-    "ensino fundamental",
+    "planos de aula",
+    "materiais de apoio",
     "BNCC",
+    "Base Nacional Comum Curricular",
     "alfabetização",
-    "atividades para imprimir",
+    "ensino fundamental",
+    "ensino médio",
+    "educação infantil",
+    "matemática",
+    "português",
+    "ciências",
     "professor",
-    "educação",
-    "inteligência artificial",
-    "IA educação",
-    "material didático",
     "recurso pedagógico",
-    "30 segundos",
-    "sem login",
-    "grátis",
+    "pt-BR",
   ],
-  authors: [{ name: "educando.app" }],
-  creator: "educando.app",
-  publisher: "educando.app",
   robots: {
     index: true,
     follow: true,
@@ -60,31 +67,31 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: "https://educando.app",
-    siteName: "educando.app",
-    title: "educando.app — Crie atividades escolares com IA em 30 segundos",
-    description:
-      "Transforme qualquer tema em atividades pedagógicas completas, alinhadas à BNCC e prontas para imprimir. Grátis, sem login!",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: TITLE,
+    description: DESCRIPTION,
     images: [
       {
         url: "/og-image.png",
         width: 1024,
         height: 1024,
-        alt: "educando.app - Gerador de Atividades Escolares",
+        alt: "educando.app — Diretório pedagógico alinhado à BNCC",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "educando.app — Crie atividades escolares com IA em 30 segundos",
-    description:
-      "Transforme qualquer tema em atividades pedagógicas completas, alinhadas à BNCC e prontas para imprimir.",
+    title: TITLE,
+    description: DESCRIPTION,
     images: ["/og-image.png"],
   },
   alternates: {
-    canonical: "https://educando.app",
+    canonical: SITE_URL,
   },
-  category: "education",
+  other: {
+    "theme-color": "#f59e0b",
+  },
 }
 
 export const viewport: Viewport = {
@@ -96,14 +103,23 @@ export const viewport: Viewport = {
 const websiteJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "educando.app",
-  url: "https://educando.app",
-  description:
-    "Gerador de atividades escolares com inteligência artificial, alinhadas à BNCC. Grátis, sem login.",
+  name: SITE_NAME,
+  url: SITE_URL,
+  description: DESCRIPTION,
+  inLanguage: "pt-BR",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${SITE_URL}/?q={search_term_string}#materiais`,
+    },
+    "query-input": "required name=search_term_string",
+  },
   publisher: {
     "@type": "Organization",
-    name: "educando.app",
-    url: "https://educando.app",
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/images/educando-app-logo.png`,
   },
 }
 
@@ -121,9 +137,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${plusJakartaSans.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
-        <ErrorBoundary>
-          {children}
-        </ErrorBoundary>
+        <ErrorBoundary>{children}</ErrorBoundary>
         <ConsentBanner />
         <Analytics />
       </body>

@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next"
 import { createServerClient } from "@/lib/supabase/server"
-import { generateSemanticSlug } from "@/lib/slug"
+import { generateMaterialSlug } from "@/lib/slug"
 
 export const revalidate = 3600
 
@@ -16,21 +16,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // All activities
   let activityPages: MetadataRoute.Sitemap = []
   try {
     const supabase = createServerClient()
     const { data: activities } = await supabase
       .from("activities")
-      .select("id, original_prompt, created_at")
-      .order("created_at", { ascending: false })
+      .select("id, theme, bncc_codes, updated_at")
+      .not("title", "is", null)
+      .order("updated_at", { ascending: false })
 
     if (activities) {
       activityPages = activities.map((activity) => ({
-        url: `${baseUrl}/atividade/${generateSemanticSlug(activity.original_prompt, activity.id)}`,
-        lastModified: new Date(activity.created_at),
-        changeFrequency: "yearly" as const,
-        priority: 0.5,
+        url: `${baseUrl}/material/${generateMaterialSlug(activity.theme, activity.id)}`,
+        lastModified: new Date(activity.updated_at),
+        changeFrequency: "monthly" as const,
+        priority: activity.bncc_codes.length > 0 ? 0.7 : 0.5,
       }))
     }
   } catch (error) {
