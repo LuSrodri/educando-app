@@ -17,11 +17,10 @@ export interface EnrichmentResult {
   failures: number
 }
 
-const QUALITY_ORDER: Record<ClassifiedImage["quality"], number> = {
-  high: 3,
-  medium: 2,
-  low: 1,
-}
+// Only "high" reaches ingestion. Anything below is discarded before we spend
+// Replicate budget on it, so every row stored via Tavily has quality_score 0.9.
+const MIN_ACCEPTED_QUALITY: ClassifiedImage["quality"] = "high"
+const HIGH_QUALITY_SCORE = 0.9
 
 async function fetchBuffer(url: string): Promise<{ buffer: Buffer; contentType: string }> {
   const controller = new AbortController()
@@ -53,9 +52,9 @@ async function classifyInParallel(
   for (const r of results) {
     if (r.status === "fulfilled") classified.push(r.value)
   }
-  return classified
-    .filter((c) => c.meta.usable && c.meta.portrait && c.meta.quality !== "low")
-    .sort((a, b) => QUALITY_ORDER[b.meta.quality] - QUALITY_ORDER[a.meta.quality])
+  return classified.filter(
+    (c) => c.meta.usable && c.meta.portrait && c.meta.quality === MIN_ACCEPTED_QUALITY,
+  )
 }
 
 export async function enrichFromTavily(
@@ -95,8 +94,6 @@ export async function enrichFromTavily(
         .upload(imagePath, buffer, { contentType, upsert: true })
       if (uploadError) throw uploadError
 
-      const qualityScore = meta.quality === "high" ? 0.9 : 0.6
-
       const { data: row, error: insertError } = await supabase
         .from("activities")
         .insert({
@@ -111,7 +108,7 @@ export async function enrichFromTavily(
           type: meta.type,
           source_url: image.url,
           source_provider: "tavily",
-          quality_score: qualityScore,
+          quality_score: HIGH_QUALITY_SCORE,
         })
         .select("*")
         .single()
