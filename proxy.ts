@@ -12,12 +12,18 @@ export function proxy(request: NextRequest) {
     // Allow all HTTPS images: Supabase image transformation serves via Cloudflare CDN
     // which uses different hostnames than the project URL, so we can't enumerate them
     "img-src 'self' data: blob: https:",
-    // Next.js App Router requires unsafe-inline for hydration scripts
-    "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
+    // Next.js App Router requires unsafe-inline for hydration scripts. Cloudflare
+    // Turnstile loads api.js and its inner challenge iframe from
+    // challenges.cloudflare.com.
+    "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://challenges.cloudflare.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
-    // Include wss: for Supabase realtime WebSocket connections
-    `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://va.vercel-scripts.com https://vitals.vercel-insights.com`,
+    // Include wss: for Supabase realtime WebSocket connections and Turnstile
+    // verification traffic.
+    `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://va.vercel-scripts.com https://vitals.vercel-insights.com https://challenges.cloudflare.com`,
+    // Turnstile renders the challenge UI inside a nested iframe from
+    // challenges.cloudflare.com — whitelist it here so the widget can mount.
+    "frame-src https://challenges.cloudflare.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -27,7 +33,20 @@ export function proxy(request: NextRequest) {
   response.headers.set("X-Frame-Options", "DENY")
   response.headers.set("X-Content-Type-Options", "nosniff")
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
-  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+  response.headers.set(
+    "Permissions-Policy",
+    [
+      "camera=()",
+      "microphone=()",
+      "geolocation=()",
+      // Cloudflare Turnstile needs these sensor APIs inside its iframe to
+      // collect anti-bot signals. Granting to self + the Turnstile origin.
+      'accelerometer=(self "https://challenges.cloudflare.com")',
+      'gyroscope=(self "https://challenges.cloudflare.com")',
+      'magnetometer=(self "https://challenges.cloudflare.com")',
+      'xr-spatial-tracking=(self "https://challenges.cloudflare.com")',
+    ].join(", "),
+  )
   response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
   response.headers.set("X-DNS-Prefetch-Control", "on")
 

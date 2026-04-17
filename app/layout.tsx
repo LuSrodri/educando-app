@@ -131,6 +131,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <head>
+        <link rel="preconnect" href="https://challenges.cloudflare.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}

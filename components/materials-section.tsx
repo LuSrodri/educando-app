@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, GraduationCap } from "lucide-react"
 import type { Activity } from "@/lib/supabase/types"
 import { DirectorySearch } from "@/components/directory-search"
 import { DirectoryGrid } from "@/components/directory-grid"
-import { TurnstileWidget } from "@/components/turnstile-widget"
+import { TurnstileWidget, type TurnstileWidgetHandle } from "@/components/turnstile-widget"
 
 const PAGE_SIZE = 24
 
@@ -39,6 +39,7 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
 
   const sectionRef = useRef<HTMLElement | null>(null)
   const fetchSeqRef = useRef(0)
+  const turnstileRef = useRef<TurnstileWidgetHandle | null>(null)
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
@@ -53,10 +54,31 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
           limit: String(PAGE_SIZE),
         })
         if (nextQuery.trim()) params.set("q", nextQuery.trim())
-        const headers: Record<string, string> = { Accept: "application/json" }
-        if (turnstileToken) headers["x-cf-turnstile-token"] = turnstileToken
+        const buildHeaders = (token: string | null): Record<string, string> => {
+          const h: Record<string, string> = { Accept: "application/json" }
+          if (token) h["x-cf-turnstile-token"] = token
+          return h
+        }
 
-        const res = await fetch(`/api/search?${params.toString()}`, { headers })
+        let res = await fetch(`/api/search?${params.toString()}`, {
+          headers: buildHeaders(turnstileToken),
+        })
+
+        // If enrichment is needed and no token was attached (widget still
+        // warming up), ask Turnstile for one and retry once.
+        if (res.status === 401) {
+          const body = await res.clone().json().catch(() => ({ reason: "unauthorized" }))
+          if (body.reason === "turnstile_required" && turnstileRef.current) {
+            const fresh = await turnstileRef.current.getToken()
+            if (fresh) {
+              setTurnstileToken(fresh)
+              res = await fetch(`/api/search?${params.toString()}`, {
+                headers: buildHeaders(fresh),
+              })
+            }
+          }
+        }
+
         if (res.status === 401) {
           const body = await res.json().catch(() => ({ reason: "unauthorized" }))
           if (seq !== fetchSeqRef.current) return
@@ -151,7 +173,11 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
 
   return (
     <section id="materiais" ref={sectionRef} className="container mx-auto px-4 py-14 sm:py-16">
-      <TurnstileWidget onToken={setTurnstileToken} onError={() => setTurnstileToken(null)} />
+      <TurnstileWidget
+        ref={turnstileRef}
+        onToken={setTurnstileToken}
+        onError={() => setTurnstileToken(null)}
+      />
 
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="space-y-3 text-center">
