@@ -73,7 +73,7 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     images: [
       {
-        url: "/og-image.png",
+        url: "/images/educando-app-logo.png",
         width: 1024,
         height: 1024,
         alt: "educando.app — Diretório pedagógico alinhado à BNCC",
@@ -84,7 +84,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: ["/og-image.png"],
+    images: ["/images/educando-app-logo.png"],
   },
   alternates: {
     canonical: SITE_URL,
