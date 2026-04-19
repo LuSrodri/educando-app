@@ -166,10 +166,13 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
       }
       return messages[errorReason] ?? messages.unknown
     }
+    if (isLoading && submittedQuery) {
+      return `Buscando atividades para "${submittedQuery}"…`
+    }
     return submittedQuery
       ? `${count} ${total === 1 ? "resultado" : "resultados"} para "${submittedQuery}".`
       : `São ${count} atividades e materiais de apoio para te auxiliar no plano de aula.`
-  }, [total, submittedQuery, errorReason])
+  }, [total, submittedQuery, errorReason, isLoading])
 
   return (
     <section id="materiais" ref={sectionRef} className="container mx-auto px-4 py-14 sm:py-16">
@@ -253,6 +256,12 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
+        )}
+
+        {submittedQuery && !errorReason && !isLoading && (
+          <p className="pt-4 text-center text-xs text-gray-500 sm:text-sm">
+            Volte aqui depois para encontrar mais resultados.
+          </p>
         )}
       </div>
     </section>

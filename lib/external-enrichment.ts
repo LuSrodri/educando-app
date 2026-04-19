@@ -1,12 +1,14 @@
 // Pipeline: when the internal directory yields fewer than N hits for a query,
-// pull candidate images from Tavily, classify each with GPT-5.4-nano in
-// parallel, then clean the accepted ones with Replicate qwen/qwen-image-2-pro
-// sequentially, upload to Supabase Storage, and insert into `activities`.
+// expand the query into PT-BR variants, pull image candidates from Tavily in
+// parallel, dedupe by URL, classify each with GPT-5.4-nano in parallel, then
+// clean the accepted ones with Replicate qwen/qwen-image-2-pro sequentially,
+// upload to Supabase Storage, and insert into `activities`.
 
 import { createServerClient } from "@/lib/supabase/server"
 import { collectImageCandidates, tavilySearchImages, type TavilyImage } from "@/lib/tavily"
 import { classifyImageCandidate, type ClassifiedImage } from "@/lib/openai-classifier"
 import { replicateCleanImage } from "@/lib/replicate"
+import { expandQuery } from "@/lib/query-expansion"
 import type { Activity } from "@/lib/supabase/types"
 import { randomUUID } from "node:crypto"
 
@@ -21,6 +23,8 @@ export interface EnrichmentResult {
 // Replicate budget on it, so every row stored via Tavily has quality_score 0.9.
 const MIN_ACCEPTED_QUALITY: ClassifiedImage["quality"] = "high"
 const HIGH_QUALITY_SCORE = 0.9
+const TAVILY_PER_QUERY = 20
+const DEFAULT_POOL_CAP = 30
 
 async function fetchBuffer(url: string): Promise<{ buffer: Buffer; contentType: string }> {
   const controller = new AbortController()
@@ -63,11 +67,27 @@ export async function enrichFromTavily(
   options: { maxCandidates?: number; overallDeadlineMs?: number } = {},
 ): Promise<EnrichmentResult> {
   const supabase = createServerClient()
-  const cap = Math.min(options.maxCandidates ?? 10, 20)
+  const cap = Math.min(options.maxCandidates ?? DEFAULT_POOL_CAP, 60)
   const deadline = Date.now() + (options.overallDeadlineMs ?? 75_000)
 
-  const tavily = await tavilySearchImages(query, { maxResults: cap })
-  const candidates = collectImageCandidates(tavily).slice(0, cap)
+  const variants = await expandQuery(query)
+  const searches = await Promise.allSettled(
+    variants.map((v) => tavilySearchImages(v, { maxResults: TAVILY_PER_QUERY })),
+  )
+
+  const seen = new Set<string>()
+  const candidates: TavilyImage[] = []
+  for (const r of searches) {
+    if (r.status !== "fulfilled") continue
+    for (const img of collectImageCandidates(r.value)) {
+      if (seen.has(img.url)) continue
+      seen.add(img.url)
+      candidates.push(img)
+      if (candidates.length >= cap) break
+    }
+    if (candidates.length >= cap) break
+  }
+
   if (candidates.length === 0) {
     return { accepted: [], inspected: 0, rejected: 0, failures: 0 }
   }
