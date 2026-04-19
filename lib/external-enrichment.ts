@@ -57,7 +57,11 @@ async function classifyInParallel(
     if (r.status === "fulfilled") classified.push(r.value)
   }
   return classified.filter(
-    (c) => c.meta.usable && c.meta.portrait && c.meta.quality === MIN_ACCEPTED_QUALITY,
+    (c) =>
+      c.meta.usable &&
+      c.meta.portrait &&
+      c.meta.self_sufficient &&
+      c.meta.quality === MIN_ACCEPTED_QUALITY,
   )
 }
 
