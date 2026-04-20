@@ -8,7 +8,10 @@ import { extractClientIp } from "@/lib/client-ip"
 import type { Activity } from "@/lib/supabase/types"
 
 export const runtime = "nodejs"
-export const maxDuration = 120
+// Pipeline de enriquecimento tem deadline interno de 180s; somamos margem para
+// FTS, moderação, rate-limit e a query final pós-ingestão. Vercel Pro permite
+// até 300s; ajustar plano se cair em 504.
+export const maxDuration = 240
 
 const DEFAULT_PAGE_SIZE = 24
 const MAX_PAGE_SIZE = 60

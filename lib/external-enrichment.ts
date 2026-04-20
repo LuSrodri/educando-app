@@ -1,13 +1,13 @@
 // Pipeline: when the internal directory yields fewer than N hits for a query,
 // expand the query into PT-BR variants, pull image candidates from Tavily in
 // parallel, dedupe by URL, classify each with GPT-5.4-nano in parallel, then
-// clean the accepted ones with Replicate qwen/qwen-image-2-pro sequentially,
+// clean the accepted ones with gpt-image-1.5 (images.edit) sequentially,
 // upload to Supabase Storage, and insert into `activities`.
 
 import { createServerClient } from "@/lib/supabase/server"
 import { collectImageCandidates, tavilySearchImages, type TavilyImage } from "@/lib/tavily"
 import { classifyImageCandidate, type ClassifiedImage } from "@/lib/openai-classifier"
-import { replicateCleanImage } from "@/lib/replicate"
+import { isEditableImageUrl, openaiCleanImage } from "@/lib/openai-image"
 import { expandQuery } from "@/lib/query-expansion"
 import type { Activity } from "@/lib/supabase/types"
 import { randomUUID } from "node:crypto"
@@ -20,25 +20,11 @@ export interface EnrichmentResult {
 }
 
 // Only "high" reaches ingestion. Anything below is discarded before we spend
-// Replicate budget on it, so every row stored via Tavily has quality_score 0.9.
+// gpt-image-1.5 budget on it, so every row stored via Tavily has quality_score 0.9.
 const MIN_ACCEPTED_QUALITY: ClassifiedImage["quality"] = "high"
 const HIGH_QUALITY_SCORE = 0.9
 const TAVILY_PER_QUERY = 20
 const DEFAULT_POOL_CAP = 30
-
-async function fetchBuffer(url: string): Promise<{ buffer: Buffer; contentType: string }> {
-  const controller = new AbortController()
-  const t = setTimeout(() => controller.abort(), 25_000)
-  try {
-    const res = await fetch(url, { signal: controller.signal })
-    if (!res.ok) throw new Error(`download_${res.status}`)
-    const contentType = (res.headers.get("content-type") ?? "image/png").split(";")[0].trim()
-    const arrayBuf = await res.arrayBuffer()
-    return { buffer: Buffer.from(arrayBuf), contentType }
-  } finally {
-    clearTimeout(t)
-  }
-}
 
 interface ClassifiedCandidate {
   image: TavilyImage
@@ -72,7 +58,7 @@ export async function enrichFromTavily(
 ): Promise<EnrichmentResult> {
   const supabase = createServerClient()
   const cap = Math.min(options.maxCandidates ?? DEFAULT_POOL_CAP, 60)
-  const deadline = Date.now() + (options.overallDeadlineMs ?? 75_000)
+  const deadline = Date.now() + (options.overallDeadlineMs ?? 180_000)
 
   const variants = await expandQuery(query)
   const searches = await Promise.allSettled(
@@ -86,6 +72,7 @@ export async function enrichFromTavily(
     for (const img of collectImageCandidates(r.value)) {
       if (seen.has(img.url)) continue
       seen.add(img.url)
+      if (!isEditableImageUrl(img.url)) continue
       candidates.push(img)
       if (candidates.length >= cap) break
     }
@@ -106,8 +93,7 @@ export async function enrichFromTavily(
     if (accepted.length >= need) break
     if (Date.now() > deadline) break
     try {
-      const cleanedUrl = await replicateCleanImage(image.url)
-      const { buffer, contentType } = await fetchBuffer(cleanedUrl)
+      const { buffer, contentType } = await openaiCleanImage(image.url)
 
       const activityId = randomUUID()
       const extension = contentType.split("/")[1] || "png"

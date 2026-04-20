@@ -9,7 +9,7 @@ O **educando.app** é um diretório inteligente para professores do ensino brasi
 ## Funcionalidades
 
 - **Busca inteligente** com full-text search (stemming pt-BR), fuzzy em título/tema, match exato em códigos BNCC. Insensível a acentos.
-- **Enriquecimento externo sob demanda** — se a busca interna traz menos de 5 resultados, o sistema consulta Tavily, classifica cada candidato com GPT-5.4 nano (portrait + qualidade + tipo), limpa watermarks com Replicate (`qwen/qwen-image-2-pro`) e persiste o material no diretório.
+- **Enriquecimento externo sob demanda** — se a busca interna traz menos de 5 resultados, o sistema consulta Tavily, classifica cada candidato com GPT-5.4 nano (portrait + qualidade + tipo), limpa watermarks com `gpt-image-1.5` (images.edit) e persiste o material no diretório.
 - **Metadados ricos** — cada material tem título, tema, descrição curta e longa, códigos BNCC aplicáveis e tipo (atividade | material de apoio).
 - **Directório 100% público** — click em qualquer card abre o material em nova aba.
 - **Telemetria** — toda busca e clique são registrados (para orientar melhorias futuras do diretório).
@@ -21,8 +21,7 @@ O **educando.app** é um diretório inteligente para professores do ensino brasi
 - **Next.js 16** (App Router, Turbopack, Node runtime)
 - **React 19** + **TypeScript** + **Tailwind CSS 4**
 - **Supabase** — Postgres (FTS + trigram + unaccent) + Storage
-- **OpenAI** GPT-5.4 nano com Structured Outputs (classificação + metadados)
-- **Replicate** `qwen/qwen-image-2-pro` (limpeza de imagens externas)
+- **OpenAI** GPT-5.4 nano com Structured Outputs (classificação + metadados) + `gpt-image-1.5` (limpeza de imagens externas via `images.edit`)
 - **Tavily** (busca de imagens na web)
 - **Cloudflare Turnstile** + WAF (proteção anti-bot)
 - **FingerprintJS** open-source (visitorId no cliente)
@@ -41,9 +40,8 @@ cp .env.example .env
 | `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anônima do Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Chave de serviço do Supabase (server-only) |
-| `OPENAI_API_KEY` | Backfill de metadados + classificação de candidatos externos |
+| `OPENAI_API_KEY` | Backfill de metadados + classificação de candidatos externos + limpeza via `gpt-image-1.5` |
 | `TAVILY_API_KEY` | Busca de imagens na web |
-| `REPLICATE_API_TOKEN` | Limpeza de watermarks com `qwen/qwen-image-2-pro` |
 | `NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY` | Site key do Turnstile (client) |
 | `CLOUDFLARE_TURNSTILE_SECRET_KEY` | Secret key do Turnstile (server) |
 | `IDENTITY_SALT` | Salt para hashear IP + fingerprint |
@@ -85,7 +83,7 @@ npm run lint
 
 ## Segurança
 
-Quatro camadas cobrem abuso e protegem o pipeline de enriquecimento (Tavily + OpenAI + Replicate), que gasta dinheiro por imagem nova:
+Quatro camadas cobrem abuso e protegem o pipeline de enriquecimento (Tavily + OpenAI), que gasta dinheiro por imagem nova:
 
 1. **Moderação GPT-5.4-nano** — `lib/moderation.ts` classifica toda busca antes de ler o banco ou chamar APIs pagas. Rejeita `irrelevant`, `nonsense`, `injection`, `illegal`, `sexual`, `abuse`, `too_long`. Rejeição devolve `401` com o motivo e **não** grava nada nem consome nenhum recurso.
 2. **Rate limit (por IP)** — RPC `public.rate_limit_check(bucket, key, limit, window_seconds)` com janela fixa. Key é o IP extraído por `lib/client-ip.ts` (atrás do Cloudflare usa `cf-connecting-ip`). Limites: busca 30/min, cliques 120/min, enrichment 10/hora.
