@@ -1,11 +1,11 @@
-// Pós-processamento de candidatos Tavily com gpt-image-1.5.
+// Pós-processamento de candidatos Tavily com gpt-image-2.
 // Transforma a imagem externa em uma folha A4 limpa e autossuficiente,
 // removendo marcas d'água, propagandas, links e logos. Retorna o buffer
 // pronto para subir no Supabase Storage.
 
 import OpenAI, { toFile } from "openai"
 
-const MODEL = "gpt-image-1.5"
+const MODEL = "gpt-image-2"
 
 const PROMPT =
   "Transforme isso em um arquivo de atividade/material de apoio, pronto para ser impresso. Alta qualidade. Fundo branco. Espaços e margens otimizadas. Remova qualquer marcas d'águas, propagandas, links, logos, ou outros elementos dissociativos. Seja extremamente fiel ao material original."
@@ -79,7 +79,7 @@ async function fetchSource(url: string): Promise<{ buffer: Buffer; contentType: 
 }
 
 /**
- * Limpa uma imagem candidata via gpt-image-1.5 (images.edit).
+ * Limpa uma imagem candidata via gpt-image-2 (images.edit).
  * Retorna diretamente o buffer PNG gerado pela OpenAI.
  */
 export async function openaiCleanImage(

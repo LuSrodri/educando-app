@@ -1,7 +1,7 @@
 // Pipeline: when the internal directory yields fewer than N hits for a query,
 // expand the query into PT-BR variants, pull image candidates from Tavily in
 // parallel, dedupe by URL, classify each with GPT-5.4-nano in parallel, then
-// clean the accepted ones with gpt-image-1.5 (images.edit) sequentially,
+// clean the accepted ones with gpt-image-2 (images.edit) sequentially,
 // upload to Supabase Storage, and insert into `activities`.
 
 import { createServerClient } from "@/lib/supabase/server"
@@ -20,7 +20,7 @@ export interface EnrichmentResult {
 }
 
 // Only "high" reaches ingestion. Anything below is discarded before we spend
-// gpt-image-1.5 budget on it, so every row stored via Tavily has quality_score 0.9.
+// gpt-image-2 budget on it, so every row stored via Tavily has quality_score 0.9.
 const MIN_ACCEPTED_QUALITY: ClassifiedImage["quality"] = "high"
 const HIGH_QUALITY_SCORE = 0.9
 const TAVILY_PER_QUERY = 20

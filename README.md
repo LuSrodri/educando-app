@@ -9,7 +9,7 @@ O **educando.app** é um diretório inteligente para professores do ensino brasi
 ## Funcionalidades
 
 - **Busca inteligente** com full-text search (stemming pt-BR), fuzzy em título/tema, match exato em códigos BNCC. Insensível a acentos.
-- **Enriquecimento externo sob demanda** — se a busca interna traz menos de 5 resultados, o sistema consulta Tavily, classifica cada candidato com GPT-5.4 nano (portrait + qualidade + tipo), limpa watermarks com `gpt-image-1.5` (images.edit) e persiste o material no diretório.
+- **Enriquecimento externo sob demanda** — se a busca interna traz menos de 5 resultados, o sistema consulta Tavily, classifica cada candidato com GPT-5.4 nano (portrait + qualidade + tipo), limpa watermarks com `gpt-image-2` (images.edit) e persiste o material no diretório.
 - **Metadados ricos** — cada material tem título, tema, descrição curta e longa, códigos BNCC aplicáveis e tipo (atividade | material de apoio).
 - **Directório 100% público** — click em qualquer card abre o material em nova aba.
 - **Telemetria** — toda busca e clique são registrados (para orientar melhorias futuras do diretório).
@@ -21,7 +21,7 @@ O **educando.app** é um diretório inteligente para professores do ensino brasi
 - **Next.js 16** (App Router, Turbopack, Node runtime)
 - **React 19** + **TypeScript** + **Tailwind CSS 4**
 - **Supabase** — Postgres (FTS + trigram + unaccent) + Storage
-- **OpenAI** GPT-5.4 nano com Structured Outputs (classificação + metadados) + `gpt-image-1.5` (limpeza de imagens externas via `images.edit`)
+- **OpenAI** GPT-5.4 nano com Structured Outputs (classificação + metadados) + `gpt-image-2` (limpeza de imagens externas via `images.edit`)
 - **Tavily** (busca de imagens na web)
 - **Cloudflare Turnstile** + WAF (proteção anti-bot)
 - **FingerprintJS** open-source (visitorId no cliente)
@@ -40,7 +40,7 @@ cp .env.example .env
 | `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anônima do Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Chave de serviço do Supabase (server-only) |
-| `OPENAI_API_KEY` | Backfill de metadados + classificação de candidatos externos + limpeza via `gpt-image-1.5` |
+| `OPENAI_API_KEY` | Backfill de metadados + classificação de candidatos externos + limpeza via `gpt-image-2` |
 | `TAVILY_API_KEY` | Busca de imagens na web |
 | `NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY` | Site key do Turnstile (client) |
 | `CLOUDFLARE_TURNSTILE_SECRET_KEY` | Secret key do Turnstile (server) |
