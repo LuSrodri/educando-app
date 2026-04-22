@@ -66,25 +66,49 @@ export type Database = {
           id: string
           query: string
           normalized_query: string
-          results_count: number
-          external_fetched: number
+          results_count: number | null
+          external_fetched: number | null
           created_at: string
+          outcome: "ok" | "search_rate_limited" | "moderation_rejected" | "turnstile_failed" | "enrichment_rate_limited" | "error"
+          moderation_reason: string | null
+          page: number
+          enrichment_triggered: boolean
+          candidates_inspected: number | null
+          candidates_rejected: number | null
+          candidates_failed: number | null
+          duration_ms: number | null
         }
         Insert: {
           id?: string
           query: string
           normalized_query: string
-          results_count?: number
-          external_fetched?: number
+          results_count?: number | null
+          external_fetched?: number | null
           created_at?: string
+          outcome?: "ok" | "search_rate_limited" | "moderation_rejected" | "turnstile_failed" | "enrichment_rate_limited" | "error"
+          moderation_reason?: string | null
+          page?: number
+          enrichment_triggered?: boolean
+          candidates_inspected?: number | null
+          candidates_rejected?: number | null
+          candidates_failed?: number | null
+          duration_ms?: number | null
         }
         Update: {
           id?: string
           query?: string
           normalized_query?: string
-          results_count?: number
-          external_fetched?: number
+          results_count?: number | null
+          external_fetched?: number | null
           created_at?: string
+          outcome?: "ok" | "search_rate_limited" | "moderation_rejected" | "turnstile_failed" | "enrichment_rate_limited" | "error"
+          moderation_reason?: string | null
+          page?: number
+          enrichment_triggered?: boolean
+          candidates_inspected?: number | null
+          candidates_rejected?: number | null
+          candidates_failed?: number | null
+          duration_ms?: number | null
         }
         Relationships: []
       }
