@@ -64,6 +64,7 @@ function tooMany() {
 }
 
 async function recordTelemetry(row: TelemetryRow): Promise<void> {
+  if (row.query.length === 0) return
   const { error } = await createServerClient()
     .from("search_queries")
     .insert(row)
@@ -192,22 +193,24 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    supabase
-      .from("search_queries")
-      .insert({
-        ...base,
-        results_count: payload.total,
-        external_fetched: externalFetched,
-        outcome: "ok",
-        enrichment_triggered: enrichmentTriggered,
-        candidates_inspected: candidatesInspected,
-        candidates_rejected: candidatesRejected,
-        candidates_failed: candidatesFailed,
-        duration_ms: Date.now() - start,
-      })
-      .then(({ error }) => {
-        if (error) console.error("[api/search] telemetry insert failed:", error.message)
-      })
+    if (q.length > 0) {
+      supabase
+        .from("search_queries")
+        .insert({
+          ...base,
+          results_count: payload.total,
+          external_fetched: externalFetched,
+          outcome: "ok",
+          enrichment_triggered: enrichmentTriggered,
+          candidates_inspected: candidatesInspected,
+          candidates_rejected: candidatesRejected,
+          candidates_failed: candidatesFailed,
+          duration_ms: Date.now() - start,
+        })
+        .then(({ error }) => {
+          if (error) console.error("[api/search] telemetry insert failed:", error.message)
+        })
+    }
 
     return NextResponse.json({
       data: payload.data,
