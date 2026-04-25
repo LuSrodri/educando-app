@@ -10,6 +10,7 @@ O **educando.app** é um diretório inteligente para professores do ensino brasi
 
 - **Busca inteligente** com full-text search (stemming pt-BR), fuzzy em título/tema, match exato em códigos BNCC. Insensível a acentos.
 - **Enriquecimento externo sob demanda** — se a busca interna traz menos de 5 resultados, o sistema consulta Tavily, classifica cada candidato com GPT-5.4 nano (portrait + qualidade + tipo), limpa watermarks com `gpt-image-2` (images.edit) e persiste o material no diretório.
+- **Geração semanal automática (Vercel Cron)** — todo domingo às 08:00 UTC, um cron job lê as buscas mais frequentes da semana com poucos resultados, pesquisa cada tema via **Tavily** + **Firecrawl**, gera a especificação completa via GPT-5.4 nano e produz a ficha impressa via `gpt-image-2`. Ver seção [Cron Jobs](#cron-jobs).
 - **Metadados ricos** — cada material tem título, tema, descrição curta e longa, códigos BNCC aplicáveis e tipo (atividade | material de apoio).
 - **Directório 100% público** — click em qualquer card abre o material em nova aba.
 - **Telemetria** — toda busca e clique são registrados (para orientar melhorias futuras do diretório).
@@ -22,7 +23,8 @@ O **educando.app** é um diretório inteligente para professores do ensino brasi
 - **React 19** + **TypeScript** + **Tailwind CSS 4**
 - **Supabase** — Postgres (FTS + trigram + unaccent) + Storage
 - **OpenAI** GPT-5.4 nano com Structured Outputs (classificação + metadados) + `gpt-image-2` (limpeza de imagens externas via `images.edit`)
-- **Tavily** (busca de imagens na web)
+- **Tavily** (busca de imagens na web + pesquisa pedagógica para o cron semanal)
+- **Firecrawl** (scraping de conteúdo técnico/BNCC para o cron semanal)
 - **Cloudflare Turnstile** + WAF (proteção anti-bot)
 - **FingerprintJS** open-source (visitorId no cliente)
 - Deploy: **Vercel**
@@ -41,7 +43,9 @@ cp .env.example .env
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anônima do Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Chave de serviço do Supabase (server-only) |
 | `OPENAI_API_KEY` | Backfill de metadados + classificação de candidatos externos + limpeza via `gpt-image-2` |
-| `TAVILY_API_KEY` | Busca de imagens na web |
+| `TAVILY_API_KEY` | Busca de imagens na web + pesquisa pedagógica para o cron semanal |
+| `FIRECRAWL_API_KEY` | Scraping técnico (BNCC, conteúdo pedagógico) para o cron semanal |
+| `CRON_SECRET` | Segredo que protege o endpoint do cron job (Vercel injeta como `Authorization: Bearer`) |
 | `NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY` | Site key do Turnstile (client) |
 | `CLOUDFLARE_TURNSTILE_SECRET_KEY` | Secret key do Turnstile (server) |
 | `IDENTITY_SALT` | Salt para hashear IP + fingerprint |
@@ -116,6 +120,35 @@ Recomendação para produção (domínio atrás do Cloudflare com proxy laranja 
 - **Firewall Custom Rule**: `http.request.uri.path eq "/api/search" and http.request.method eq "GET" and cf.threat_score gt 20` → `Managed Challenge`.
 
 `lib/identity.ts` extrai o IP correto de `cf-connecting-ip` quando atrás do Cloudflare.
+
+## Cron Jobs
+
+### Geração semanal de atividades (`/api/cron/weekly-activities`)
+
+Configurado em `vercel.json` para rodar todo **domingo às 08:00 UTC** (`0 8 * * 0`).
+
+**Pipeline (até 3 tópicos por execução, em paralelo):**
+
+1. Lê de `search_queries` os termos mais buscados nos últimos 7 dias com `outcome='ok'` e `results_count < 5` (sub-cobertos), agregados por `normalized_query`.
+2. Para cada termo, pula se já houver ≥ 2 atividades cobrindo o tema (idempotência contra eventos duplicados do Vercel).
+3. **Tavily** busca referências pedagógicas + visuais alinhadas à BNCC e cultura brasileira.
+4. **Firecrawl** faz scrape da URL pedagógica mais relevante (Nova Escola, MEC, etc.) para embasamento técnico.
+5. **GPT-5.4 nano** sintetiza a pesquisa em uma `ActivitySpec` (title, theme, descriptions, bncc_codes, image_prompt) via Structured Outputs com schema strict.
+6. **gpt-image-2** gera a ficha impressa A4 seguindo o design system embutido no prompt (cabeçalho com nome/escola/turma/professor/ano/data; figuras coloridas + layout monocromático; tipografia sans-serif neutra; rodapé com códigos BNCC; elementos da cultura brasileira).
+7. Upload no Storage + INSERT em `activities` (source_provider='internal', quality_score=0.9).
+
+**Configuração:**
+
+- `maxDuration = 500` (Vercel Pro suporta até 800s).
+- Autenticação: `Authorization: Bearer ${CRON_SECRET}` — gerar um valor aleatório com `openssl rand -hex 32` e configurar tanto no `.env` local quanto em Vercel → Project Settings → Environment Variables.
+- Cron jobs do Vercel **podem disparar duplicado** — o coverage check garante idempotência.
+- Cron jobs **não retentam em caso de falha** — monitorar via Vercel Logs.
+
+**Teste manual após deploy:**
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" https://educando.app/api/cron/weekly-activities
+```
 
 ## Integração com Claude Code (opcional)
 
