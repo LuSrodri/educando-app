@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { Mail } from "lucide-react"
 
 export function Footer() {
   return (
@@ -23,6 +24,15 @@ export function Footer() {
                 className="underline hover:text-background transition-colors"
               >
                 Lucas Santos Rodrigues
+              </a>
+            </p>
+            <p>
+              <a
+                href="mailto:rodrigueslucass@outlook.com.br"
+                className="inline-flex items-center gap-1.5 underline hover:text-background transition-colors"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                rodrigueslucass@outlook.com.br
               </a>
             </p>
             <p className="text-xs opacity-60">
