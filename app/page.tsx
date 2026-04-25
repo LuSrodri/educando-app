@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/site-header"
 import { Hero } from "@/components/hero"
+import { WeeklyDropBanner } from "@/components/weekly-drop-banner"
 import { MaterialsSection } from "@/components/materials-section"
 import { Footer } from "@/components/footer"
 import { getAllActivities } from "@/lib/activities"
@@ -30,6 +31,7 @@ export default async function Home() {
       <SiteHeader />
       <main className="min-h-screen bg-background">
         <Hero />
+        <WeeklyDropBanner />
         <MaterialsSection initialActivities={activities} initialTotal={total} />
       </main>
       <Footer />

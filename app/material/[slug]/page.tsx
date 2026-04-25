@@ -1,13 +1,14 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { getActivity, getActivityBySlug } from "@/lib/activities"
+import { getActivity, getActivityBySlug, getRelatedActivities } from "@/lib/activities"
 import { getActivityImageUrl } from "@/lib/image-utils"
 import { isUUID, generateMaterialSlug } from "@/lib/slug"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { BookOpen, ArrowLeft, Calendar, Tag } from "lucide-react"
 import { SharedActivityClient } from "./shared-activity-client"
+import { RelatedActivities } from "@/components/related-activities"
 import type { Activity } from "@/lib/supabase/types"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://educando.app"
@@ -83,6 +84,7 @@ export default async function MaterialPage({ params }: PageProps) {
   const title = activity.title ?? "Material pedagógico"
   const imageUrl = getActivityImageUrl(activity.image_path)
   const pageUrl = `${BASE_URL}/material/${generateMaterialSlug(activity.theme, id)}`
+  const related = await getRelatedActivities(activity, 3)
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -175,6 +177,8 @@ export default async function MaterialPage({ params }: PageProps) {
             </Card>
           </div>
         </div>
+
+        <RelatedActivities activities={related} />
       </main>
     </>
   )
