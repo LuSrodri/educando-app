@@ -109,7 +109,7 @@ const SPEC_JSON_SCHEMA = {
       title: { type: "string", minLength: 5, maxLength: 80 },
       theme: { type: "string", minLength: 5, maxLength: 120 },
       short_description: { type: "string", minLength: 10, maxLength: 200 },
-      long_description: { type: "string", minLength: 30, maxLength: 600 },
+      long_description: { type: "string", minLength: 200, maxLength: 900 },
       bncc_codes: {
         type: "array",
         items: { type: "string" },
@@ -150,6 +150,10 @@ ${tavilySummary || "(sem resultados)"}
 
 REFERÊNCIA TÉCNICA (Firecrawl):
 ${firecrawlContent || "(sem conteúdo)"}
+
+REGRAS DE TEXTO:
+- "short_description": 1 frase, 80-180 caracteres.
+- "long_description": 2-4 frases, 300-880 caracteres, faixa etária/ano e sugestão de uso. NUNCA exceda 880 caracteres e SEMPRE termine em ponto final — o campo é cortado em 900 caracteres pelo schema, então planeje o tamanho antes de escrever.
 
 PARA O image_prompt, aplique este sistema de design:
 ${DESIGN_SYSTEM}
