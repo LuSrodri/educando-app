@@ -64,7 +64,13 @@ const FAQS = [
   },
 ]
 
-export default async function SejamebroPage() {
+interface PageProps {
+  searchParams: Promise<{ tema?: string }>
+}
+
+export default async function SejamebroPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const tema = params.tema?.trim().slice(0, 200)
   const user = await getCurrentUser()
 
   if (user) {
@@ -73,7 +79,7 @@ export default async function SejamebroPage() {
       p_user_id: user.id,
     })
     if (((balance as number | null) ?? 0) > 0) {
-      redirect("/criar")
+      redirect(tema ? `/criar?tema=${encodeURIComponent(tema)}` : "/criar")
     }
   }
 

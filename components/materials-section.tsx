@@ -6,6 +6,7 @@ import type { Activity } from "@/lib/supabase/types"
 import { DirectorySearch } from "@/components/directory-search"
 import { DirectoryGrid } from "@/components/directory-grid"
 import { TurnstileWidget, type TurnstileWidgetHandle } from "@/components/turnstile-widget"
+import { CreateCta } from "@/components/create-cta"
 
 const PAGE_SIZE = 24
 
@@ -258,8 +259,12 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
           </div>
         )}
 
+        {!errorReason && !isLoading && (
+          <CreateCta total={total} submittedQuery={submittedQuery} />
+        )}
+
         {submittedQuery && !errorReason && !isLoading && (
-          <p className="pt-4 text-center text-xs text-gray-500 sm:text-sm">
+          <p className="pt-2 text-center text-xs text-gray-500 sm:text-sm">
             Volte aqui depois para encontrar mais resultados.
           </p>
         )}

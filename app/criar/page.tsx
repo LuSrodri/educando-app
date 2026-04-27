@@ -15,9 +15,21 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"
 
-export default async function CriarPage() {
+interface PageProps {
+  searchParams: Promise<{ tema?: string }>
+}
+
+export default async function CriarPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const initialTheme = params.tema?.trim().slice(0, 200) ?? ""
+
   const user = await getCurrentUser()
-  if (!user) redirect("/login?next=/criar")
+  if (!user) {
+    const next = initialTheme
+      ? `/criar?tema=${encodeURIComponent(initialTheme)}`
+      : "/criar"
+    redirect(`/login?next=${encodeURIComponent(next)}`)
+  }
 
   const supabase = await createSSRServerClient()
   const { data: balance } = await supabase.rpc("current_credit_balance", {
@@ -49,7 +61,7 @@ export default async function CriarPage() {
             </header>
 
             <div className="rounded-2xl border border-amber-200 bg-white p-6 shadow-sm">
-              <GenerationForm balance={saldo} />
+              <GenerationForm balance={saldo} initialTheme={initialTheme} />
             </div>
 
             <p className="mt-6 text-center text-xs text-gray-500">

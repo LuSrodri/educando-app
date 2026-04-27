@@ -38,9 +38,15 @@ const STAGE_ORDER: Stage[] = [
   "done",
 ]
 
-export function GenerationForm({ balance }: { balance: number }) {
+export function GenerationForm({
+  balance,
+  initialTheme = "",
+}: {
+  balance: number
+  initialTheme?: string
+}) {
   const router = useRouter()
-  const [theme, setTheme] = useState("")
+  const [theme, setTheme] = useState(initialTheme)
   const [type, setType] = useState<ActivityType>("activity")
   const [stage, setStage] = useState<Stage>("idle")
   const [errorMsg, setErrorMsg] = useState("")
