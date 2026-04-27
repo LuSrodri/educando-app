@@ -1,4 +1,5 @@
 import Image from "next/image"
+import Link from "next/link"
 import { Mail } from "lucide-react"
 
 export function Footer() {
@@ -34,6 +35,20 @@ export function Footer() {
                 <Mail className="h-3.5 w-3.5" />
                 rodrigueslucass@outlook.com.br
               </a>
+            </p>
+            <p className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 md:justify-end">
+              <Link
+                href="/privacidade"
+                className="underline hover:text-background transition-colors"
+              >
+                Privacidade
+              </Link>
+              <Link
+                href="/termos"
+                className="underline hover:text-background transition-colors"
+              >
+                Termos de Uso
+              </Link>
             </p>
             <p className="text-xs opacity-60">
               Lucas Santos Rodrigues Ltda — 65.101.183/0001-87
