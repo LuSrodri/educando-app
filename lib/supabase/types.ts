@@ -6,6 +6,20 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type PaymentPackCode = "experimentar" | "popular" | "melhor_valor"
+export type PaymentIntentStatus =
+  | "pending"
+  | "paid"
+  | "failed"
+  | "canceled"
+  | "expired"
+export type CreditEntryKind =
+  | "purchase"
+  | "consume"
+  | "refund"
+  | "expire"
+  | "adjustment"
+
 export type Database = {
   public: {
     Tables: {
@@ -26,6 +40,7 @@ export type Database = {
           source_provider: "internal" | "tavily"
           quality_score: number | null
           search_vector: unknown
+          user_id: string | null
         }
         Insert: {
           id?: string
@@ -42,6 +57,7 @@ export type Database = {
           source_url?: string | null
           source_provider?: "internal" | "tavily"
           quality_score?: number | null
+          user_id?: string | null
         }
         Update: {
           id?: string
@@ -58,6 +74,7 @@ export type Database = {
           source_url?: string | null
           source_provider?: "internal" | "tavily"
           quality_score?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -133,6 +150,114 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          full_name: string | null
+          avatar_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_intents: {
+        Row: {
+          id: string
+          user_id: string
+          stripe_session_id: string | null
+          stripe_payment_intent_id: string | null
+          pack_code: PaymentPackCode
+          credits_amount: number
+          amount_brl_cents: number
+          status: PaymentIntentStatus
+          created_at: string
+          paid_at: string | null
+          expires_at: string | null
+          metadata: Json
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          stripe_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          pack_code: PaymentPackCode
+          credits_amount: number
+          amount_brl_cents: number
+          status?: PaymentIntentStatus
+          created_at?: string
+          paid_at?: string | null
+          expires_at?: string | null
+          metadata?: Json
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          stripe_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          pack_code?: PaymentPackCode
+          credits_amount?: number
+          amount_brl_cents?: number
+          status?: PaymentIntentStatus
+          created_at?: string
+          paid_at?: string | null
+          expires_at?: string | null
+          metadata?: Json
+        }
+        Relationships: []
+      }
+      credit_ledger: {
+        Row: {
+          id: string
+          user_id: string
+          delta: number
+          kind: CreditEntryKind
+          reason: string | null
+          payment_intent_id: string | null
+          activity_id: string | null
+          expires_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          delta: number
+          kind: CreditEntryKind
+          reason?: string | null
+          payment_intent_id?: string | null
+          activity_id?: string | null
+          expires_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          delta?: number
+          kind?: CreditEntryKind
+          reason?: string | null
+          payment_intent_id?: string | null
+          activity_id?: string | null
+          expires_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -155,9 +280,15 @@ export type Database = {
         Args: { p_suffix: string }
         Returns: Database["public"]["Tables"]["activities"]["Row"][]
       }
+      current_credit_balance: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
     }
     Enums: {
-      [_ in never]: never
+      payment_pack_code: PaymentPackCode
+      payment_intent_status: PaymentIntentStatus
+      credit_entry_kind: CreditEntryKind
     }
     CompositeTypes: {
       [_ in never]: never
@@ -175,3 +306,6 @@ export type UpdateTables<T extends keyof Database["public"]["Tables"]> =
 export type Activity = Tables<"activities">
 export type SearchQuery = Tables<"search_queries">
 export type ActivityClick = Tables<"activity_clicks">
+export type Profile = Tables<"profiles">
+export type PaymentIntent = Tables<"payment_intents">
+export type CreditLedgerEntry = Tables<"credit_ledger">

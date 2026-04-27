@@ -4,6 +4,7 @@ import { Space_Grotesk, Plus_Jakarta_Sans } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ConsentBanner } from "@/components/consent-banner"
 import { ErrorBoundary } from "@/components/error-boundary"
+import { FirstSessionBanner } from "@/components/first-session-banner"
 import "./globals.css"
 
 const spaceGrotesk = Space_Grotesk({
@@ -140,6 +141,7 @@ export default function RootLayout({
       <body className={`${plusJakartaSans.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
         <ErrorBoundary>{children}</ErrorBoundary>
         <ConsentBanner />
+        <FirstSessionBanner />
         <Analytics />
       </body>
     </html>

@@ -6,9 +6,10 @@ import { getActivityImageUrl } from "@/lib/image-utils"
 import { isUUID, generateMaterialSlug } from "@/lib/slug"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { BookOpen, ArrowLeft, Calendar, Tag } from "lucide-react"
+import { ArrowLeft, Calendar, Tag } from "lucide-react"
 import { SharedActivityClient } from "./shared-activity-client"
 import { RelatedActivities } from "@/components/related-activities"
+import { SiteHeader } from "@/components/site-header"
 import type { Activity } from "@/lib/supabase/types"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://educando.app"
@@ -105,20 +106,8 @@ export default async function MaterialPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <SiteHeader />
       <main className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
-        <header className="sticky top-0 z-50 border-b border-amber-200 bg-white/80 backdrop-blur-sm">
-          <div className="container mx-auto flex items-center justify-between px-4 py-4">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500">
-                <BookOpen className="h-5 w-5 text-white" />
-              </div>
-              <span className="font-heading text-xl font-bold text-gray-900">
-                educando<span className="text-amber-600">.app</span>
-              </span>
-            </Link>
-          </div>
-        </header>
-
         <div className="border-b border-amber-100 bg-amber-50">
           <div className="container mx-auto px-4 py-3">
             <Link
