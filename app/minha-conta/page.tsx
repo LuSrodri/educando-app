@@ -134,7 +134,7 @@ export default async function MinhaContaPage({ searchParams }: PageProps) {
                     return (
                       <Link
                         key={activity.id}
-                        href={`/material/${slug}`}
+                        href={`/personalizado/${slug}`}
                         className="group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:border-amber-300 hover:shadow-md"
                       >
                         <div className="aspect-[3/4] overflow-hidden bg-amber-50">

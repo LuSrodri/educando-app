@@ -1,22 +1,27 @@
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import type { Metadata } from "next"
-import { getActivity, getActivityBySlug, getRelatedActivities } from "@/lib/activities"
+import { getActivity, getActivityBySlug } from "@/lib/activities"
 import { getActivityImageUrl } from "@/lib/image-utils"
-import { isUUID, generateMaterialSlug } from "@/lib/slug"
+import { isUUID } from "@/lib/slug"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Calendar, Tag } from "lucide-react"
-import { SharedActivityClient } from "./shared-activity-client"
-import { RelatedActivities } from "@/components/related-activities"
+import { ArrowLeft, Calendar, Lock, Tag } from "lucide-react"
+import { SharedActivityClient } from "@/app/material/[slug]/shared-activity-client"
 import { SiteHeader } from "@/components/site-header"
-import { MaterialCtaBanner } from "@/components/material-cta-banner"
+import { getCurrentUser } from "@/lib/supabase/ssr-server"
 import type { Activity } from "@/lib/supabase/types"
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://educando.app"
+export const dynamic = "force-dynamic"
 
 interface PageProps {
   params: Promise<{ slug: string }>
+}
+
+export const metadata: Metadata = {
+  title: "Atividade personalizada | educando.app",
+  description: "Sua atividade pedagógica personalizada.",
+  robots: { index: false, follow: false },
 }
 
 async function resolveActivity(
@@ -30,11 +35,6 @@ async function resolveActivity(
   return { activity, id: activity?.id ?? null }
 }
 
-// Atividades geradas por usuário (user_id IS NOT NULL) só existem em /personalizado/[slug].
-function isCuratedDirectoryItem(activity: Activity): boolean {
-  return activity.user_id == null
-}
-
 function formatDate(dateString: string | null) {
   if (!dateString) return ""
   return new Date(dateString).toLocaleDateString("pt-BR", {
@@ -44,85 +44,36 @@ function formatDate(dateString: string | null) {
   })
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export default async function PersonalizadoPage({ params }: PageProps) {
   const { slug } = await params
+
+  const user = await getCurrentUser()
+  if (!user) redirect("/sejamembro")
+
   const { activity, id } = await resolveActivity(slug)
+  if (!activity || !id) notFound()
+  if (activity.user_id !== user.id) notFound()
 
-  if (!activity || !id || !isCuratedDirectoryItem(activity)) {
-    return {
-      title: "Material não encontrado | educando.app",
-      description: "O material solicitado não foi encontrado.",
-    }
-  }
-
-  const title = activity.title ?? "Material pedagógico"
-  const description =
-    activity.short_description ??
-    "Material pedagógico do diretório educando.app, alinhado à BNCC."
+  const title = activity.title ?? "Atividade pedagógica"
   const imageUrl = getActivityImageUrl(activity.image_path)
-  const canonicalSlug = generateMaterialSlug(activity.theme, id)
-  const pageUrl = `${BASE_URL}/material/${canonicalSlug}`
-
-  return {
-    title,
-    description,
-    keywords: ["atividade escolar", "material de apoio", "BNCC", "professor", activity.theme ?? ""],
-    robots: { index: true, follow: true },
-    openGraph: {
-      title,
-      description,
-      type: "article",
-      url: pageUrl,
-      siteName: "educando.app",
-      locale: "pt_BR",
-      images: [{ url: imageUrl, width: 2480, height: 3508, alt: title, type: "image/png" }],
-    },
-    twitter: { card: "summary_large_image", title, description, images: [imageUrl] },
-    alternates: { canonical: pageUrl },
-  }
-}
-
-export default async function MaterialPage({ params }: PageProps) {
-  const { slug } = await params
-  const { activity, id } = await resolveActivity(slug)
-
-  if (!activity || !id || !isCuratedDirectoryItem(activity)) notFound()
-
-  const title = activity.title ?? "Material pedagógico"
-  const imageUrl = getActivityImageUrl(activity.image_path)
-  const pageUrl = `${BASE_URL}/material/${generateMaterialSlug(activity.theme, id)}`
-  const related = await getRelatedActivities(activity, 3)
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: title,
-    description: activity.long_description ?? activity.short_description ?? "",
-    image: imageUrl,
-    datePublished: activity.created_at ?? activity.updated_at,
-    url: pageUrl,
-    author: { "@type": "Organization", name: "educando.app" },
-    publisher: { "@type": "Organization", name: "educando.app", url: BASE_URL },
-    isPartOf: { "@type": "WebSite", name: "educando.app", url: BASE_URL },
-  }
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
       <SiteHeader />
       <main className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
         <div className="border-b border-amber-100 bg-amber-50">
-          <div className="container mx-auto px-4 py-3">
+          <div className="container mx-auto flex flex-wrap items-center justify-between gap-3 px-4 py-3">
             <Link
-              href="/"
+              href="/minha-conta"
               className="flex w-fit items-center gap-1 text-sm text-amber-700 hover:text-amber-800"
             >
               <ArrowLeft className="h-4 w-4" />
-              Voltar ao diretório
+              Voltar à minha conta
             </Link>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-white px-3 py-1 text-xs font-medium text-amber-800">
+              <Lock className="h-3 w-3" />
+              Material privado — só você vê
+            </span>
           </div>
         </div>
 
@@ -172,10 +123,7 @@ export default async function MaterialPage({ params }: PageProps) {
             </Card>
           </div>
         </div>
-
-        <RelatedActivities activities={related} />
       </main>
-      <MaterialCtaBanner />
     </>
   )
 }

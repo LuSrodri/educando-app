@@ -15,7 +15,8 @@ async function fetchDirectoryState() {
     supabase
       .from("activities")
       .select("id", { count: "exact", head: true })
-      .not("title", "is", null),
+      .not("title", "is", null)
+      .is("user_id", null),
   ])
   return {
     activities,

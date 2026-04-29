@@ -91,7 +91,7 @@ export function GenerationForm({
             const event = JSON.parse(line) as { stage: Stage; slug?: string; message?: string }
             if (event.stage === "done" && event.slug) {
               setStage("done")
-              setTimeout(() => router.push(`/material/${event.slug}`), 600)
+              setTimeout(() => router.push(`/personalizado/${event.slug}`), 600)
             } else if (event.stage === "error") {
               setStage("error")
               setErrorMsg(event.message ?? "Algo deu errado. Tente novamente.")
