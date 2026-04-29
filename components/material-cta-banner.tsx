@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { Sparkles, X } from "lucide-react"
 
 const STORAGE_KEY = "educando:material-cta-dismissed"
-const DELAY_MS = 15_000
+const DELAY_MS = 8_000
 
 export function MaterialCtaBanner() {
   const [open, setOpen] = useState(false)
@@ -29,59 +29,39 @@ export function MaterialCtaBanner() {
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="material-cta-title"
-      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
+      role="complementary"
+      aria-label="Convite para criar atividade personalizada"
+      className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 sm:bottom-6"
     >
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-gray-950/60 backdrop-blur-sm"
-        onClick={dismiss}
-      />
+      <div className="pointer-events-auto relative flex w-full max-w-md items-center gap-3 rounded-2xl border border-amber-200 bg-white/95 p-4 pr-10 shadow-2xl backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-300 sm:gap-4 sm:p-5 sm:pr-12">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-md sm:h-11 sm:w-11">
+          <Sparkles className="h-5 w-5" />
+        </div>
 
-      <div className="relative w-full max-w-md rounded-2xl border-2 border-amber-300 bg-white p-7 shadow-2xl">
+        <div className="min-w-0 flex-1">
+          <p className="font-heading text-sm font-bold leading-snug text-gray-900 sm:text-base">
+            Não é ainda a atividade que você busca?
+          </p>
+          <p className="mt-0.5 hidden text-xs leading-snug text-gray-600 sm:block">
+            Crie o seu próprio material personalizado em menos de 1 minuto.
+          </p>
+          <Link
+            href="/sejamembro"
+            onClick={dismiss}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-amber-600 sm:text-sm"
+          >
+            Criar minha atividade
+          </Link>
+        </div>
+
         <button
           type="button"
           onClick={dismiss}
           aria-label="Fechar"
-          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+          className="absolute right-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
         >
           <X className="h-4 w-4" />
         </button>
-
-        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg">
-          <Sparkles className="h-6 w-6" />
-        </div>
-
-        <h2
-          id="material-cta-title"
-          className="font-heading text-xl font-bold leading-snug text-gray-900"
-        >
-          Não é ainda a atividade que você busca?
-        </h2>
-
-        <p className="mt-2 text-sm leading-relaxed text-gray-600">
-          Crie o seu próprio material personalizado em menos de 1 minuto — alinhado à BNCC e ao seu contexto de aula.
-        </p>
-
-        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
-          <button
-            type="button"
-            onClick={dismiss}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900"
-          >
-            Agora não
-          </button>
-          <Link
-            href="/sejamembro"
-            onClick={dismiss}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-amber-600 hover:shadow-lg"
-          >
-            <Sparkles className="h-4 w-4" />
-            Criar minha atividade
-          </Link>
-        </div>
       </div>
     </div>
   )
