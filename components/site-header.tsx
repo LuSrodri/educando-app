@@ -77,7 +77,7 @@ export function SiteHeader({ hideCta = false }: { hideCta?: boolean }) {
             priority
             className="h-9 w-9 rounded-lg object-contain"
           />
-          <span className="font-heading text-lg font-semibold tracking-tight text-gray-900">
+          <span className="font-heading text-lg font-semibold tracking-tight text-gray-900 hidden lg:inline-block">
             educando<span className="text-amber-600">.app</span>
           </span>
         </Link>
