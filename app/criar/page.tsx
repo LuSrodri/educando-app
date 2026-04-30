@@ -70,7 +70,7 @@ export default async function CriarPage({ searchParams }: PageProps) {
                 histórico
               </Link>
               . Sem créditos?{" "}
-              <Link href="/sejamembro" className="text-amber-700 underline">
+              <Link href="/creditos" className="text-amber-700 underline">
                 Comprar mais.
               </Link>
             </p>
