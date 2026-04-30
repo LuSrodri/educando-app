@@ -54,7 +54,7 @@ async function HeaderCta() {
         </Link>
       ) : (
         <Link
-          href="/sejamembro"
+          href="/creditos"
           className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-white px-3 py-1.5 text-sm font-semibold text-amber-700 shadow-sm transition-colors hover:bg-amber-50 sm:px-4"
         >
           Comprar créditos 🍎

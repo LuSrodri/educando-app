@@ -88,7 +88,7 @@ export default async function MinhaContaPage({ searchParams }: PageProps) {
                   </Button>
                 )}
                 <Button asChild variant="outline">
-                  <Link href="/sejamembro">
+                  <Link href="/creditos">
                     Comprar créditos
                   </Link>
                 </Button>
