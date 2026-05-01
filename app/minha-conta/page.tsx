@@ -2,13 +2,14 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { Sparkles, BookOpen } from "lucide-react"
+import { Sparkles, BookOpen, LogOut } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { createSSRServerClient, getCurrentUser } from "@/lib/supabase/ssr-server"
 import { getActivityImageUrl } from "@/lib/image-utils"
 import { generateMaterialSlug } from "@/lib/slug"
+import { signOutAction } from "./actions"
 
 export const metadata: Metadata = {
   title: "Minha conta | educando.app",
@@ -65,9 +66,22 @@ export default async function MinhaContaPage({ searchParams }: PageProps) {
               </div>
             )}
 
-            <header className="mb-8">
-              <p className="text-sm text-gray-500">Olá,</p>
-              <h1 className="font-heading text-3xl font-bold text-gray-900">{fullName}</h1>
+            <header className="mb-8 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm text-gray-500">Olá,</p>
+                <h1 className="font-heading text-3xl font-bold text-gray-900">{fullName}</h1>
+              </div>
+              <form action={signOutAction}>
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sair
+                </Button>
+              </form>
             </header>
 
             {/* Saldo */}
