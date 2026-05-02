@@ -19,7 +19,7 @@ async function HeaderCta() {
           href="/sejamembro"
           className="flex items-center gap-1.5 rounded-full bg-amber-500 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 sm:px-4"
         >
-          Torna-se membro 🍎
+          Tornar-se membro 🍎
         </Link>
       </div>
     )
