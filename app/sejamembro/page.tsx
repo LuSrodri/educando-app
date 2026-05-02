@@ -141,7 +141,7 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
                   href="#precos"
                   className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all hover:bg-amber-600 hover:shadow-amber-200 hover:shadow-xl"
                 >
-                  Ver planos e preços
+                  Ver pacotes
                   <ArrowRight className="h-4 w-4" />
                 </a>
                 <Link
@@ -380,7 +380,7 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
               href="#precos"
               className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-bold text-amber-700 shadow-lg transition-all hover:bg-amber-50 hover:shadow-xl"
             >
-              Ver planos e preços
+              Ver pacotes
               <ArrowRight className="h-4 w-4" />
             </a>
           </div>
