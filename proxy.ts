@@ -49,12 +49,12 @@ export async function proxy(request: NextRequest) {
     // Next.js App Router requires unsafe-inline for hydration scripts. Cloudflare
     // Turnstile loads api.js and its inner challenge iframe from
     // challenges.cloudflare.com.
-    "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://challenges.cloudflare.com",
+    "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://challenges.cloudflare.com https://www.clarity.ms",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     // Include wss: for Supabase realtime WebSocket connections and Turnstile
     // verification traffic.
-    `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://va.vercel-scripts.com https://vitals.vercel-insights.com https://challenges.cloudflare.com`,
+    `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://va.vercel-scripts.com https://vitals.vercel-insights.com https://challenges.cloudflare.com https://www.clarity.ms`,
     // Turnstile renders the challenge UI inside a nested iframe from
     // challenges.cloudflare.com — whitelist it here so the widget can mount.
     "frame-src https://challenges.cloudflare.com",
