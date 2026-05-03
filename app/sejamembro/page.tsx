@@ -199,16 +199,16 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
 
         {/* ─── SAMPLE ACTIVITIES ───────────────────────────────────────────────── */}
         {sampleActivities.length > 0 && (
-          <section className="bg-gray-950 py-20">
+          <section className="bg-white py-20">
             <div className="container mx-auto px-4">
               <div className="mx-auto mb-12 max-w-2xl text-center">
-                <span className="mb-3 inline-block rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-amber-400">
+                <span className="mb-3 inline-block rounded-full border border-amber-500/30 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-amber-600">
                   Exemplos reais
                 </span>
-                <h2 className="font-heading text-3xl font-black tracking-tight text-white md:text-4xl">
+                <h2 className="font-heading text-3xl font-black tracking-tight text-gray-900 md:text-4xl">
                   Veja o que a IA gera
                 </h2>
-                <p className="mt-3 text-gray-400">
+                <p className="mt-3 text-gray-500">
                   Fichas do diretório público — geradas pelo mesmo sistema que você vai usar.
                 </p>
               </div>
@@ -221,7 +221,7 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
                     <Link
                       key={activity.id}
                       href={`/material/${slug}`}
-                      className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:border-amber-500/40 hover:bg-white/10"
+                      className="group overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 transition-all hover:border-amber-400/60 hover:bg-amber-50"
                     >
                       <div className="aspect-[3/4] overflow-hidden">
                         <Image
@@ -234,11 +234,11 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
                       </div>
                       <div className="p-4">
                         {activity.theme && (
-                          <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-amber-400">
+                          <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-amber-600">
                             {activity.theme}
                           </p>
                         )}
-                        <p className="line-clamp-2 text-sm font-semibold text-white">
+                        <p className="line-clamp-2 text-sm font-semibold text-gray-900">
                           {activity.title}
                         </p>
                       </div>
@@ -248,7 +248,7 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
               </div>
 
               <p className="mt-8 text-center text-sm text-gray-500">
-                <Link href="/" className="text-amber-400 underline-offset-2 hover:underline">
+                <Link href="/" className="text-amber-600 underline-offset-2 hover:underline">
                   Ver todo o diretório gratuito →
                 </Link>
               </p>

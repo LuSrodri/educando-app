@@ -24,13 +24,13 @@ export function ConsentBanner() {
     <div
       role="banner"
       aria-label="Aviso de privacidade"
-      className="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 border-t border-gray-700 px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-amber-100 px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
     >
-      <p className="text-sm text-gray-300">
-        O <span className="text-white font-semibold">educando.app</span> usa{" "}
-        <span className="text-white font-semibold">tecnologias de terceiros</span> para coletar dados
+      <p className="text-sm text-gray-600">
+        O <span className="text-gray-900 font-semibold">educando.app</span> usa{" "}
+        <span className="text-gray-900 font-semibold">tecnologias de terceiros</span> para coletar dados
         de uso anônimos (páginas visitadas, tempo de acesso) e melhorar o serviço.{" "}
-        <span className="text-gray-400">
+        <span className="text-gray-500">
           Ao continuar navegando, você concorda com essa coleta.
         </span>
       </p>
