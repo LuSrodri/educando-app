@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/site-header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { createSSRServerClient, getCurrentUser } from "@/lib/supabase/ssr-server"
+import { createServerClient } from "@/lib/supabase/server"
 import { getActivityImageUrl, isPersonalizedImage } from "@/lib/image-utils"
 import { generateMaterialSlug } from "@/lib/slug"
 import { signOutAction } from "./actions"
@@ -50,13 +51,15 @@ export default async function MinhaContaPage({ searchParams }: PageProps) {
     (user.user_metadata?.full_name as string | undefined) ?? user.email ?? "Você"
 
   // Generate signed URLs for private personalized images (1-hour expiry).
+  // Uses service role: SSR anon client cannot create signed URLs on private buckets.
   const signedUrlMap = new Map<string, string>()
   if (userActivities && userActivities.length > 0) {
     const privatePaths = userActivities
       .map((a) => a.image_path)
       .filter((p): p is string => typeof p === "string" && isPersonalizedImage(p))
     if (privatePaths.length > 0) {
-      const { data: signed } = await supabase.storage
+      const admin = createServerClient()
+      const { data: signed } = await admin.storage
         .from("personalized")
         .createSignedUrls(privatePaths, 3600)
       signed?.forEach(({ path, signedUrl }) => {
