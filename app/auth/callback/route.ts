@@ -30,7 +30,9 @@ export async function GET(request: NextRequest) {
   // Bloqueia open-redirect: só aceita paths relativos do próprio app.
   // O check do `//` impede protocol-relative URLs (`//attacker.com/...`).
   const next =
-    nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/"
+    nextParam.startsWith("/") && !nextParam.startsWith("//") && !nextParam.startsWith("/\\")
+      ? nextParam
+      : "/"
 
   if (!code) {
     return safeRedirect(buildRedirectUrl(request, "/login?error=missing_code"))

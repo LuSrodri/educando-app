@@ -2,7 +2,7 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import type { Metadata } from "next"
 import { getActivity, getActivityBySlug } from "@/lib/activities"
-import { getActivityImageUrl } from "@/lib/image-utils"
+import { getActivityImageUrl, isPersonalizedImage } from "@/lib/image-utils"
 import { isUUID } from "@/lib/slug"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -10,6 +10,7 @@ import { ArrowLeft, Calendar, Lock, Tag } from "lucide-react"
 import { SharedActivityClient } from "@/app/material/[slug]/shared-activity-client"
 import { SiteHeader } from "@/components/site-header"
 import { getCurrentUser } from "@/lib/supabase/ssr-server"
+import { createServerClient } from "@/lib/supabase/server"
 import type { Activity } from "@/lib/supabase/types"
 
 export const dynamic = "force-dynamic"
@@ -55,7 +56,17 @@ export default async function PersonalizadoPage({ params }: PageProps) {
   if (activity.user_id !== user.id) notFound()
 
   const title = activity.title ?? "Atividade pedagógica"
-  const imageUrl = getActivityImageUrl(activity.image_path)
+
+  let imageUrl: string
+  if (isPersonalizedImage(activity.image_path)) {
+    const admin = createServerClient()
+    const { data } = await admin.storage
+      .from("personalized")
+      .createSignedUrl(activity.image_path, 3600)
+    imageUrl = data?.signedUrl ?? getActivityImageUrl(activity.image_path)
+  } else {
+    imageUrl = getActivityImageUrl(activity.image_path)
+  }
 
   return (
     <>

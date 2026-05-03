@@ -7,3 +7,9 @@ export function getActivityImageUrl(imagePath: string): string {
 export function getActivityThumbnailUrl(imagePath: string, width: number): string {
   return `${SUPABASE_URL}/storage/v1/render/image/public/activities/${imagePath}?width=${width}&quality=50&resize=contain`
 }
+
+/** Returns true for user-generated images stored in the private personalized bucket. */
+export function isPersonalizedImage(imagePath: string): boolean {
+  // Curated images are stored under internal/…; user images are UUID-prefixed.
+  return !imagePath.startsWith("internal/") && !imagePath.startsWith("user/")
+}

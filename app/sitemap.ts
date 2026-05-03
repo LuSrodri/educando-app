@@ -41,6 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .from("activities")
       .select("id, theme, bncc_codes, updated_at")
       .not("title", "is", null)
+      .is("user_id", null)
       .order("updated_at", { ascending: false })
 
     if (activities) {

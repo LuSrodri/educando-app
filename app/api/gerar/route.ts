@@ -69,8 +69,11 @@ export async function POST(request: NextRequest) {
     async start(controller) {
       const send = (data: SseStage) => controller.enqueue(sseChunk(data))
 
+      let activityId: string | null = null
+      let imagePath: string | null = null
+
       try {
-        // Verifica saldo antes de iniciar (evita cobrar crédito por etapas inúteis)
+        // Fast pre-flight: avoid burning API quota when obviously out of credits.
         const { data: balance, error: balanceErr } = await admin.rpc(
           "current_credit_balance",
           { p_user_id: user.id },
@@ -101,11 +104,11 @@ export async function POST(request: NextRequest) {
         const imageBuffer = await generateImage(spec.image_prompt, openai)
 
         send({ stage: "saving" })
-        const activityId = randomUUID()
-        const imagePath = `user/${user.id}/${activityId}/activity.png`
+        activityId = randomUUID()
+        imagePath = `${activityId}/activity.png`
 
         const { error: uploadErr } = await admin.storage
-          .from("activities")
+          .from("personalized")
           .upload(imagePath, imageBuffer, { contentType: "image/png", upsert: true })
         if (uploadErr) throw new Error(`upload_failed: ${uploadErr.message}`)
 
@@ -126,15 +129,22 @@ export async function POST(request: NextRequest) {
         })
         if (insertErr) throw new Error(`insert_failed: ${insertErr.message}`)
 
-        // Debita 1 crédito — só depois do sucesso completo
-        const { error: ledgerErr } = await admin.from("credit_ledger").insert({
-          user_id: user.id,
-          delta: -1,
-          kind: "consume",
-          reason: `Geração: ${spec.title}`,
-          activity_id: activityId,
+        // Atomic debit with advisory lock — prevents TOCTOU double-spend.
+        const { data: consumed, error: consumeErr } = await admin.rpc("consume_credit", {
+          p_user_id: user.id,
+          p_activity_id: activityId,
+          p_reason: `Geração: ${spec.title}`,
         })
-        if (ledgerErr) throw new Error(`ledger_failed: ${ledgerErr.message}`)
+        if (consumeErr || !consumed) {
+          // Race condition: balance ran out between pre-check and now; roll back.
+          try { await admin.from("activities").delete().eq("id", activityId) } catch { /* ignore */ }
+          await admin.storage.from("personalized").remove([imagePath])
+          activityId = null
+          imagePath = null
+          send({ stage: "error", message: "Saldo insuficiente.", code: "insufficient_balance" })
+          controller.close()
+          return
+        }
 
         const slug = generateMaterialSlug(spec.theme, activityId)
         send({ stage: "done", activityId, slug })
@@ -142,7 +152,14 @@ export async function POST(request: NextRequest) {
       } catch (err) {
         const message = err instanceof Error ? err.message : "unknown_error"
         console.error("[api/gerar]", message)
-        send({ stage: "error", message, code: "generation_failed" })
+        // Clean up any partial state so orphaned rows don't accumulate.
+        if (activityId) {
+          try { await admin.from("activities").delete().eq("id", activityId) } catch { /* ignore */ }
+        }
+        if (imagePath) {
+          try { await admin.storage.from("personalized").remove([imagePath]) } catch { /* ignore */ }
+        }
+        send({ stage: "error", message: "Algo deu errado. Tente novamente.", code: "generation_failed" })
         controller.close()
       }
     },

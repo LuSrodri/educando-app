@@ -59,11 +59,32 @@ export function isEditableImageUrl(rawUrl: string): boolean {
   return true
 }
 
+// Regex for private/loopback address spaces — blocks SSRF to internal hosts.
+const PRIVATE_HOST_RE =
+  /^(localhost|127\.\d+\.\d+\.\d+|0\.0\.0\.0|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|::1|fc[0-9a-f]{2}:|fd[0-9a-f]{2}:)/i
+
+function assertSafeUrl(rawUrl: string): void {
+  let parsed: URL
+  try {
+    parsed = new URL(rawUrl)
+  } catch {
+    throw new Error("invalid_url")
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    throw new Error("blocked_protocol")
+  }
+  if (PRIVATE_HOST_RE.test(parsed.hostname)) {
+    throw new Error("blocked_private_host")
+  }
+}
+
 async function fetchSource(url: string): Promise<{ buffer: Buffer; contentType: string; filename: string }> {
+  assertSafeUrl(url)
   const controller = new AbortController()
   const t = setTimeout(() => controller.abort(), 25_000)
   try {
-    const res = await fetch(url, { signal: controller.signal })
+    const res = await fetch(url, { signal: controller.signal, redirect: "manual" })
+    if (res.status >= 300 && res.status < 400) throw new Error("blocked_redirect")
     if (!res.ok) throw new Error(`download_${res.status}`)
     const contentType = (res.headers.get("content-type") ?? "image/png").split(";")[0].trim().toLowerCase()
     if (!SUPPORTED_CONTENT_TYPES.has(contentType)) {

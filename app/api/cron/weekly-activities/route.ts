@@ -108,7 +108,7 @@ async function processTopic(
 export async function GET(req: Request) {
   // Verify Vercel cron secret
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && req.headers.get("authorization") !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || req.headers.get("authorization") !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
 

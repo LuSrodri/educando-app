@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/site-header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { createSSRServerClient, getCurrentUser } from "@/lib/supabase/ssr-server"
-import { getActivityImageUrl } from "@/lib/image-utils"
+import { getActivityImageUrl, isPersonalizedImage } from "@/lib/image-utils"
 import { generateMaterialSlug } from "@/lib/slug"
 import { signOutAction } from "./actions"
 
@@ -48,6 +48,22 @@ export default async function MinhaContaPage({ searchParams }: PageProps) {
   const balance = (balanceData as number | null) ?? 0
   const fullName =
     (user.user_metadata?.full_name as string | undefined) ?? user.email ?? "Você"
+
+  // Generate signed URLs for private personalized images (1-hour expiry).
+  const signedUrlMap = new Map<string, string>()
+  if (userActivities && userActivities.length > 0) {
+    const privatePaths = userActivities
+      .map((a) => a.image_path)
+      .filter((p): p is string => typeof p === "string" && isPersonalizedImage(p))
+    if (privatePaths.length > 0) {
+      const { data: signed } = await supabase.storage
+        .from("personalized")
+        .createSignedUrls(privatePaths, 3600)
+      signed?.forEach(({ path, signedUrl }) => {
+        if (path && signedUrl) signedUrlMap.set(path, signedUrl)
+      })
+    }
+  }
 
   return (
     <>
@@ -144,7 +160,9 @@ export default async function MinhaContaPage({ searchParams }: PageProps) {
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                   {userActivities.map((activity) => {
                     const slug = generateMaterialSlug(activity.theme, activity.id)
-                    const imageUrl = getActivityImageUrl(activity.image_path)
+                    const imageUrl =
+                      (activity.image_path && signedUrlMap.get(activity.image_path)) ??
+                      getActivityImageUrl(activity.image_path ?? "")
                     return (
                       <Link
                         key={activity.id}

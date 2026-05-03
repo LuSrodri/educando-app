@@ -12,7 +12,8 @@ export async function POST(request: NextRequest) {
       referrer?: string
     }
     const activityId = body.activityId
-    if (!activityId || typeof activityId !== "string") {
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!activityId || typeof activityId !== "string" || !UUID_RE.test(activityId)) {
       return NextResponse.json({ error: "activityId required" }, { status: 400 })
     }
 

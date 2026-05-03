@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "stripe_error"
     console.error("[pagamento/criar] stripe error:", message)
-    return NextResponse.json({ error: "stripe_error", message }, { status: 502 })
+    return NextResponse.json({ error: "stripe_error" }, { status: 502 })
   }
 
   const expiresAtIso = paymentIntent.next_action?.pix_display_qr_code?.expires_at

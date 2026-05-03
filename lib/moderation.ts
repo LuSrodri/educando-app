@@ -59,7 +59,11 @@ export async function moderateSearchQuery(query: string): Promise<ModerationResu
 
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
-    console.warn("[moderation] OPENAI_API_KEY missing — accepting all queries")
+    if (process.env.NODE_ENV === "production") {
+      console.error("[moderation] OPENAI_API_KEY missing in production — rejecting query")
+      return { accept: false, reason: "nonsense" }
+    }
+    console.warn("[moderation] OPENAI_API_KEY missing — accepting all queries in dev")
     return { accept: true, reason: "ok" }
   }
 

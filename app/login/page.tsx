@@ -23,7 +23,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 function safeNext(value: string | undefined) {
   if (!value) return undefined
-  if (!value.startsWith("/") || value.startsWith("//")) return undefined
+  if (!value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return undefined
   return value
 }
 

@@ -8,8 +8,11 @@ export async function verifyTurnstileToken(
 ): Promise<boolean> {
   const secret = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY
   if (!secret) {
-    // In dev without a secret, skip verification rather than hard-failing.
-    console.warn("[turnstile] CLOUDFLARE_TURNSTILE_SECRET_KEY missing — skipping verification")
+    if (process.env.NODE_ENV === "production") {
+      console.error("[turnstile] CLOUDFLARE_TURNSTILE_SECRET_KEY missing in production — blocking request")
+      return false
+    }
+    console.warn("[turnstile] CLOUDFLARE_TURNSTILE_SECRET_KEY missing — skipping verification in dev")
     return true
   }
   if (!token || typeof token !== "string" || token.length < 8) return false

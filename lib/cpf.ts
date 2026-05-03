@@ -23,6 +23,7 @@ export function formatCpf(input: string): string {
 }
 
 export function isStripeTestCpf(cpf: string): boolean {
+  if (process.env.STRIPE_SECRET_KEY?.startsWith("sk_live_")) return false
   return sanitizeCpf(cpf) === "00000000000"
 }
 
