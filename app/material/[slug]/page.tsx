@@ -117,11 +117,11 @@ export default async function MaterialPage({ params }: PageProps) {
         <div className="border-b border-amber-100 bg-amber-50">
           <div className="container mx-auto px-4 py-3">
             <Link
-              href="/"
+              href="/#materiais"
               className="flex w-fit items-center gap-1 text-sm text-amber-700 hover:text-amber-800"
             >
               <ArrowLeft className="h-4 w-4" />
-              Voltar ao diretório
+              Ver outras atividades gratuitas
             </Link>
           </div>
         </div>
