@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, GraduationCap } from "lucide-react"
 import type { Activity } from "@/lib/supabase/types"
 import { DirectorySearch } from "@/components/directory-search"
 import { DirectoryGrid } from "@/components/directory-grid"
-import { TurnstileWidget, type TurnstileWidgetHandle } from "@/components/turnstile-widget"
+import { TurnstileWidget } from "@/components/turnstile-widget"
 import { CreateCta } from "@/components/create-cta"
 
 const PAGE_SIZE = 24
@@ -40,7 +40,6 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
 
   const sectionRef = useRef<HTMLElement | null>(null)
   const fetchSeqRef = useRef(0)
-  const turnstileRef = useRef<TurnstileWidgetHandle | null>(null)
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
@@ -61,24 +60,9 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
           return h
         }
 
-        let res = await fetch(`/api/search?${params.toString()}`, {
+        const res = await fetch(`/api/search?${params.toString()}`, {
           headers: buildHeaders(turnstileToken),
         })
-
-        // If enrichment is needed and no token was attached (widget still
-        // warming up), ask Turnstile for one and retry once.
-        if (res.status === 401) {
-          const body = await res.clone().json().catch(() => ({ reason: "unauthorized" }))
-          if (body.reason === "turnstile_required" && turnstileRef.current) {
-            const fresh = await turnstileRef.current.getToken()
-            if (fresh) {
-              setTurnstileToken(fresh)
-              res = await fetch(`/api/search?${params.toString()}`, {
-                headers: buildHeaders(fresh),
-              })
-            }
-          }
-        }
 
         if (res.status === 401) {
           const body = await res.json().catch(() => ({ reason: "unauthorized" }))
@@ -159,8 +143,6 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
         sexual: "Essa busca não foi aceita.",
         abuse: "Essa busca não foi aceita.",
         too_long: "A busca é longa demais — use no máximo 160 caracteres.",
-        turnstile_required:
-          "Verificação antibot ainda carregando ou indisponível. Aguarde alguns segundos e tente novamente.",
         rate_limited: "Muitas buscas em pouco tempo. Aguarde um minuto e tente novamente.",
         unauthorized: "Busca bloqueada. Tente outra formulação.",
         unknown: "Erro ao buscar. Tente novamente.",
@@ -178,7 +160,6 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
   return (
     <section id="materiais" ref={sectionRef} className="container mx-auto px-4 py-14 sm:py-16">
       <TurnstileWidget
-        ref={turnstileRef}
         onToken={setTurnstileToken}
         onError={() => setTurnstileToken(null)}
       />

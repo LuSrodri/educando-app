@@ -30,14 +30,7 @@ export function DirectoryGrid({ activities, isLoading }: DirectoryGridProps) {
   }
 
   if (activities.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed border-amber-200 bg-amber-50/40 py-12 text-center">
-        <p className="text-gray-600">Nenhum material encontrado.</p>
-        <p className="mt-1 text-sm text-gray-500">
-          Tente outro termo — temas, códigos da BNCC ou palavras-chave.
-        </p>
-      </div>
-    )
+    return null
   }
 
   return (

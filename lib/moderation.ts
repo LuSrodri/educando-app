@@ -52,6 +52,17 @@ export interface ModerationResult {
   reason: ModerationReason
 }
 
+export function quickReject(query: string): ModerationResult {
+  const trimmed = query.trim()
+  if (!trimmed) return { accept: true, reason: "empty" }
+  if (trimmed.length > MAX_QUERY_LEN) return { accept: false, reason: "too_long" }
+  if (/(.)\1{6,}/.test(trimmed)) return { accept: false, reason: "nonsense" }
+  if (!/\p{L}/u.test(trimmed)) return { accept: false, reason: "nonsense" }
+  if (/\b(ignore (previous|all)|system prompt|you are now|jailbreak)\b/i.test(trimmed))
+    return { accept: false, reason: "injection" }
+  return { accept: true, reason: "ok" }
+}
+
 export async function moderateSearchQuery(query: string): Promise<ModerationResult> {
   const trimmed = query.trim()
   if (!trimmed) return { accept: true, reason: "empty" }
