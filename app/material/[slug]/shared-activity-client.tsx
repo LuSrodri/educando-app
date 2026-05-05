@@ -39,36 +39,60 @@ export function SharedActivityClient({ activityId, imageUrl, activityTitle }: Sh
     }
   }
 
-  const printImage = async () => {
-    try {
-      const response = await fetch(imageUrl)
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
+  const printImage = () => {
+    const iframe = document.createElement("iframe")
+    iframe.style.cssText = "position:absolute;visibility:hidden;width:1px;height:1px;border:0;"
+    document.body.appendChild(iframe)
 
-      const printWindow = window.open("", "_blank")
-      if (printWindow) {
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Atividade Escolar - educando.app</title>
-              <style>
-                body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-                img { max-width: 100%; height: auto; }
-                @media print {
-                  body { margin: 0; }
-                  img { max-width: 100%; page-break-inside: avoid; }
-                }
-              </style>
-            </head>
-            <body>
-              <img src="${url}" onload="window.print(); window.close();" />
-            </body>
-          </html>
-        `)
-        printWindow.document.close()
+    const doc = iframe.contentDocument || iframe.contentWindow?.document
+    if (!doc) {
+      document.body.removeChild(iframe)
+      return
+    }
+
+    const cleanup = () => {
+      if (document.body.contains(iframe)) document.body.removeChild(iframe)
+    }
+
+    doc.write(`
+      <html>
+        <head>
+          <title>Atividade Escolar - educando.app</title>
+          <style>
+            body { margin: 0; }
+            img { max-width: 100%; height: auto; display: block; }
+            @media print {
+              body { margin: 0; }
+              img { max-width: 100%; page-break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body><img src="${imageUrl}" crossorigin="anonymous" /></body>
+      </html>
+    `)
+    doc.close()
+
+    const img = doc.querySelector("img")
+    if (!img) {
+      cleanup()
+      return
+    }
+
+    const triggerPrint = () => {
+      try {
+        iframe.contentWindow?.focus()
+        iframe.contentWindow?.print()
+      } catch (error) {
+        console.error("Error printing image:", error)
       }
-    } catch (error) {
-      console.error("Error printing image:", error)
+      setTimeout(cleanup, 1000)
+    }
+
+    if (img.complete && img.naturalWidth > 0) {
+      triggerPrint()
+    } else {
+      img.onload = triggerPrint
+      img.onerror = cleanup
     }
   }
 
