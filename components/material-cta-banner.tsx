@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { Sparkles, X } from "lucide-react"
 
 const STORAGE_KEY = "educando:material-cta-dismissed"
-const DELAY_MS = 8_000
+const DELAY_MS = 16_000
 
 export function MaterialCtaBanner() {
   const [open, setOpen] = useState(false)
@@ -40,17 +40,17 @@ export function MaterialCtaBanner() {
 
         <div className="min-w-0 flex-1">
           <p className="font-heading text-sm font-bold leading-snug text-gray-900 sm:text-base">
-            Não é ainda a atividade que você busca?
+            Quer essa atividade adaptada pra sua turma?
           </p>
-          <p className="mt-0.5 hidden text-xs leading-snug text-gray-600 sm:block">
-            Crie o seu próprio material personalizado em menos de 1 minuto.
+          <p className="mt-0.5 text-xs leading-snug text-gray-600">
+            Crie sua versão personalizada em menos de 1 minuto.
           </p>
           <Link
             href="/sejamembro"
             onClick={dismiss}
             className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-amber-600 sm:text-sm"
           >
-            Criar minha atividade
+            Personalizar pra minha turma
           </Link>
         </div>
 

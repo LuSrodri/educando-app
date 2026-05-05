@@ -24,7 +24,7 @@ export const CREDIT_PACKS: Record<PaymentPackCode, CreditPack> = {
     amountBrlCents: 1490,
     priceLabel: "R$ 14,90",
     unitPriceLabel: "R$ 2,98 por atividade",
-    pitch: "Pra testar antes de adotar.",
+    pitch: "Pra ver se faz sentido — uma semana de aulas.",
   },
   popular: {
     code: "popular",
@@ -34,7 +34,7 @@ export const CREDIT_PACKS: Record<PaymentPackCode, CreditPack> = {
     priceLabel: "R$ 39,90",
     unitPriceLabel: "R$ 2,66 por atividade",
     recommended: true,
-    pitch: "Cobre uma quinzena de aulas.",
+    pitch: "Pra cobrir um mês inteiro de aulas com folga.",
   },
   melhor_valor: {
     code: "melhor_valor",
@@ -43,7 +43,7 @@ export const CREDIT_PACKS: Record<PaymentPackCode, CreditPack> = {
     amountBrlCents: 9990,
     priceLabel: "R$ 99,90",
     unitPriceLabel: "R$ 2,50 por atividade",
-    pitch: "Pro bimestre inteiro, mais barato por unidade.",
+    pitch: "Pro bimestre fechado — R$ 2,50 por ficha, o menor preço.",
   },
 }
 

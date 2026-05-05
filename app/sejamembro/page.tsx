@@ -12,7 +12,7 @@ import { CREDIT_PACKS, PACK_ORDER } from "@/lib/credit-packs"
 import { getCurrentUser, createSSRServerClient } from "@/lib/supabase/ssr-server"
 
 export const metadata: Metadata = {
-  title: "Torna-se membro | educando.app",
+  title: "Tornar-se membro | educando.app",
   description:
     "Gere fichas pedagógicas personalizadas, alinhadas à BNCC e à cultura brasileira, em menos de 1 minuto.",
   alternates: { canonical: "https://educando.app/sejamembro" },
@@ -47,16 +47,20 @@ const FAQS = [
     a: "Em média 60 segundos. A IA faz pesquisa em fontes pedagógicas, elabora a estrutura e renderiza a ficha em alta resolução (A4, 300 DPI) — tudo automaticamente.",
   },
   {
+    q: "Por que pagar se já tem o diretório gratuito?",
+    a: "O diretório tem milhares de fichas prontas, mas elas atendem temas amplos. Quando você precisa de algo específico — sua turma, seu projeto, sua faixa etária, o tema da sua semana — você gera em 60 segundos em vez de procurar e adaptar por horas.",
+  },
+  {
+    q: "Os créditos têm prazo de validade?",
+    a: "Sim. Cada pacote tem validade de 12 meses a partir da data de compra. Você recebe um e-mail quando os créditos estiverem próximos do vencimento.",
+  },
+  {
     q: "Posso usar o material gerado em sala de aula?",
     a: "Sim, sem restrições. Ao adquirir créditos, você recebe licença ampla e perpétua para uso pedagógico: imprimir, fotocopiar para os alunos, incluir em planos de aula. A única restrição é revenda comercial.",
   },
   {
     q: "E se eu não gostar do resultado?",
     a: "Se nenhum crédito do pacote foi utilizado, você pode solicitar reembolso integral em até 7 dias — conforme o Código de Defesa do Consumidor. Depois de usar qualquer crédito, o serviço é considerado entregue. Consulte os Termos de Uso para detalhes.",
-  },
-  {
-    q: "Os créditos têm prazo de validade?",
-    a: "Sim. Cada pacote tem validade de 12 meses a partir da data de compra. Você recebe um e-mail quando os créditos estiverem próximos do vencimento.",
   },
   {
     q: 'O que é o IOF e por que aparece "Ebanx" no extrato?',
@@ -107,7 +111,7 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
             <div className="mx-auto max-w-3xl text-center">
               <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-300 bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-amber-700 shadow-sm">
                 <Sparkles className="h-3.5 w-3.5" />
-                Fichas geradas por IA pedagógica
+                Personalizado pra sua turma
               </span>
 
               <h1 className="font-heading text-4xl font-black leading-[1.05] tracking-tight text-gray-950 sm:text-5xl md:text-6xl lg:text-7xl">
@@ -144,16 +148,10 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
                   Ver pacotes
                   <CirclePercent className="h-4 w-4" />
                 </a>
-                <Link
-                  href="/#materiais"
-                  className="inline-flex items-center gap-1.5 px-4 py-3.5 text-sm font-medium text-gray-600 underline-offset-2 hover:text-amber-700 hover:underline"
-                >
-                  Ver atividades gratuitas
-                </Link>
               </div>
 
               <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
-                {["Alinhado à BNCC", "Cultura brasileira", "Sem anúncios", "Uso livre em sala"].map((feat) => (
+                {["Alinhado à BNCC", "Cultura brasileira", "Licença pra sala de aula", "Uso livre em sala"].map((feat) => (
                   <span key={feat} className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     {feat}
@@ -255,6 +253,20 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
             </div>
           </section>
         )}
+
+        {/* ─── LICENSE REASSURANCE ─────────────────────────────────────────────── */}
+        <section className="bg-white py-10">
+          <div className="container mx-auto px-4">
+            <div className="mx-auto max-w-2xl rounded-2xl border border-emerald-200 bg-emerald-50 px-8 py-7 text-center">
+              <CheckCircle2 className="mx-auto mb-3 h-7 w-7 text-emerald-500" />
+              <h3 className="font-heading text-xl font-bold text-gray-900">Use sem medo na sua sala</h3>
+              <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                Licença ampla e perpétua pra uso pedagógico — imprima, fotocopie, distribua para os alunos, inclua em planos de aula.
+                <span className="block mt-1 text-gray-500">A única restrição é revenda comercial.</span>
+              </p>
+            </div>
+          </div>
+        </section>
 
         {/* ─── PRICING ─────────────────────────────────────────────────────────── */}
         <section id="precos" className="bg-amber-50 py-20">
