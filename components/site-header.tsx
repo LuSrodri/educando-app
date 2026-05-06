@@ -19,7 +19,7 @@ async function HeaderCta() {
           href="/sejamembro"
           className="flex items-center gap-1.5 rounded-full bg-amber-500 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 sm:px-4"
         >
-          Tornar-se membro 🍎
+          Criar atividades
         </Link>
       </div>
     )
@@ -50,14 +50,14 @@ async function HeaderCta() {
           className="flex items-center gap-1.5 rounded-full bg-amber-500 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 sm:px-4"
         >
           <Sparkles className="h-3.5 w-3.5" />
-          Criar atividade
+          Criar atividades
         </Link>
       ) : (
         <Link
           href="/creditos"
           className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-white px-3 py-1.5 text-sm font-semibold text-amber-700 shadow-sm transition-colors hover:bg-amber-50 sm:px-4"
         >
-          Comprar créditos 🍎
+          Comprar créditos
         </Link>
       )}
     </div>
