@@ -17,9 +17,10 @@ async function HeaderCta() {
         </Link>
         <Link
           href="/sejamembro"
-          className="flex items-center gap-1.5 rounded-full bg-amber-500 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 sm:px-4"
+          className="flex items-center gap-1.5 rounded-full bg-amber-500 px-6 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 sm:px-4 w-min sm:w-full"
         >
-          Criar atividades
+          <Sparkles className="h-7 w-7 sm:h-3.5 sm:w-3.5" />
+          Criar atividades personalizadas
         </Link>
       </div>
     )

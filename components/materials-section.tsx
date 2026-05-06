@@ -160,7 +160,7 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
     }
     return submittedQuery
       ? `${count} ${total === 1 ? "resultado" : "resultados"} para "${submittedQuery}".`
-      : `São ${count} atividades e materiais de apoio para te auxiliar no plano de aula.`
+      : `São ${count} atividades e materiais de apoio para te auxiliar no preparo da aula.`
   }, [total, submittedQuery, errorReason, isLoading])
 
   return (
@@ -174,10 +174,6 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
 
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="space-y-3 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 sm:text-sm">
-            <GraduationCap className="h-4 w-4" aria-hidden />
-            Materiais para Professores
-          </div>
           <h2 className="font-heading text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl md:text-4xl">
             Busque o material ideal para sua próxima aula
           </h2>

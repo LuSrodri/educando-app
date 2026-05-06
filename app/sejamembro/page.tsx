@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import Image from "next/image"
 import { redirect } from "next/navigation"
-import { Sparkles, BookOpen, Download, CheckCircle2, ChevronDown, CirclePercent } from "lucide-react"
+import { Sparkles, BookOpen, Download, CheckCircle2, ChevronDown } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { Footer } from "@/components/footer"
 import { getAllActivities } from "@/lib/activities"
@@ -142,11 +142,11 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
 
               <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <a
-                  href="#precos"
+                  href="/login?next=/creditos"
                   className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all hover:bg-amber-600 hover:shadow-amber-200 hover:shadow-xl"
                 >
-                  Ver pacotes
-                  <CirclePercent className="h-4 w-4" />
+                  Começar agora
+                  <Sparkles className="h-4 w-4" />
                 </a>
               </div>
 
@@ -389,11 +389,11 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
               Sem assinatura. Sem burocracia. Pague uma vez, use quando precisar.
             </p>
             <a
-              href="#precos"
+              href="/login?next=/creditos"
               className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-bold text-amber-700 shadow-lg transition-all hover:bg-amber-50 hover:shadow-xl"
             >
-              Ver pacotes
-              <CirclePercent className="h-4 w-4" />
+              Começar agora
+              <Sparkles className="h-4 w-4" />
             </a>
           </div>
         </section>
