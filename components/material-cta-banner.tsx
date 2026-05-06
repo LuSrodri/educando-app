@@ -40,7 +40,7 @@ export function MaterialCtaBanner() {
 
         <div className="min-w-0 flex-1">
           <p className="font-heading text-sm font-bold leading-snug text-gray-900 sm:text-base">
-            Quer essa atividade adaptada pra sua turma?
+            Quer essa atividade adaptada para sua turma?
           </p>
           <p className="mt-0.5 text-xs leading-snug text-gray-600">
             Crie sua versão personalizada em menos de 1 minuto.
@@ -50,7 +50,7 @@ export function MaterialCtaBanner() {
             onClick={dismiss}
             className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-amber-600 sm:text-sm"
           >
-            Personalizar pra minha turma
+            Personalizar para minha turma
           </Link>
         </div>
 
