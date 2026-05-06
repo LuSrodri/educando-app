@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { ClarityAnalytics } from "@/components/clarity-analytics"
 import { ConsentBanner } from "@/components/consent-banner"
 import { ErrorBoundary } from "@/components/error-boundary"
+import { SITE_URL, SITE_NAME } from "@/lib/site-config"
 import "./globals.css"
 
 const spaceGrotesk = Space_Grotesk({
@@ -19,9 +20,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: "swap",
 })
 
-const SITE_URL = "https://educando.app"
-const SITE_NAME = "educando.app"
-const TITLE = "educando.app — O seu plano de aula a 1-click"
+const TITLE = "educando.app — Atividades prontas para sua turma a 1-click"
 const DESCRIPTION =
   "Diretório de atividades e materiais de apoio pedagógicos alinhados à BNCC. Encontre em 1 click o material ideal para a sua próxima aula."
 
@@ -52,7 +51,9 @@ export const metadata: Metadata = {
     "ciências",
     "professor",
     "recurso pedagógico",
-    "pt-BR",
+    "gerar atividade",
+    "plano de aula personalizado",
+    "atividades com IA",
   ],
   robots: {
     index: true,
@@ -72,26 +73,15 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: TITLE,
     description: DESCRIPTION,
-    images: [
-      {
-        url: "/images/educando-app-logo.png",
-        width: 1024,
-        height: 1024,
-        alt: "educando.app — Diretório pedagógico alinhado à BNCC",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: ["/images/educando-app-logo.png"],
+    images: [{ url: "/opengraph-image", alt: "educando.app — Diretório pedagógico alinhado à BNCC" }],
   },
   alternates: {
     canonical: SITE_URL,
-  },
-  other: {
-    "theme-color": "#f59e0b",
   },
 }
 

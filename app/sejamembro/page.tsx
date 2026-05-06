@@ -12,9 +12,35 @@ import { CREDIT_PACKS, PACK_ORDER } from "@/lib/credit-packs"
 import { getCurrentUser, createSSRServerClient } from "@/lib/supabase/ssr-server"
 
 export const metadata: Metadata = {
-  title: "Tornar-se membro | educando.app",
+  title: "Fichas pedagógicas personalizadas em 60 segundos",
   description:
     "Gere fichas pedagógicas personalizadas, alinhadas à BNCC e à cultura brasileira, em menos de 1 minuto.",
+  keywords: [
+    "gerar atividade",
+    "ficha pedagógica personalizada",
+    "plano de aula com IA",
+    "atividade personalizada",
+    "BNCC personalizado",
+    "cultura brasileira",
+    "créditos educando",
+    "Pix educação",
+  ],
+  openGraph: {
+    title: "Fichas pedagógicas personalizadas em 60 segundos",
+    description:
+      "Gere fichas pedagógicas personalizadas, alinhadas à BNCC e à cultura brasileira, em menos de 1 minuto.",
+    type: "website",
+    locale: "pt_BR",
+    siteName: "educando.app",
+    url: "https://educando.app/sejamembro",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Fichas pedagógicas personalizadas em 60 segundos",
+    description:
+      "Gere fichas pedagógicas personalizadas, alinhadas à BNCC e à cultura brasileira, em menos de 1 minuto.",
+    images: [{ url: "/sejamembro/opengraph-image", alt: "Fichas pedagógicas personalizadas em 60 segundos — educando.app" }],
+  },
   alternates: { canonical: "https://educando.app/sejamembro" },
 }
 

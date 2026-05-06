@@ -12,8 +12,7 @@ import { RelatedActivities } from "@/components/related-activities"
 import { SiteHeader } from "@/components/site-header"
 import { MaterialCtaBanner } from "@/components/material-cta-banner"
 import type { Activity } from "@/lib/supabase/types"
-
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://educando.app"
+import { SITE_URL } from "@/lib/site-config"
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -59,9 +58,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description =
     activity.short_description ??
     "Material pedagógico do diretório educando.app, alinhado à BNCC."
-  const imageUrl = getActivityImageUrl(activity.image_path)
   const canonicalSlug = generateMaterialSlug(activity.theme, id)
-  const pageUrl = `${BASE_URL}/material/${canonicalSlug}`
+  const pageUrl = `${SITE_URL}/material/${canonicalSlug}`
 
   return {
     title,
@@ -75,9 +73,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url: pageUrl,
       siteName: "educando.app",
       locale: "pt_BR",
-      images: [{ url: imageUrl, width: 2480, height: 3508, alt: title, type: "image/png" }],
     },
-    twitter: { card: "summary_large_image", title, description, images: [imageUrl] },
+    twitter: { card: "summary_large_image", title, description, images: [{ url: `${SITE_URL}/material/${slug}/opengraph-image`, alt: title }] },
     alternates: { canonical: pageUrl },
   }
 }
@@ -90,7 +87,7 @@ export default async function MaterialPage({ params }: PageProps) {
 
   const title = activity.title ?? "Material pedagógico"
   const imageUrl = getActivityImageUrl(activity.image_path)
-  const pageUrl = `${BASE_URL}/material/${generateMaterialSlug(activity.theme, id)}`
+  const pageUrl = `${SITE_URL}/material/${generateMaterialSlug(activity.theme, id)}`
   const related = await getRelatedActivities(activity, 3)
 
   const jsonLd = {
@@ -102,8 +99,8 @@ export default async function MaterialPage({ params }: PageProps) {
     datePublished: activity.created_at ?? activity.updated_at,
     url: pageUrl,
     author: { "@type": "Organization", name: "educando.app" },
-    publisher: { "@type": "Organization", name: "educando.app", url: BASE_URL },
-    isPartOf: { "@type": "WebSite", name: "educando.app", url: BASE_URL },
+    publisher: { "@type": "Organization", name: "educando.app", url: SITE_URL },
+    isPartOf: { "@type": "WebSite", name: "educando.app", url: SITE_URL },
   }
 
   return (

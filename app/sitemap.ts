@@ -1,11 +1,12 @@
 import { MetadataRoute } from "next"
 import { createServerClient } from "@/lib/supabase/server"
 import { generateMaterialSlug } from "@/lib/slug"
+import { SITE_URL } from "@/lib/site-config"
 
 export const revalidate = 3600
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://educando.app"
+  const baseUrl = SITE_URL
 
   const staticPages: MetadataRoute.Sitemap = [
     {
