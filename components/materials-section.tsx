@@ -29,6 +29,7 @@ function getPaginationPages(current: number, total: number): (number | "...")[] 
 
 export function MaterialsSection({ initialActivities, initialTotal }: MaterialsSectionProps) {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const [turnstileMounted, setTurnstileMounted] = useState(false)
 
   const [inputValue, setInputValue] = useState("")
   const [submittedQuery, setSubmittedQuery] = useState("")
@@ -110,7 +111,12 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
     // runFetch is stable-ish; include it to satisfy the linter.
   }, [submittedQuery, page, initialActivities, initialTotal, runFetch])
 
+  const handleSearchFocus = useCallback(() => {
+    setTurnstileMounted(true)
+  }, [])
+
   const handleSubmit = useCallback((value: string) => {
+    setTurnstileMounted(true)
     const q = value.trim()
     setSubmittedQuery(q)
     setPage(1)
@@ -159,10 +165,12 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
 
   return (
     <section id="materiais" ref={sectionRef} className="container mx-auto px-4 py-14 sm:py-16">
-      <TurnstileWidget
-        onToken={setTurnstileToken}
-        onError={() => setTurnstileToken(null)}
-      />
+      {turnstileMounted && (
+        <TurnstileWidget
+          onToken={setTurnstileToken}
+          onError={() => setTurnstileToken(null)}
+        />
+      )}
 
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="space-y-3 text-center">
@@ -183,6 +191,7 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
           onChange={setInputValue}
           onSubmit={handleSubmit}
           onClear={handleClear}
+          onFocus={handleSearchFocus}
           isLoading={isLoading}
           hasActiveQuery={Boolean(submittedQuery || inputValue)}
         />

@@ -10,6 +10,7 @@ interface DirectorySearchProps {
   onChange: (value: string) => void
   onSubmit: (value: string) => void
   onClear?: () => void
+  onFocus?: () => void
   isLoading?: boolean
   hasActiveQuery?: boolean
   placeholder?: string
@@ -20,6 +21,7 @@ export function DirectorySearch({
   onChange,
   onSubmit,
   onClear,
+  onFocus,
   isLoading = false,
   hasActiveQuery = false,
   placeholder = "Busque por tema, título ou código BNCC (ex.: EF01MA08)",
@@ -43,6 +45,7 @@ export function DirectorySearch({
           id={inputId}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={onFocus}
           placeholder={placeholder}
           maxLength={160}
           enterKeyHint="search"

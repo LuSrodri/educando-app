@@ -8,7 +8,13 @@ export function ClarityAnalytics() {
 
   useEffect(() => {
     if (!projectId) return
-    Clarity.init(projectId)
+    const start = () => Clarity.init(projectId)
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      ;(window as unknown as { requestIdleCallback: (fn: () => void, opts: { timeout: number }) => void })
+        .requestIdleCallback(start, { timeout: 3000 })
+    } else {
+      setTimeout(start, 1500)
+    }
   }, [projectId])
 
   return null
