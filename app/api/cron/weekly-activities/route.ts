@@ -11,7 +11,7 @@ import {
   generateImage,
 } from "@/lib/generation"
 
-export const maxDuration = 500
+export const maxDuration = 600
 export const dynamic = "force-dynamic"
 
 const MAX_TOPICS = 3
