@@ -15,17 +15,8 @@ export function Footer() {
             className="h-16 w-16 rounded-lg object-contain"
           />
           <div className="text-sm text-gray-500 text-center md:text-right space-y-1">
-            <p>Feito com carinho para professores do Ensino Fundamental</p>
             <p>
-              Feito com ❤️ por{" "}
-              <a
-                href="https://lusrodri.me"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-gray-900 transition-colors"
-              >
-                Lucas Santos Rodrigues
-              </a>
+              Feito com carinho para professores do Ensino Brasileiro
             </p>
             <p>
               <a
