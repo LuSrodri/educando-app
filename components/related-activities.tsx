@@ -6,9 +6,11 @@ import { Eye, Sparkles } from "lucide-react"
 import type { Activity } from "@/lib/supabase/types"
 import { getActivityThumbnailUrl } from "@/lib/image-utils"
 import { generateMaterialSlug } from "@/lib/slug"
+import { CoringaCard } from "@/components/coringa-card"
 
 interface RelatedActivitiesProps {
   activities: Activity[]
+  currentActivity: Activity
 }
 
 function truncate(str: string, max: number): string {
@@ -38,7 +40,7 @@ function logClick(activityId: string) {
   }
 }
 
-export function RelatedActivities({ activities }: RelatedActivitiesProps) {
+export function RelatedActivities({ activities, currentActivity }: RelatedActivitiesProps) {
   if (activities.length === 0) return null
 
   return (
@@ -60,7 +62,7 @@ export function RelatedActivities({ activities }: RelatedActivitiesProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-5">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-5">
             {activities.map((activity) => {
               const title = activity.title ?? "Material pedagógico"
               const slug = generateMaterialSlug(activity.theme, activity.id)
@@ -128,6 +130,11 @@ export function RelatedActivities({ activities }: RelatedActivitiesProps) {
                 </Link>
               )
             })}
+            <CoringaCard
+              imagePath={currentActivity.image_path}
+              tema={currentActivity.theme ?? "este tema"}
+              bnccCodes={currentActivity.bncc_codes}
+            />
           </div>
         </div>
       </div>

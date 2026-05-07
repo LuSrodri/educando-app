@@ -140,27 +140,51 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
                 Personalizado pra sua turma
               </span>
 
-              <h1 className="font-heading text-4xl font-black leading-[1.05] tracking-tight text-gray-950 sm:text-5xl md:text-6xl lg:text-7xl">
-                Fichas pedagógicas{" "}
-                <span className="relative whitespace-nowrap">
-                  <span className="relative z-10 text-amber-600">prontas</span>
-                  <svg
-                    aria-hidden
-                    viewBox="0 0 220 12"
-                    className="absolute -bottom-1 left-0 w-full"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M2 9.5C50 3 120 2 218 9.5"
-                      stroke="#f59e0b"
-                      strokeWidth="4"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </span>{" "}
-                em 60 segundos
-              </h1>
+              {tema ? (
+                <h1 className="font-heading text-4xl font-black leading-[1.05] tracking-tight text-gray-950 sm:text-5xl md:text-6xl lg:text-7xl">
+                  Sua atividade{" "}
+                  <span className="relative whitespace-nowrap">
+                    <span className="relative z-10 text-amber-600">personalizada</span>
+                    <svg
+                      aria-hidden
+                      viewBox="0 0 220 12"
+                      className="absolute -bottom-1 left-0 w-full"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M2 9.5C50 3 120 2 218 9.5"
+                        stroke="#f59e0b"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </span>{" "}
+                  de {tema} sai em 60 segundos.
+                </h1>
+              ) : (
+                <h1 className="font-heading text-4xl font-black leading-[1.05] tracking-tight text-gray-950 sm:text-5xl md:text-6xl lg:text-7xl">
+                  Fichas pedagógicas{" "}
+                  <span className="relative whitespace-nowrap">
+                    <span className="relative z-10 text-amber-600">prontas</span>
+                    <svg
+                      aria-hidden
+                      viewBox="0 0 220 12"
+                      className="absolute -bottom-1 left-0 w-full"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M2 9.5C50 3 120 2 218 9.5"
+                        stroke="#f59e0b"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </span>{" "}
+                  em 60 segundos
+                </h1>
+              )}
 
               <p className="mx-auto mt-7 max-w-xl text-lg leading-relaxed text-gray-700">
                 Alinhadas à BNCC, com referências culturais brasileiras, personalizadas pro seu tema e faixa etária — sem gastar horas preparando aulas.

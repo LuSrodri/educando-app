@@ -8,10 +8,13 @@ import { Eye } from "lucide-react"
 import type { Activity } from "@/lib/supabase/types"
 import { getActivityThumbnailUrl } from "@/lib/image-utils"
 import { generateMaterialSlug } from "@/lib/slug"
+import { CoringaCard } from "@/components/coringa-card"
 
 interface DirectoryGridProps {
   activities: Activity[]
   isLoading: boolean
+  coringaImagePath?: string | null
+  coringaTema?: string | null
 }
 
 function truncate(str: string, maxLength: number): string {
@@ -19,7 +22,7 @@ function truncate(str: string, maxLength: number): string {
   return str.slice(0, maxLength - 3) + "..."
 }
 
-export function DirectoryGrid({ activities, isLoading }: DirectoryGridProps) {
+export function DirectoryGrid({ activities, isLoading, coringaImagePath, coringaTema }: DirectoryGridProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
@@ -30,7 +33,9 @@ export function DirectoryGrid({ activities, isLoading }: DirectoryGridProps) {
     )
   }
 
-  if (activities.length === 0) {
+  const showCoringa = !!(coringaImagePath && coringaTema)
+
+  if (activities.length === 0 && !showCoringa) {
     return null
   }
 
@@ -121,6 +126,9 @@ export function DirectoryGrid({ activities, isLoading }: DirectoryGridProps) {
           </Link>
         )
       })}
+      {coringaImagePath && coringaTema && (
+        <CoringaCard imagePath={coringaImagePath} tema={coringaTema} />
+      )}
     </div>
   )
 }

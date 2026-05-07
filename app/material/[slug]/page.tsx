@@ -10,7 +10,6 @@ import { ArrowLeft, Calendar, Tag } from "lucide-react"
 import { SharedActivityClient } from "./shared-activity-client"
 import { RelatedActivities } from "@/components/related-activities"
 import { SiteHeader } from "@/components/site-header"
-import { MaterialCtaBanner } from "@/components/material-cta-banner"
 import type { Activity } from "@/lib/supabase/types"
 import { SITE_URL } from "@/lib/site-config"
 
@@ -170,9 +169,8 @@ export default async function MaterialPage({ params }: PageProps) {
           </div>
         </div>
 
-        <RelatedActivities activities={related} />
+        <RelatedActivities activities={related} currentActivity={activity} />
       </main>
-      <MaterialCtaBanner />
     </>
   )
 }

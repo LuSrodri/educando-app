@@ -6,7 +6,6 @@ import type { Activity } from "@/lib/supabase/types"
 import { DirectorySearch } from "@/components/directory-search"
 import { DirectoryGrid } from "@/components/directory-grid"
 import { TurnstileWidget } from "@/components/turnstile-widget"
-import { CreateCta } from "@/components/create-cta"
 
 const PAGE_SIZE = 24
 
@@ -195,6 +194,8 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
         <DirectoryGrid
           activities={activities}
           isLoading={isLoading && activities.length === 0}
+          coringaImagePath={initialActivities[0]?.image_path ?? null}
+          coringaTema={submittedQuery || null}
         />
 
         {totalPages > 1 && !errorReason && (
@@ -245,15 +246,6 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
           </div>
         )}
 
-        {!errorReason && !isLoading && (
-          <CreateCta total={total} submittedQuery={submittedQuery} />
-        )}
-
-        {submittedQuery && !errorReason && !isLoading && (
-          <p className="pt-2 text-center text-xs text-gray-500 sm:text-sm">
-            Volte aqui depois para encontrar mais resultados.
-          </p>
-        )}
       </div>
     </section>
   )
