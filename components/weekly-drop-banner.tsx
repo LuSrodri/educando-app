@@ -14,10 +14,10 @@ export function WeeklyDropBanner() {
         <div className="relative flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5">
           <div className="min-w-0 flex-1">
             <h2 className="font-heading text-base font-bold text-gray-900 sm:text-lg">
-              Novas atividades todo domingo
+              Novas atividades toda quarta-feira e domingo
             </h2>
             <p className="mt-0.5 text-sm leading-relaxed text-gray-600 sm:text-[15px]">
-              Geramos 3 fichas inéditas toda semana, alinhadas à BNCC e baseadas nos temas mais buscados pela comunidade.
+              Geramos fichas inéditas toda semana, alinhadas à BNCC e baseadas nos temas mais buscados pela comunidade.
             </p>
           </div>
         </div>
