@@ -55,7 +55,7 @@ export function DirectorySearch({
           <button
             type="button"
             onClick={onClear}
-            className="absolute inset-y-0 right-3 my-auto flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+            className="absolute inset-y-0 right-3 my-auto flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
             aria-label="Limpar busca"
           >
             <X className="h-4 w-4" />
@@ -65,7 +65,7 @@ export function DirectorySearch({
       <Button
         type="submit"
         disabled={isLoading || value.trim().length === 0}
-        className="h-14 cursor-pointer rounded-full bg-amber-500 px-5 text-white shadow-sm hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+        className="h-14 rounded-full bg-amber-500 px-5 text-white shadow-sm hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading ? (
           <>

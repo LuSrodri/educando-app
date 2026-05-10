@@ -355,7 +355,7 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
               <div className="divide-y divide-gray-200">
                 {FAQS.map(({ q, a }) => (
                   <details key={q} className="group py-5">
-                    <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-base font-semibold text-gray-900 marker:hidden">
+                    <summary className="flex list-none items-start justify-between gap-4 text-base font-semibold text-gray-900 marker:hidden">
                       {q}
                       <ChevronDown className="mt-0.5 h-5 w-5 shrink-0 text-amber-500 transition-transform group-open:rotate-180" />
                     </summary>

@@ -203,7 +203,7 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
             <button
               onClick={() => goTo(page - 1)}
               disabled={page === 1 || isLoading}
-              className="cursor-pointer rounded-md p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
+              className="rounded-md p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
               aria-label="Página anterior"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -224,7 +224,7 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
                   onClick={() => goTo(p)}
                   disabled={isLoading}
                   aria-current={p === page ? "page" : undefined}
-                  className={`h-9 min-w-[36px] cursor-pointer rounded-md text-sm font-medium transition-colors ${
+                  className={`h-9 min-w-[36px] rounded-md text-sm font-medium transition-colors ${
                     p === page
                       ? "bg-amber-500 text-white"
                       : "text-gray-600 hover:bg-gray-100 disabled:opacity-50"
@@ -238,7 +238,7 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
             <button
               onClick={() => goTo(page + 1)}
               disabled={page === totalPages || isLoading}
-              className="cursor-pointer rounded-md p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
+              className="rounded-md p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-30"
               aria-label="Próxima página"
             >
               <ChevronRight className="h-4 w-4" />

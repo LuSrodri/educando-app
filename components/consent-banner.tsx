@@ -36,7 +36,7 @@ export function ConsentBanner() {
       </p>
       <button
         onClick={accept}
-        className="shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors cursor-pointer"
+        className="shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors"
       >
         Entendido
       </button>

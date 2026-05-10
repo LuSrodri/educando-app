@@ -77,7 +77,7 @@ export function CreditsModal() {
                     key={code}
                     type="button"
                     onClick={() => setSelectedPack(code)}
-                    className={`relative w-full cursor-pointer rounded-xl border-2 p-4 text-left transition-all ${
+                    className={`relative w-full rounded-xl border-2 p-4 text-left transition-all ${
                       isSelected
                         ? "border-amber-500 bg-amber-50 ring-2 ring-amber-200"
                         : "border-gray-200 bg-white hover:border-amber-200"

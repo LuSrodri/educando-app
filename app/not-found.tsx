@@ -32,14 +32,14 @@ export default function NotFound() {
 
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
             <Link href="/">
-              <Button className="w-full cursor-pointer bg-amber-500 text-white hover:bg-amber-600 sm:w-auto">
+              <Button className="w-full bg-amber-500 text-white hover:bg-amber-600 sm:w-auto">
                 Voltar ao diretório
               </Button>
             </Link>
             <Link href="/#materiais">
               <Button
                 variant="outline"
-                className="w-full cursor-pointer border-amber-300 text-amber-700 hover:bg-amber-50 sm:w-auto"
+                className="w-full border-amber-300 text-amber-700 hover:bg-amber-50 sm:w-auto"
               >
                 <Search className="mr-2 h-4 w-4" />
                 Buscar um material

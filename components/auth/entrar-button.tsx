@@ -10,7 +10,7 @@ export function EntrarButton({ className }: { className?: string }) {
       onClick={() => openLogin()}
       className={
         className ??
-        "text-sm font-medium text-gray-700 transition-colors hover:text-amber-700 cursor-pointer"
+        "text-sm font-medium text-gray-700 transition-colors hover:text-amber-700"
       }
     >
       Entrar
