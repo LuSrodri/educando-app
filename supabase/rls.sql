@@ -12,12 +12,16 @@ ALTER TABLE daily_usage  ENABLE ROW LEVEL SECURITY;
 
 -- ─────────────────────────────────────────
 -- ACTIVITIES
--- Leitura pública (todas as atividades são públicas)
--- Escrita apenas via service_role (servidor Next.js)
+-- Leitura: curated (user_id IS NULL) é pública; atividades privadas
+-- (user_id IS NOT NULL) são visíveis apenas pelo próprio dono autenticado.
+-- Escrita apenas via service_role (servidor Next.js).
 -- ─────────────────────────────────────────
 CREATE POLICY "activities: leitura pública"
   ON activities FOR SELECT
-  USING (true);
+  USING (
+    user_id IS NULL
+    OR (auth.uid() IS NOT NULL AND auth.uid() = user_id)
+  );
 
 CREATE POLICY "activities: insert via service_role"
   ON activities FOR INSERT
