@@ -194,8 +194,8 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
         <DirectoryGrid
           activities={activities}
           isLoading={isLoading && activities.length === 0}
-          coringaImagePath={initialActivities[0]?.image_path ?? null}
-          coringaTema={submittedQuery || null}
+          coringaImagePath={page === totalPages ? initialActivities[0]?.image_path ?? null : null}
+          coringaTema={page === totalPages ? submittedQuery || null : null}
         />
 
         {totalPages > 1 && !errorReason && (
