@@ -29,7 +29,16 @@ SPACING: 1.5 cm margins on all sides. Clear breathing room between each section.
 
 FOOTER: Bottom of page, left-aligned, 8–9pt sans-serif: "BNCC: [codes here]"
 
-CULTURAL CONTEXT: Use Brazilian names (Kauan, Ana Júlia, Beatriz, João Pedro, Yasmin, Miguel), Brazilian geography and biomes (Cerrado, Amazônia, Caatinga, Sertão, Sul), Brazilian fauna and flora (tucano, onça-pintada, açaí, jacarandá, sabiá-laranjeira, capivara, arara), and multicultural everyday Brazilian life.
+CULTURAL CONTEXT — decision rule: first, judge whether the activity topic naturally accommodates Brazilian cultural references (e.g., a reading about regional food, a science lesson on Amazonian fauna, a history lesson on African-Brazilian heritage). If yes, pick ONE coherent cultural thread and apply it throughout. If the topic is abstract (structural math, universal grammar rules, geometry, universal science concepts), stay neutral — use only Brazilian names in the exercises, without forcing fauna, food, or folklore as decoration. Do NOT add cultural decoration unrelated to the activity content (e.g., a toucan in a triangle-area worksheet, açaí in a verb-conjugation exercise).
+Repertoire to draw from (choose the category that fits the topic):
+• Names (diverse): Iara, Cauã, Maíra, Benício, Heitor, Sophia, Davi, Helena, Cecília, Théo, Liz, Kauan, Ana Júlia, Beatriz, João Pedro, Yasmin, Miguel — Afro-Brazilian, Indigenous, and regional names included.
+• Geography & biomes: Cerrado, Amazônia, Caatinga, Mata Atlântica, Pampa, Pantanal — also urban settings (favela, vila, bairro, cidade do interior) and rural (sertão, ribeirinha, quilombola, agreste).
+• Fauna & flora: tucano, onça-pintada, capivara, arara, sabiá-laranjeira, jacarandá, açaí, mico-leão-dourado, ararajuba, peixe-boi, jaguatirica, ipê, pequi, jabuticaba, cupuaçu, buriti.
+• Regional cuisine: açaí, tapioca, pão de queijo, cuscuz, brigadeiro, vatapá, acarajé, baião-de-dois, pamonha, feijoada.
+• Folklore & traditions: Saci, Curupira, Iara, Boitatá, Bumba-meu-boi, Festas Juninas, Carnaval, Frevo, Maracatu, capoeira, cirandas.
+• Represented diversity: include Afro-Brazilian, Indigenous, quilombola, riverside characters with varied skin tones, in both urban and rural contexts.
+
+THEMATIC COHERENCE: every visual element — illustrations, header characters, decorative motifs, and examples in exercises — must serve the activity's topic. If you introduce a character, place, food, or animal, it must appear in the exercises themselves, never as floating decoration. The reading passage, questions, illustrations, and BNCC codes must all converge on the same theme. Reject loose elements: anything that wouldn't make sense if removed shouldn't be added.
 
 AVOID: watermarks, logos, religious imagery, politically sensitive content, borders thicker than 2pt, font sizes below 8pt.
 `.trim()
@@ -41,7 +50,7 @@ export async function searchTavily(
 ): Promise<{ summary: string; urls: string[] }> {
   try {
     const response: TavilySearchResponse = await tavilySearchImages(
-      `atividade pedagógica "${query}" BNCC ensino fundamental Brasil cultura brasileira`,
+      `atividade pedagógica "${query}" BNCC Brasil`,
       { maxResults: 5 },
     )
     const snippets = (response.results ?? [])
@@ -132,8 +141,10 @@ export async function generateSpec(
 ): Promise<ActivitySpec> {
   const systemPrompt = [
     "Você é um especialista em pedagogia brasileira e na Base Nacional Comum Curricular (BNCC).",
-    "Gere fichas escolares impressas de alta qualidade, alinhadas ao currículo e à cultura brasileira.",
+    "Gere fichas escolares impressas de alta qualidade, alinhadas ao currículo e, quando o contexto permitir, à cultura brasileira.",
     "Use códigos BNCC reais e válidos no formato EF__XX__ (ex.: EF03LP04, EF02MA17, EI03ET06).",
+    "Cada atividade deve ter coerência total entre título, tema, exercícios e ilustrações. Não inclua elementos soltos (personagens, animais, comidas, cenários) que não apareçam nos próprios enunciados.",
+    "Use elementos da cultura brasileira (culinária, folclore, fauna, flora, tradições regionais, diversidade étnica) APENAS quando se encaixarem naturalmente no tema. Em conteúdos abstratos (matemática estrutural, gramática, ciências universais), basta usar nomes brasileiros nos enunciados — não force ambientação cultural.",
   ].join("\n")
 
   const typeInstruction = forceType
@@ -158,13 +169,18 @@ REGRAS DE TEXTO:
 - "short_description": 1 frase, 80-180 caracteres.
 - "long_description": 2-4 frases, 300-880 caracteres, faixa etária/ano e sugestão de uso. NUNCA exceda 880 caracteres e SEMPRE termine em ponto final — o campo é cortado em 900 caracteres pelo schema, então planeje o tamanho antes de escrever.
 
+REGRAS DE COERÊNCIA:
+- O title, theme, short_description, long_description e image_prompt devem descrever a MESMA atividade — sem divergência de personagens, cenário ou foco.
+- Se você introduzir um personagem (ex.: "Ana Júlia visita a feira"), ele deve aparecer nos exercícios, não só na ilustração.
+- Decida ANTES de escrever: este tema pede ambientação cultural brasileira? Se sim, escolha UMA linha (culinária OU folclore OU bioma OU tradição regional) e mantenha-a do título à imagem. Se não, mantenha neutro — use apenas nomes brasileiros nos enunciados.
+
 PARA O image_prompt, aplique este sistema de design:
 ${DESIGN_SYSTEM}
 
 O prompt de imagem (em inglês) deve especificar com precisão:
 - O cabeçalho completo (nome, escola, turma, professor(a), ano, data) — ou omitir se type="support_material"
 - Cada seção do corpo com instruções em português e espaços para o aluno preencher
-- Ilustrações coloridas com elementos da cultura brasileira (nomes, biomas, fauna, flora)
+- Ilustrações coloridas que SERVEM ao conteúdo dos exercícios (sem decoração solta). Se o tema pede ambientação cultural brasileira, mantenha a mesma linha cultural escolhida no texto (culinária, folclore, biomas, fauna, flora, tradições). Em temas abstratos, ilustre apenas o conteúdo (formas geométricas, símbolos, diagramas) sem forçar elementos culturais.
 - O rodapé com os códigos BNCC reais
 - Tipografia, espaçamento e estrutura visual conforme o sistema de design.`
 
