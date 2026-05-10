@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import Image from "next/image"
-import { redirect } from "next/navigation"
 import { Sparkles, BookOpen, Download, CheckCircle2, ChevronDown } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { Footer } from "@/components/footer"
@@ -9,7 +8,6 @@ import { getAllActivities } from "@/lib/activities"
 import { getActivityImageUrl } from "@/lib/image-utils"
 import { generateMaterialSlug } from "@/lib/slug"
 import { CREDIT_PACKS, PACK_ORDER } from "@/lib/credit-packs"
-import { getCurrentUser, createSSRServerClient } from "@/lib/supabase/ssr-server"
 
 export const metadata: Metadata = {
   title: "Fichas pedagógicas personalizadas em 60 segundos",
@@ -101,19 +99,9 @@ interface PageProps {
 export default async function SejamebroPage({ searchParams }: PageProps) {
   const params = await searchParams
   const tema = params.tema?.trim().slice(0, 200)
-  const user = await getCurrentUser()
-
-  if (user) {
-    const supabase = await createSSRServerClient()
-    const { data: balance } = await supabase.rpc("current_credit_balance", {
-      p_user_id: user.id,
-    })
-    if (((balance as number | null) ?? 0) > 0) {
-      redirect(tema ? `/criar?tema=${encodeURIComponent(tema)}` : "/criar")
-    }
-  }
 
   const sampleActivities = await getAllActivities(3)
+  const ctaHref = tema ? `/criar?tema=${encodeURIComponent(tema)}` : "/criar"
 
   return (
     <>
@@ -122,7 +110,6 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
       <main>
         {/* ─── HERO ───────────────────────────────────────────────────────────── */}
         <section className="relative overflow-hidden bg-amber-50">
-          {/* Decorative grid */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 opacity-[0.035]"
@@ -133,8 +120,8 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
             }}
           />
 
-          <div className="container relative mx-auto px-4 py-20 md:py-28 lg:py-32">
-            <div className="mx-auto max-w-3xl text-center">
+          <div className="container relative mx-auto px-4 py-20">
+            <div className="mx-auto text-center">
               <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-300 bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-amber-700 shadow-sm">
                 <Sparkles className="h-3.5 w-3.5" />
                 Personalizado pra sua turma
@@ -142,66 +129,43 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
 
               {tema ? (
                 <h1 className="font-heading text-4xl font-black leading-[1.05] tracking-tight text-gray-950 sm:text-5xl md:text-6xl lg:text-7xl">
-                  Sua atividade{" "}
-                  <span className="relative whitespace-nowrap">
-                    <span className="relative z-10 text-amber-600">personalizada</span>
-                    <svg
-                      aria-hidden
-                      viewBox="0 0 220 12"
-                      className="absolute -bottom-1 left-0 w-full"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M2 9.5C50 3 120 2 218 9.5"
-                        stroke="#f59e0b"
-                        strokeWidth="4"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </span>{" "}
-                  de {tema} sai em 60 segundos.
+                  Não encontrou atividades de{" "}
+                  <br/>
+                  <span className="relative">
+                    <span className="relative z-10 text-amber-600">{tema}</span>
+                  </span>
+                  ?
                 </h1>
               ) : (
                 <h1 className="font-heading text-4xl font-black leading-[1.05] tracking-tight text-gray-950 sm:text-5xl md:text-6xl lg:text-7xl">
-                  Fichas pedagógicas{" "}
+                  Não encontrou a atividade que{" "}
                   <span className="relative whitespace-nowrap">
-                    <span className="relative z-10 text-amber-600">prontas</span>
+                    <span className="relative z-10 text-amber-600">estava procurando</span>
                     <svg
                       aria-hidden
-                      viewBox="0 0 220 12"
+                      viewBox="0 0 340 12"
                       className="absolute -bottom-1 left-0 w-full"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M2 9.5C50 3 120 2 218 9.5"
+                        d="M2 9.5C80 3 200 2 338 9.5"
                         stroke="#f59e0b"
                         strokeWidth="4"
                         strokeLinecap="round"
                       />
                     </svg>
-                  </span>{" "}
-                  em 60 segundos
+                  </span>
+                  ?
                 </h1>
               )}
 
               <p className="mx-auto mt-7 max-w-xl text-lg leading-relaxed text-gray-700">
-                Alinhadas à BNCC, com referências culturais brasileiras, personalizadas pro seu tema e faixa etária — sem gastar horas preparando aulas.
+                A gente cria uma pra você em 60 segundos.
               </p>
 
-              <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <a
-                  href="/login?next=/creditos"
-                  className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-7 py-3.5 text-base font-bold text-white shadow-lg transition-all hover:bg-amber-600 hover:shadow-amber-200 hover:shadow-xl"
-                >
-                  Começar agora
-                  <Sparkles className="h-4 w-4" />
-                </a>
-              </div>
-
               <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
-                {["Alinhado à BNCC", "Cultura brasileira", "Licença pra sala de aula", "Uso livre em sala"].map((feat) => (
+                {["Alinhado à BNCC", "Cultura brasileira", "Uso livre em sala"].map((feat) => (
                   <span key={feat} className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     {feat}
@@ -211,46 +175,92 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
             </div>
           </div>
 
-          {/* Bottom wave */}
           <div className="h-8 bg-white" style={{ clipPath: "ellipse(55% 100% at 50% 100%)" }} />
         </section>
 
-        {/* ─── HOW IT WORKS ────────────────────────────────────────────────────── */}
-        <section className="bg-white py-20">
+        {/* ─── PRICING (informativo) ───────────────────────────────────────────── */}
+        <section id="precos" className="bg-white py-20">
           <div className="container mx-auto px-4">
-            <div className="mx-auto max-w-2xl text-center">
+            <div className="mx-auto mb-12 max-w-2xl text-center">
               <h2 className="font-heading text-3xl font-black tracking-tight text-gray-950 md:text-4xl">
-                Como funciona
+                Quanto custa?
               </h2>
-              <p className="mt-3 text-gray-600">Três passos. Menos de 1 minuto.</p>
+              <p className="mt-3 text-gray-600">
+                Pagamento único via Pix. Sem assinatura, sem renovação automática.
+              </p>
             </div>
 
-            <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-3">
-              {STEPS.map(({ n, icon: Icon, title, desc }) => (
-                <div
-                  key={n}
-                  className="group relative rounded-2xl border border-amber-100 bg-amber-50/60 p-7 transition-shadow hover:shadow-lg"
-                >
-                  <span className="font-heading text-5xl font-black leading-none text-amber-200 select-none">
-                    {n}
-                  </span>
-                  <div className="mt-3 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-white shadow">
-                    <Icon className="h-5 w-5" />
+            <div className="mx-auto grid max-w-4xl gap-5 sm:grid-cols-3">
+              {PACK_ORDER.map((code) => {
+                const pack = CREDIT_PACKS[code]
+                const isPopular = pack.recommended
+                return (
+                  <div
+                    key={code}
+                    className={`relative flex flex-col rounded-2xl border-2 p-7 ${
+                      isPopular
+                        ? "border-amber-500 bg-amber-500 text-white shadow-lg shadow-amber-200"
+                        : "border-amber-200 bg-white text-gray-900"
+                    }`}
+                  >
+                    {isPopular && (
+                      <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gray-950 px-4 py-1 text-xs font-bold uppercase tracking-widest text-amber-400">
+                        Recomendado
+                      </span>
+                    )}
+
+                    <div className="mb-6">
+                      <p
+                        className={`text-sm font-semibold uppercase tracking-widest ${isPopular ? "text-amber-100" : "text-amber-700"}`}
+                      >
+                        {pack.label}
+                      </p>
+                      <p className="mt-2 font-heading text-4xl font-black tracking-tight">
+                        {pack.priceLabel}
+                      </p>
+                      <p className={`mt-1 text-sm ${isPopular ? "text-amber-100" : "text-gray-500"}`}>
+                        {pack.credits} créditos · {pack.unitPriceLabel}
+                      </p>
+                    </div>
+
+                    <p className={`text-sm leading-relaxed ${isPopular ? "text-amber-100" : "text-gray-600"}`}>
+                      {pack.pitch}
+                    </p>
                   </div>
-                  <h3 className="mt-4 font-heading text-lg font-bold text-gray-900">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-600">{desc}</p>
-                </div>
-              ))}
+                )
+              })}
+            </div>
+
+            <div className="mx-auto mt-8 max-w-xl rounded-xl border border-amber-200 bg-amber-50 p-5">
+              <p className="text-xs leading-relaxed text-gray-500">
+                Pagamento processado via Pix. Por ser uma empresa internacional, incide IOF de 3,5%
+                já embutido nos preços acima — sem surpresas no app do seu banco. O processador
+                parceiro é o{" "}
+                <a
+                  href="https://www.ebanx.com/pt-br/legal/consumidores/brasil/termos-para-processar-pagamentos/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-amber-700 underline"
+                >
+                  Ebanx
+                </a>
+                , e é esse nome que aparece no seu extrato. Em caso de arrependimento sem uso, reembolso integral
+                em até 7 dias — veja os{" "}
+                <Link href="/termos" className="text-amber-700 underline">
+                  Termos de Uso
+                </Link>
+                .
+              </p>
             </div>
           </div>
         </section>
 
-        {/* ─── SAMPLE ACTIVITIES ───────────────────────────────────────────────── */}
+        {/* ─── PROVA (atividades reais) ─────────────────────────────────────────── */}
         {sampleActivities.length > 0 && (
-          <section className="bg-white py-20">
+          <section className="bg-amber-50 py-20">
             <div className="container mx-auto px-4">
               <div className="mx-auto mb-12 max-w-2xl text-center">
-                <span className="mb-3 inline-block rounded-full border border-amber-500/30 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-amber-600">
+                <span className="mb-3 inline-block rounded-full border border-amber-500/30 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-widest text-amber-600">
                   Exemplos reais
                 </span>
                 <h2 className="font-heading text-3xl font-black tracking-tight text-gray-900 md:text-4xl">
@@ -304,117 +314,45 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
           </section>
         )}
 
-        {/* ─── LICENSE REASSURANCE ─────────────────────────────────────────────── */}
-        <section className="bg-white py-10">
+        {/* ─── COMO FUNCIONA ───────────────────────────────────────────────────── */}
+        <section className="bg-white py-20">
           <div className="container mx-auto px-4">
-            <div className="mx-auto max-w-2xl rounded-2xl border border-emerald-200 bg-emerald-50 px-8 py-7 text-center">
-              <CheckCircle2 className="mx-auto mb-3 h-7 w-7 text-emerald-500" />
-              <h3 className="font-heading text-xl font-bold text-gray-900">Use sem medo na sua sala</h3>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                Licença ampla e perpétua pra uso pedagógico — imprima, fotocopie, distribua para os alunos, inclua em planos de aula.
-                <span className="block mt-1 text-gray-500">A única restrição é revenda comercial.</span>
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ─── PRICING ─────────────────────────────────────────────────────────── */}
-        <section id="precos" className="bg-amber-50 py-20">
-          <div className="container mx-auto px-4">
-            <div className="mx-auto mb-12 max-w-2xl text-center">
+            <div className="mx-auto max-w-2xl text-center">
               <h2 className="font-heading text-3xl font-black tracking-tight text-gray-950 md:text-4xl">
-                Escolha seu pacote
+                Como funciona
               </h2>
-              <p className="mt-3 text-gray-600">
-                Pagamento único via Pix. Sem assinatura, sem renovação automática.
-              </p>
+              <p className="mt-3 text-gray-600">Três passos. Menos de 1 minuto.</p>
             </div>
 
-            <div className="mx-auto grid max-w-4xl gap-5 sm:grid-cols-3">
-              {PACK_ORDER.map((code) => {
-                const pack = CREDIT_PACKS[code]
-                const isPopular = pack.recommended
-                return (
-                  <div
-                    key={code}
-                    className={`relative flex flex-col rounded-2xl border-2 p-7 transition-shadow hover:shadow-xl ${
-                      isPopular
-                        ? "border-amber-500 bg-amber-500 text-white shadow-lg shadow-amber-200"
-                        : "border-amber-200 bg-white text-gray-900"
-                    }`}
-                  >
-                    {isPopular && (
-                      <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gray-950 px-4 py-1 text-xs font-bold uppercase tracking-widest text-amber-400">
-                        Recomendado
-                      </span>
-                    )}
-
-                    <div className="mb-6">
-                      <p
-                        className={`text-sm font-semibold uppercase tracking-widest ${isPopular ? "text-amber-100" : "text-amber-700"}`}
-                      >
-                        {pack.label}
-                      </p>
-                      <p className="mt-2 font-heading text-4xl font-black tracking-tight">
-                        {pack.priceLabel}
-                      </p>
-                      <p className={`mt-1 text-sm ${isPopular ? "text-amber-100" : "text-gray-500"}`}>
-                        {pack.credits} créditos · {pack.unitPriceLabel}
-                      </p>
-                    </div>
-
-                    <p className={`mb-6 text-sm leading-relaxed ${isPopular ? "text-amber-100" : "text-gray-600"}`}>
-                      {pack.pitch}
-                    </p>
-
-                    <Link
-                      href={`/comprar/${pack.code}`}
-                      className={`mt-auto block rounded-xl px-6 py-3 text-center text-sm font-bold transition-all ${
-                        isPopular
-                          ? "bg-white text-amber-700 hover:bg-amber-50"
-                          : "bg-amber-500 text-white hover:bg-amber-600"
-                      }`}
-                    >
-                      Comprar {pack.label}
-                    </Link>
-                  </div>
-                )
-              })}
-            </div>
-
-            <div className="mx-auto mt-8 max-w-xl rounded-xl border border-amber-200 bg-white p-5">
-              <p className="text-xs leading-relaxed text-gray-500">
-                Pagamento processado via Pix. Por ser uma empresa internacional, incide IOF de 3,5%
-                já embutido nos preços acima — sem surpresas no app do seu banco. O processador
-                parceiro é o{" "}
-                <a
-                  href="https://www.ebanx.com/pt-br/legal/consumidores/brasil/termos-para-processar-pagamentos/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-amber-700 underline"
+            <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-3">
+              {STEPS.map(({ n, icon: Icon, title, desc }) => (
+                <div
+                  key={n}
+                  className="group relative rounded-2xl border border-amber-100 bg-amber-50/60 p-7 transition-shadow hover:shadow-lg"
                 >
-                  Ebanx
-                </a>
-                , e é esse nome que aparece no seu extrato. Em caso de arrependimento sem uso, reembolso integral
-                em até 7 dias — veja os{" "}
-                <Link href="/termos" className="text-amber-700 underline">
-                  Termos de Uso
-                </Link>
-                .
-              </p>
+                  <span className="font-heading text-5xl font-black leading-none text-amber-200 select-none">
+                    {n}
+                  </span>
+                  <div className="mt-3 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-white shadow">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-4 font-heading text-lg font-bold text-gray-900">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-600">{desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
         {/* ─── FAQ ─────────────────────────────────────────────────────────────── */}
-        <section className="bg-white py-20">
+        <section className="bg-amber-50 py-20">
           <div className="container mx-auto px-4">
             <div className="mx-auto max-w-2xl">
               <h2 className="mb-10 font-heading text-3xl font-black tracking-tight text-gray-950 md:text-4xl">
                 Dúvidas frequentes
               </h2>
 
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-200">
                 {FAQS.map(({ q, a }) => (
                   <details key={q} className="group py-5">
                     <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-base font-semibold text-gray-900 marker:hidden">
@@ -429,22 +367,22 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
           </div>
         </section>
 
-        {/* ─── FOOTER CTA ──────────────────────────────────────────────────────── */}
-        <section className="bg-amber-500 py-16">
+        {/* ─── CTA ─────────────────────────────────────────────────────────────── */}
+        <section className="bg-amber-500 py-20">
           <div className="container mx-auto px-4 text-center">
             <h2 className="font-heading text-3xl font-black tracking-tight text-white md:text-4xl">
-              Comece hoje. Sua próxima aula agradece.
+              Pronta em 60 segundos.
             </h2>
             <p className="mx-auto mt-4 max-w-md text-amber-100">
               Sem assinatura. Sem burocracia. Pague uma vez, use quando precisar.
             </p>
-            <a
-              href="/login?next=/creditos"
+            <Link
+              href={ctaHref}
               className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-bold text-amber-700 shadow-lg transition-all hover:bg-amber-50 hover:shadow-xl"
             >
-              Começar agora
               <Sparkles className="h-4 w-4" />
-            </a>
+              Criar minha atividade
+            </Link>
           </div>
         </section>
       </main>

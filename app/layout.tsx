@@ -5,6 +5,8 @@ import { Analytics } from "@vercel/analytics/next"
 import { ClarityAnalytics } from "@/components/clarity-analytics"
 import { ConsentBanner } from "@/components/consent-banner"
 import { ErrorBoundary } from "@/components/error-boundary"
+import { AuthGateProvider } from "@/components/auth/auth-gate-provider"
+import { getCurrentUser } from "@/lib/supabase/ssr-server"
 import { SITE_URL, SITE_NAME } from "@/lib/site-config"
 import "./globals.css"
 
@@ -114,11 +116,13 @@ const websiteJsonLd = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const user = await getCurrentUser()
+
   return (
     <html lang="pt-BR">
       <head>
@@ -129,10 +133,12 @@ export default function RootLayout({
         />
       </head>
       <body className={`${plusJakartaSans.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
-        <ErrorBoundary>{children}</ErrorBoundary>
-        <ConsentBanner />
-        <Analytics />
-        <ClarityAnalytics />
+        <AuthGateProvider initialUser={user}>
+          <ErrorBoundary>{children}</ErrorBoundary>
+          <ConsentBanner />
+          <Analytics />
+          <ClarityAnalytics />
+        </AuthGateProvider>
       </body>
     </html>
   )

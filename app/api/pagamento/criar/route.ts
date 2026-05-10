@@ -82,9 +82,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "stripe_error" }, { status: 502 })
   }
 
-  const expiresAtIso = paymentIntent.next_action?.pix_display_qr_code?.expires_at
-    ? new Date(paymentIntent.next_action.pix_display_qr_code.expires_at * 1000).toISOString()
-    : new Date(Date.now() + PIX_EXPIRES_AFTER_SECONDS * 1000).toISOString()
+  const expiresAtFallback = new Date(Date.now() + PIX_EXPIRES_AFTER_SECONDS * 1000).toISOString()
 
   const { data: row, error: insertError } = await admin
     .from("payment_intents")
@@ -95,7 +93,7 @@ export async function POST(request: NextRequest) {
       credits_amount: pack.credits,
       amount_brl_cents: pack.amountBrlCents,
       status: "pending",
-      expires_at: expiresAtIso,
+      expires_at: expiresAtFallback,
       metadata: {
         full_name: fullName,
         cpf: cpfDigits,
@@ -106,10 +104,30 @@ export async function POST(request: NextRequest) {
 
   if (insertError || !row) {
     console.error("[pagamento/criar] insert error:", insertError?.message)
-    // Idealmente cancelar o PaymentIntent aqui, mas Pix não tem capture
-    // manual; ele expira sozinho. Deixamos pra reconciliação via webhook.
+    // Pix não tem capture manual; expira sozinho. Reconciliação via webhook.
     return NextResponse.json({ error: "db_error" }, { status: 500 })
   }
 
-  return NextResponse.json({ paymentId: row.id })
+  // next_action.pix_display_qr_code não é populado na resposta do create —
+  // é necessário um retrieve separado para obter os URLs do QR code.
+  let qr:
+    | { data?: string; image_url_svg?: string; image_url_png?: string; expires_at?: number }
+    | undefined
+  try {
+    const retrieved = await stripe.paymentIntents.retrieve(paymentIntent.id)
+    qr = retrieved.next_action?.pix_display_qr_code as typeof qr
+  } catch (err) {
+    console.error("[pagamento/criar] retrieve error:", (err as Error).message)
+  }
+
+  const expiresAtIso = qr?.expires_at
+    ? new Date(qr.expires_at * 1000).toISOString()
+    : expiresAtFallback
+
+  return NextResponse.json({
+    paymentId: row.id,
+    qrImageUrl: qr?.image_url_svg ?? qr?.image_url_png ?? "",
+    qrText: qr?.data ?? "",
+    expiresAt: expiresAtIso,
+  })
 }

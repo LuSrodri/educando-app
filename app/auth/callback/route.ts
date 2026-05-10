@@ -25,17 +25,17 @@ function buildRedirectUrl(request: NextRequest, path: string) {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get("code")
-  const nextParam = searchParams.get("next") ?? "/"
+  const nextParam = searchParams.get("next") ?? "/criar?retry=1"
 
   // Bloqueia open-redirect: só aceita paths relativos do próprio app.
   // O check do `//` impede protocol-relative URLs (`//attacker.com/...`).
   const next =
     nextParam.startsWith("/") && !nextParam.startsWith("//") && !nextParam.startsWith("/\\")
       ? nextParam
-      : "/"
+      : "/criar?retry=1"
 
   if (!code) {
-    return safeRedirect(buildRedirectUrl(request, "/login?error=missing_code"))
+    return safeRedirect(buildRedirectUrl(request, "/criar?login=1"))
   }
 
   const supabase = await createSSRServerClient()
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error("[auth/callback] exchange failed:", error.message)
-    return safeRedirect(buildRedirectUrl(request, "/login?error=exchange_failed"))
+    return safeRedirect(buildRedirectUrl(request, "/criar?login=1"))
   }
 
   return safeRedirect(buildRedirectUrl(request, next))

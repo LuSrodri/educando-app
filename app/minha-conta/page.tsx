@@ -28,7 +28,7 @@ export default async function MinhaContaPage({ searchParams }: PageProps) {
   const showSuccess = params.compra === "sucesso"
 
   const user = await getCurrentUser()
-  if (!user) redirect("/login?next=/minha-conta")
+  if (!user) redirect("/criar?login=1&next=/minha-conta")
 
   const supabase = await createSSRServerClient()
   const [{ data: balanceData }, { data: ledger }, { data: userActivities }] = await Promise.all([
@@ -121,7 +121,7 @@ export default async function MinhaContaPage({ searchParams }: PageProps) {
                   </Button>
                 )}
                 <Button asChild variant="outline">
-                  <Link href="/creditos">
+                  <Link href="/criar?creditos=1">
                     Comprar créditos
                   </Link>
                 </Button>

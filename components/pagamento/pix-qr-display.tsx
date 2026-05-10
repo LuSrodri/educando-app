@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { Check, Copy, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -10,7 +9,8 @@ interface Props {
   qrSvgDataUrl: string
   pixCopyPaste: string
   expiresAt: string
-  successPath: string
+  onPaid?: () => void
+  onRetry?: () => void
 }
 
 type Status = "pending" | "paid" | "failed" | "canceled" | "expired"
@@ -28,9 +28,9 @@ export function PixQrDisplay({
   qrSvgDataUrl,
   pixCopyPaste,
   expiresAt,
-  successPath,
+  onPaid,
+  onRetry,
 }: Props) {
-  const router = useRouter()
   const [status, setStatus] = useState<Status>("pending")
   const [copied, setCopied] = useState(false)
   const [now, setNow] = useState(() => Date.now())
@@ -54,8 +54,7 @@ export function PixQrDisplay({
         if (cancelled) return
         setStatus(data.status)
         if (data.status === "paid") {
-          // Pequena pausa pra exibir o estado de sucesso antes de redirecionar.
-          setTimeout(() => router.push(successPath), 1200)
+          setTimeout(() => onPaid?.(), 1200)
         }
       } catch {
         // Silencioso — próximo tick tenta de novo.
@@ -68,7 +67,7 @@ export function PixQrDisplay({
       cancelled = true
       clearInterval(interval)
     }
-  }, [paymentId, status, router, successPath])
+  }, [paymentId, status, onPaid])
 
   const expiresMs = new Date(expiresAt).getTime() - now
   const expired = expiresMs <= 0
@@ -93,7 +92,7 @@ export function PixQrDisplay({
         <p className="font-heading text-xl font-bold text-emerald-900">
           Pagamento confirmado!
         </p>
-        <p className="text-sm text-emerald-800">Redirecionando…</p>
+        <p className="text-sm text-emerald-800">Processando…</p>
       </div>
     )
   }
@@ -105,34 +104,34 @@ export function PixQrDisplay({
         <p className="mt-2 text-sm text-red-800">
           O Pix não foi confirmado dentro de 30 minutos. Você pode tentar novamente.
         </p>
-        <Button
-          className="mt-4"
-          variant="outline"
-          onClick={() => router.push("/sejamembro")}
-        >
-          Escolher outro pacote
-        </Button>
+        {onRetry && (
+          <Button className="mt-4" variant="outline" onClick={onRetry}>
+            Escolher outro pacote
+          </Button>
+        )}
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-amber-200 bg-white p-6">
-        <img
-          src={qrSvgDataUrl}
-          alt="QR Code Pix"
-          className="h-64 w-64 rounded-lg border border-gray-200 bg-white p-3"
-        />
-        <p className="text-center text-sm text-gray-600">
+    <div className="w-full min-w-0 space-y-4">
+      <div className="w-full rounded-2xl border-2 border-amber-200 bg-white p-4">
+        <div className="h-[240px] max-h-full w-auto rounded-lg border border-gray-200 bg-white p-2 flex items-center justify-center">
+          <img
+            src={qrSvgDataUrl}
+            alt="QR Code Pix"
+            className="h-full w-auto object-contain"
+          />
+        </div>
+        <p className="mt-3 text-center text-sm text-gray-600">
           Abra o app do seu banco, escolha pagar com Pix por QR Code e aponte a câmera.
         </p>
       </div>
 
-      <div>
+      <div className="w-full min-w-0">
         <p className="mb-2 text-sm font-medium text-gray-700">Ou copie e cole este código:</p>
-        <div className="flex gap-2">
-          <code className="flex-1 truncate rounded-md border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-xs text-gray-800">
+        <div className="flex min-w-0 gap-2">
+          <code className="min-w-0 flex-1 truncate rounded-md border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-xs text-gray-800">
             {pixCopyPaste}
           </code>
           <Button
@@ -156,10 +155,10 @@ export function PixQrDisplay({
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-2 text-sm text-gray-700">
+      <div className="w-full flex items-center justify-center gap-2 text-sm text-gray-700">
         <Loader2 className="h-4 w-4 animate-spin text-amber-600" />
         <span>
-          Aguardando confirmação do pagamento — código expira em{" "}
+          Aguardando confirmação — código expira em{" "}
           <strong className="font-mono">{remaining}</strong>
         </span>
       </div>

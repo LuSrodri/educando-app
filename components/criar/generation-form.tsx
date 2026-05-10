@@ -1,10 +1,12 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2, Sparkles, BookOpen, FileText } from "lucide-react"
+import type { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { useAuthGate } from "@/components/auth/auth-gate-context"
 
 type ActivityType = "activity" | "support_material"
 
@@ -38,14 +40,30 @@ const STAGE_ORDER: Stage[] = [
   "done",
 ]
 
-export function GenerationForm({
-  balance,
-  initialTheme = "",
-}: {
+interface Props {
+  user: User | null
   balance: number
   initialTheme?: string
-}) {
+  retry?: boolean
+  loginOnMount?: boolean
+  creditsOnMount?: boolean
+  initialNext?: string
+  initialPack?: string
+}
+
+export function GenerationForm({
+  user,
+  balance,
+  initialTheme = "",
+  retry = false,
+  loginOnMount = false,
+  creditsOnMount = false,
+  initialNext,
+  initialPack,
+}: Props) {
   const router = useRouter()
+  const { openLogin, openCredits } = useAuthGate()
+
   const [theme, setTheme] = useState(initialTheme)
   const [type, setType] = useState<ActivityType>("activity")
   const [stage, setStage] = useState<Stage>("idle")
@@ -53,81 +71,130 @@ export function GenerationForm({
   const readerRef = useRef<ReadableStreamDefaultReader<Uint8Array> | null>(null)
 
   const isRunning = stage !== "idle" && stage !== "done" && stage !== "error"
-  const canSubmit = theme.trim().length >= 3 && !isRunning && balance > 0
+  const canSubmit = theme.trim().length >= 3 && !isRunning
+
+  const fireGeneration = useCallback(
+    async (t: string, ty: ActivityType) => {
+      setStage("searching")
+      setErrorMsg("")
+      try {
+        const res = await fetch("/api/gerar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ theme: t, type: ty }),
+        })
+        if (!res.body) throw new Error("No stream body")
+        const reader = res.body.getReader()
+        readerRef.current = reader
+        const textDecoder = new TextDecoder()
+        let buffer = ""
+        while (true) {
+          const { value, done } = await reader.read()
+          if (done) break
+          buffer += textDecoder.decode(value, { stream: true })
+          const parts = buffer.split("\n\n")
+          buffer = parts.pop() ?? ""
+          for (const part of parts) {
+            const line = part.startsWith("data: ") ? part.slice(6) : part
+            if (!line) continue
+            try {
+              const event = JSON.parse(line) as { stage: Stage; slug?: string; message?: string }
+              if (event.stage === "done" && event.slug) {
+                setStage("done")
+                setTimeout(() => router.push(`/personalizado/${event.slug}`), 600)
+              } else if (event.stage === "error") {
+                setStage("error")
+                setErrorMsg(event.message ?? "Algo deu errado. Tente novamente.")
+              } else {
+                setStage(event.stage)
+              }
+            } catch {
+              // ignore malformed chunks
+            }
+          }
+        }
+      } catch (err) {
+        setStage("error")
+        setErrorMsg((err as Error).message ?? "Erro de rede. Tente novamente.")
+      }
+    },
+    [router],
+  )
+
+  // Handle mount-time triggers from URL params
+  useEffect(() => {
+    function cleanUrl(paramsToRemove: string[]) {
+      const url = new URL(window.location.href)
+      paramsToRemove.forEach((p) => url.searchParams.delete(p))
+      window.history.replaceState({}, "", url.toString())
+    }
+
+    // ?retry=1 — restore prompt from sessionStorage and auto-submit
+    if (retry) {
+      cleanUrl(["retry"])
+      const saved = sessionStorage.getItem("pendingGeneration")
+      if (saved) {
+        sessionStorage.removeItem("pendingGeneration")
+        try {
+          const { theme: t, type: ty } = JSON.parse(saved) as { theme: string; type: ActivityType }
+          setTheme(t)
+          setType(ty)
+          if (user) {
+            if (balance <= 0) {
+              openCredits({ onAfterPaid: () => fireGeneration(t, ty), initialPack })
+            } else {
+              fireGeneration(t, ty)
+            }
+          }
+        } catch {
+          // ignore malformed saved data
+        }
+      }
+      return
+    }
+
+    // ?login=1 — open login modal
+    if (loginOnMount && !user) {
+      cleanUrl(["login", "next"])
+      openLogin({ next: initialNext })
+      return
+    }
+
+    // ?creditos=1 — open credits modal (or login if not authed)
+    if (creditsOnMount) {
+      cleanUrl(["creditos", "pack"])
+      if (!user) {
+        const nextWithCredits = `/criar?creditos=1${initialPack ? `&pack=${initialPack}` : ""}`
+        openLogin({ next: initialNext ?? nextWithCredits })
+      } else {
+        openCredits({ initialPack })
+      }
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!canSubmit) return
+    const trimmedTheme = theme.trim()
+    if (trimmedTheme.length < 3 || isRunning) return
 
-    setStage("searching")
-    setErrorMsg("")
-
-    try {
-      const res = await fetch("/api/gerar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ theme: theme.trim(), type }),
-      })
-
-      if (!res.body) throw new Error("No stream body")
-      const reader = res.body.getReader()
-      readerRef.current = reader
-      const textDecoder = new TextDecoder()
-      let buffer = ""
-
-      while (true) {
-        const { value, done } = await reader.read()
-        if (done) break
-        buffer += textDecoder.decode(value, { stream: true })
-
-        // Parse SSE events (separated by \n\n)
-        const parts = buffer.split("\n\n")
-        buffer = parts.pop() ?? ""
-
-        for (const part of parts) {
-          const line = part.startsWith("data: ") ? part.slice(6) : part
-          if (!line) continue
-          try {
-            const event = JSON.parse(line) as { stage: Stage; slug?: string; message?: string }
-            if (event.stage === "done" && event.slug) {
-              setStage("done")
-              setTimeout(() => router.push(`/personalizado/${event.slug}`), 600)
-            } else if (event.stage === "error") {
-              setStage("error")
-              setErrorMsg(event.message ?? "Algo deu errado. Tente novamente.")
-            } else {
-              setStage(event.stage)
-            }
-          } catch {
-            // Ignore malformed chunks
-          }
-        }
-      }
-    } catch (err) {
-      setStage("error")
-      setErrorMsg((err as Error).message ?? "Erro de rede. Tente novamente.")
+    if (!user) {
+      sessionStorage.setItem("pendingGeneration", JSON.stringify({ theme: trimmedTheme, type }))
+      openLogin()
+      return
     }
+
+    if (balance <= 0) {
+      openCredits({ onAfterPaid: () => fireGeneration(trimmedTheme, type), initialPack })
+      return
+    }
+
+    await fireGeneration(trimmedTheme, type)
   }
 
   const currentStageIndex = STAGE_ORDER.indexOf(stage)
 
   return (
     <div className="space-y-8">
-      {balance <= 0 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
-          <p className="text-sm font-medium text-amber-900">
-            Você não tem créditos disponíveis.
-          </p>
-          <Button
-            asChild
-            size="sm"
-            className="mt-3 bg-amber-600 text-white hover:bg-amber-700"
-          >
-            <a href="/sejamembro">Comprar créditos</a>
-          </Button>
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="mb-2 block text-sm font-medium text-gray-800">
@@ -187,10 +254,29 @@ export function GenerationForm({
           ) : (
             <>
               <Sparkles className="h-4 w-4" />
-              Gerar atividade — 1 crédito
+              {user ? "Gerar atividade — 1 crédito" : "Gerar atividade"}
             </>
           )}
         </Button>
+
+        {!user && (
+          <p className="text-center text-xs text-gray-500">
+            Você precisará entrar com Google para gerar.
+          </p>
+        )}
+
+        {user && balance <= 0 && (
+          <p className="text-center text-xs text-gray-500">
+            Sem créditos?{" "}
+            <button
+              type="button"
+              onClick={() => openCredits({ onAfterPaid: () => fireGeneration(theme.trim(), type), initialPack })}
+              className="text-amber-700 underline"
+            >
+              Comprar créditos.
+            </button>
+          </p>
+        )}
       </form>
 
       {isRunning && (
