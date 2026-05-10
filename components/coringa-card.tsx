@@ -12,7 +12,7 @@ interface CoringaCardProps {
 }
 
 export function CoringaCard({ imagePath, tema, bnccCodes }: CoringaCardProps) {
-  const href = `/sejamembro?tema=${encodeURIComponent(tema)}`
+  const href = `/criar?tema=${encodeURIComponent(tema)}`
 
   return (
     <Link

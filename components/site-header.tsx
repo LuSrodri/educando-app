@@ -20,7 +20,7 @@ async function HeaderCta() {
       <div className="flex items-center gap-2 sm:gap-3">
         <EntrarButton />
         <Link
-          href="/sejamembro"
+          href="/criar"
           className="flex items-center gap-1.5 rounded-full bg-amber-500 px-6 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 sm:px-4 w-min sm:w-full"
         >
           <Sparkles className="h-7 w-7 sm:h-3.5 sm:w-3.5" />

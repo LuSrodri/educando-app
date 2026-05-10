@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { Sparkles } from "lucide-react"
+import { Sparkles, SquareArrowOutUpRight } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { Footer } from "@/components/footer"
 import { GenerationForm } from "@/components/criar/generation-form"
@@ -89,7 +89,7 @@ export default async function CriarPage({ searchParams }: PageProps) {
             </div>
 
             {user && (
-              <p className="mt-6 text-center text-xs text-gray-500">
+              <p className="mt-6 text-center text-sm text-gray-500">
                 A atividade gerada aparece no seu{" "}
                 <Link href="/minha-conta" className="text-amber-700 underline">
                   histórico
@@ -97,6 +97,12 @@ export default async function CriarPage({ searchParams }: PageProps) {
                 .
               </p>
             )}
+            <p className="mt-6 text-center text-sm text-gray-500">
+              <Link href="/sejamembro" className="text-amber-700 underline inline-flex items-center justify-center gap-1.5">
+                Descubra como funciona a geração de atividades 
+                <SquareArrowOutUpRight className="h-4 w-4" />
+              </Link>
+            </p>
           </div>
         </div>
       </main>

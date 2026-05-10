@@ -105,7 +105,7 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
 
   return (
     <>
-      <SiteHeader hideCta />
+      <SiteHeader />
 
       <main>
         {/* ─── HERO ───────────────────────────────────────────────────────────── */}
