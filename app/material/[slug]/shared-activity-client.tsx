@@ -59,11 +59,14 @@ export function SharedActivityClient({ activityId, imageUrl, activityTitle }: Sh
         <head>
           <title>Atividade Escolar - educando.app</title>
           <style>
-            body { margin: 0; }
-            img { max-width: 100%; height: auto; display: block; }
+            html, body { margin: 0; padding: 0; height: 100%; }
+            body { display: flex; align-items: center; justify-content: center; }
+            img { max-width: 100%; max-height: 100vh; width: auto; height: auto; display: block; object-fit: contain; }
             @media print {
-              body { margin: 0; }
-              img { max-width: 100%; page-break-inside: avoid; }
+              @page { size: A4; margin: 0; }
+              html, body { width: 210mm; height: 297mm; }
+              body { display: flex; align-items: center; justify-content: center; }
+              img { max-width: 210mm; max-height: 297mm; width: auto; height: auto; page-break-inside: avoid; object-fit: contain; }
             }
           </style>
         </head>
