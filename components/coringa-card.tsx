@@ -40,8 +40,8 @@ export function CoringaCard({ imagePath, tema, bnccCodes }: CoringaCardProps) {
                 </div>
               </div>
             </div>
-            <span className="absolute right-2 top-2 rounded-full bg-gray-900/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white backdrop-blur-sm">
-              Premium
+            <span className="absolute right-2 top-2 rounded-full bg-gray-900/70 px-4 lg:px-2 py-1.5 lg:py-0.5 text-[10px] font-medium uppercase tracking-wide text-white backdrop-blur-sm text-center">
+              Personalizável <br className="lg:hidden" />com <span className="whitespace-nowrap">1-click</span>
             </span>
           </div>
           <div className="space-y-1.5 p-3 sm:p-4">

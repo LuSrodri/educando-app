@@ -21,10 +21,10 @@ async function HeaderCta() {
         <EntrarButton />
         <Link
           href="/criar"
-          className="flex items-center gap-1.5 rounded-full bg-amber-500 px-6 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 sm:px-4 w-min sm:w-full"
+          className="flex items-center gap-1.5 rounded-full bg-amber-500 px-6 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 sm:px-4"
         >
-          <Sparkles className="h-7 w-7 sm:h-3.5 sm:w-3.5" />
-          Criar atividade personalizada
+          Gerar atividade com IA 
+          <Sparkles className="h-4 w-4" />
         </Link>
       </div>
     )
@@ -47,8 +47,7 @@ async function HeaderCta() {
         href="/criar"
         className="flex items-center gap-1.5 rounded-full bg-amber-500 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 sm:px-4"
       >
-        <Sparkles className="h-3.5 w-3.5" />
-        Criar atividade personalizada
+        Criar atividade
       </Link>
     </div>
   )
