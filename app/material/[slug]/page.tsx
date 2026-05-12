@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { getActivity, getActivityBySlug, getRelatedActivities } from "@/lib/activities"
@@ -6,10 +5,11 @@ import { getActivityImageUrl } from "@/lib/image-utils"
 import { isUUID, generateMaterialSlug } from "@/lib/slug"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Calendar, Tag } from "lucide-react"
+import { Calendar, Tag } from "lucide-react"
 import { SharedActivityClient } from "./shared-activity-client"
 import { RelatedActivities } from "@/components/related-activities"
 import { SiteHeader } from "@/components/site-header"
+import { RedirectSearchBar } from "@/components/redirect-search-bar"
 import type { Activity } from "@/lib/supabase/types"
 import { SITE_URL } from "@/lib/site-config"
 
@@ -112,13 +112,7 @@ export default async function MaterialPage({ params }: PageProps) {
       <main className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
         <div className="border-b border-amber-100 bg-amber-50">
           <div className="container mx-auto px-4 py-3">
-            <Link
-              href="/#materiais"
-              className="flex w-fit items-center gap-1 text-sm text-amber-700 hover:text-amber-800"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Ver outras atividades gratuitas
-            </Link>
+            <RedirectSearchBar />
           </div>
         </div>
 

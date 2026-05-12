@@ -12,6 +12,8 @@ const PAGE_SIZE = 24
 interface MaterialsSectionProps {
   initialActivities: Activity[]
   initialTotal: number
+  initialQuery?: string
+  syncUrl?: boolean
 }
 
 function getPaginationPages(current: number, total: number): (number | "...")[] {
@@ -26,12 +28,18 @@ function getPaginationPages(current: number, total: number): (number | "...")[] 
   return pages
 }
 
-export function MaterialsSection({ initialActivities, initialTotal }: MaterialsSectionProps) {
+export function MaterialsSection({
+  initialActivities,
+  initialTotal,
+  initialQuery,
+  syncUrl = false,
+}: MaterialsSectionProps) {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [turnstileMounted, setTurnstileMounted] = useState(false)
 
-  const [inputValue, setInputValue] = useState("")
-  const [submittedQuery, setSubmittedQuery] = useState("")
+  const seededQuery = initialQuery?.trim() ?? ""
+  const [inputValue, setInputValue] = useState(seededQuery)
+  const [submittedQuery, setSubmittedQuery] = useState(seededQuery)
   const [activities, setActivities] = useState<Activity[]>(initialActivities)
   const [total, setTotal] = useState(initialTotal)
   const [page, setPage] = useState(1)
@@ -97,6 +105,19 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
     [turnstileToken],
   )
 
+  useEffect(() => {
+    if (!syncUrl || typeof window === "undefined") return
+    const onPopState = () => {
+      const tema = new URL(window.location.href).searchParams.get("tema")?.trim() ?? ""
+      setInputValue(tema)
+      setSubmittedQuery(tema)
+      setPage(1)
+      setErrorReason(null)
+    }
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [syncUrl])
+
   // Reset to the full directory snapshot whenever the user clears the query.
   useEffect(() => {
     if (!submittedQuery && page === 1) {
@@ -114,19 +135,35 @@ export function MaterialsSection({ initialActivities, initialTotal }: MaterialsS
     setTurnstileMounted(true)
   }, [])
 
-  const handleSubmit = useCallback((value: string) => {
-    setTurnstileMounted(true)
-    const q = value.trim()
-    setSubmittedQuery(q)
-    setPage(1)
-  }, [])
+  const pushQueryToUrl = useCallback(
+    (q: string) => {
+      if (!syncUrl || typeof window === "undefined") return
+      const url = new URL(window.location.href)
+      if (q) url.searchParams.set("tema", q)
+      else url.searchParams.delete("tema")
+      window.history.pushState({}, "", url.toString())
+    },
+    [syncUrl],
+  )
+
+  const handleSubmit = useCallback(
+    (value: string) => {
+      setTurnstileMounted(true)
+      const q = value.trim()
+      setSubmittedQuery(q)
+      setPage(1)
+      pushQueryToUrl(q)
+    },
+    [pushQueryToUrl],
+  )
 
   const handleClear = useCallback(() => {
     setInputValue("")
     setSubmittedQuery("")
     setPage(1)
     setErrorReason(null)
-  }, [])
+    pushQueryToUrl("")
+  }, [pushQueryToUrl])
 
   const goTo = useCallback(
     (p: number) => {
