@@ -1,5 +1,6 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
+import Script from "next/script"
 import { Space_Grotesk, Plus_Jakarta_Sans } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ClarityAnalytics } from "@/components/clarity-analytics"
@@ -133,6 +134,11 @@ export default async function RootLayout({
         />
       </head>
       <body className={`${plusJakartaSans.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
+        <Script src="https://www.ezojs.com/ezoic/sa.min.js" strategy="afterInteractive" async />
+        <Script id="ezoic-init" strategy="afterInteractive">
+          {`window.ezstandalone = window.ezstandalone || {}; ezstandalone.cmd = ezstandalone.cmd || [];`}
+        </Script>
+        <Script src="https://ezoicanalytics.com/analytics.js" strategy="afterInteractive" />
         <AuthGateProvider initialUser={user}>
           <ErrorBoundary>{children}</ErrorBoundary>
           <ConsentBanner />
