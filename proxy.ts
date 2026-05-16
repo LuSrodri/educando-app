@@ -39,31 +39,6 @@ export async function proxy(request: NextRequest) {
   }
 
   // ─── Cabeçalhos de segurança ───────────────────────────────────────────────
-  const supabaseHost = supabaseUrl ? new URL(supabaseUrl).host : "*.supabase.co"
-
-  const csp = [
-    "default-src 'self'",
-    // Allow all HTTPS images: Supabase image transformation serves via Cloudflare CDN
-    // which uses different hostnames than the project URL, so we can't enumerate them
-    "img-src 'self' data: blob: https:",
-    // Next.js App Router requires unsafe-inline for hydration scripts. Cloudflare
-    // Turnstile loads api.js and its inner challenge iframe from
-    // challenges.cloudflare.com.
-    "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://challenges.cloudflare.com https://*.clarity.ms",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
-    // Include wss: for Supabase realtime WebSocket connections and Turnstile
-    // verification traffic.
-    `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://va.vercel-scripts.com https://vitals.vercel-insights.com https://challenges.cloudflare.com https://*.clarity.ms`,
-    // Turnstile renders the challenge UI inside a nested iframe from
-    // challenges.cloudflare.com — whitelist it here so the widget can mount.
-    "frame-src https://challenges.cloudflare.com",
-    "frame-ancestors 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-  ].join("; ")
-
-  response.headers.set("Content-Security-Policy", csp)
   response.headers.set("X-Frame-Options", "DENY")
   response.headers.set("X-Content-Type-Options", "nosniff")
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
