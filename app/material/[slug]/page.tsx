@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation"
-import { cookies } from "next/headers"
 import type { Metadata } from "next"
 import { getActivity, getActivityBySlug, getRelatedActivities } from "@/lib/activities"
 import { getActivityImageUrl } from "@/lib/image-utils"
@@ -12,7 +11,6 @@ import { RelatedActivities } from "@/components/related-activities"
 import { SiteHeader } from "@/components/site-header"
 import { RedirectSearchBar } from "@/components/redirect-search-bar"
 import { MaterialPaywallModal } from "@/components/material/material-paywall-modal"
-import { getCurrentUser } from "@/lib/supabase/ssr-server"
 import type { Activity } from "@/lib/supabase/types"
 import { SITE_URL } from "@/lib/site-config"
 
@@ -92,11 +90,6 @@ export default async function MaterialPage({ params }: PageProps) {
   const pageUrl = `${SITE_URL}/material/${generateMaterialSlug(activity.theme, id)}`
   const related = await getRelatedActivities(activity, 3)
 
-  const [user, cookieStore] = await Promise.all([getCurrentUser(), cookies()])
-  const refusedPaywall = cookieStore.get("paywall_refused")?.value === "1"
-  const showPaywall = !user && !refusedPaywall
-  const paywallTheme = activity.theme ?? title
-
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -173,7 +166,6 @@ export default async function MaterialPage({ params }: PageProps) {
 
         <RelatedActivities activities={related} currentActivity={activity} />
       </main>
-      {showPaywall && <MaterialPaywallModal theme={paywallTheme} />}
     </>
   )
 }
