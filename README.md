@@ -24,7 +24,7 @@ Diretório público de atividades pedagógicas alinhadas à BNCC + camada de ger
 | Geração de imagem | OpenAI gpt-image-2 (A4, 1024×1536, quality=high) |
 | Pesquisa pedagógica | Tavily |
 | Scraping educacional | Firecrawl |
-| Proteção anti-bot | Cloudflare Turnstile + WAF |
+| Proteção anti-bot | Cloudflare WAF |
 | Deploy | Vercel |
 
 ## Desenvolvimento local
@@ -61,8 +61,6 @@ Veja `.env.example` para a lista completa. Variáveis obrigatórias:
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe client-side |
 | `STRIPE_SECRET_KEY` | Stripe server-side |
 | `STRIPE_WEBHOOK_SECRET` | Verificação de assinatura do webhook |
-| `NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY` | Turnstile (client) |
-| `CLOUDFLARE_TURNSTILE_SECRET_KEY` | Turnstile (server) |
 | `CRON_SECRET` | Protege `/api/cron/weekly-activities` |
 
 ## Banco de dados
@@ -138,10 +136,10 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://educando.app/api/cron/weekl
 
 ## Segurança
 
-- **Moderação** — toda busca passa pelo GPT-5.4-nano antes de acessar APIs pagas
+- **quickReject** — checagem síncrona local (regex) que filtra queries óbvias antes de qualquer chamada externa
+- **Moderação** — GPT-5.4-nano valida cada busca aceita; falha = 401 + sem telemetria
 - **Rate limit** — RPC `rate_limit_check` por IP com janela fixa (Supabase)
-- **Turnstile invisível** — ativado quando a busca dispara enriquecimento externo
-- **`proxy.ts`** — CSP, Permissions-Policy (Turnstile), HSTS, `Cache-Control: private, no-store` em todas as respostas
+- **`proxy.ts`** — Permissions-Policy, HSTS, `Cache-Control: private, no-store` em todas as respostas
 - **WAF** — Cloudflare recomendado em produção
 
 ## Integração Claude Code (opcional)

@@ -148,7 +148,7 @@ export default function PrivacidadePage() {
                     <strong>Vercel</strong> (hospedagem da aplicação) — Estados Unidos.
                   </li>
                   <li>
-                    <strong>Cloudflare</strong> (CDN, proteção contra ataques e Turnstile) —
+                    <strong>Cloudflare</strong> (CDN e proteção contra ataques) —
                     Estados Unidos.
                   </li>
                   <li>
@@ -275,7 +275,7 @@ export default function PrivacidadePage() {
                   Adotamos medidas técnicas e administrativas para proteger seus dados,
                   incluindo: criptografia em trânsito (TLS), controle de acesso por linhas
                   (Row Level Security) no banco de dados, segregação de credenciais,
-                  proteção contra abuso (Cloudflare e Turnstile) e auditoria periódica de
+                  proteção contra abuso (Cloudflare) e auditoria periódica de
                   permissões. Apesar disso, nenhum sistema é 100% seguro; em caso de
                   incidente que possa gerar risco ou dano relevante, comunicaremos a ANPD e
                   os titulares afetados nos termos do art. 48 da LGPD.

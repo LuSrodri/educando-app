@@ -44,17 +44,7 @@ export async function proxy(request: NextRequest) {
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
   response.headers.set(
     "Permissions-Policy",
-    [
-      "camera=()",
-      "microphone=()",
-      "geolocation=()",
-      // Cloudflare Turnstile needs these sensor APIs inside its iframe to
-      // collect anti-bot signals. Granting to self + the Turnstile origin.
-      'accelerometer=(self "https://challenges.cloudflare.com")',
-      'gyroscope=(self "https://challenges.cloudflare.com")',
-      'magnetometer=(self "https://challenges.cloudflare.com")',
-      'xr-spatial-tracking=(self "https://challenges.cloudflare.com")',
-    ].join(", "),
+    ["camera=()", "microphone=()", "geolocation=()"].join(", "),
   )
   response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
   response.headers.set("X-DNS-Prefetch-Control", "on")

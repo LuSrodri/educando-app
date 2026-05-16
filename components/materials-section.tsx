@@ -5,7 +5,6 @@ import { ChevronLeft, ChevronRight, GraduationCap } from "lucide-react"
 import type { Activity } from "@/lib/supabase/types"
 import { DirectorySearch } from "@/components/directory-search"
 import { DirectoryGrid } from "@/components/directory-grid"
-import { TurnstileWidget } from "@/components/turnstile-widget"
 
 const PAGE_SIZE = 24
 
@@ -34,9 +33,6 @@ export function MaterialsSection({
   initialQuery,
   syncUrl = false,
 }: MaterialsSectionProps) {
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
-  const [turnstileMounted, setTurnstileMounted] = useState(false)
-
   const seededQuery = initialQuery?.trim() ?? ""
   const [inputValue, setInputValue] = useState(seededQuery)
   const [submittedQuery, setSubmittedQuery] = useState(seededQuery)
@@ -62,14 +58,9 @@ export function MaterialsSection({
           limit: String(PAGE_SIZE),
         })
         if (nextQuery.trim()) params.set("q", nextQuery.trim())
-        const buildHeaders = (token: string | null): Record<string, string> => {
-          const h: Record<string, string> = { Accept: "application/json" }
-          if (token) h["x-cf-turnstile-token"] = token
-          return h
-        }
 
         const res = await fetch(`/api/search?${params.toString()}`, {
-          headers: buildHeaders(turnstileToken),
+          headers: { Accept: "application/json" },
         })
 
         if (res.status === 401) {
@@ -102,7 +93,7 @@ export function MaterialsSection({
         if (seq === fetchSeqRef.current) setIsLoading(false)
       }
     },
-    [turnstileToken],
+    [],
   )
 
   useEffect(() => {
@@ -131,10 +122,6 @@ export function MaterialsSection({
     // runFetch is stable-ish; include it to satisfy the linter.
   }, [submittedQuery, page, initialActivities, initialTotal, runFetch])
 
-  const handleSearchFocus = useCallback(() => {
-    setTurnstileMounted(true)
-  }, [])
-
   const pushQueryToUrl = useCallback(
     (q: string) => {
       if (!syncUrl || typeof window === "undefined") return
@@ -148,7 +135,6 @@ export function MaterialsSection({
 
   const handleSubmit = useCallback(
     (value: string) => {
-      setTurnstileMounted(true)
       const q = value.trim()
       setSubmittedQuery(q)
       setPage(1)
@@ -201,13 +187,6 @@ export function MaterialsSection({
 
   return (
     <section id="materiais" ref={sectionRef} className="container mx-auto px-4 py-14 sm:py-16">
-      {turnstileMounted && (
-        <TurnstileWidget
-          onToken={setTurnstileToken}
-          onError={() => setTurnstileToken(null)}
-        />
-      )}
-
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="space-y-3 text-center">
           <h2 className="font-heading text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl md:text-4xl">
@@ -223,14 +202,13 @@ export function MaterialsSection({
           onChange={setInputValue}
           onSubmit={handleSubmit}
           onClear={handleClear}
-          onFocus={handleSearchFocus}
           isLoading={isLoading}
           hasActiveQuery={Boolean(submittedQuery || inputValue)}
         />
 
         <DirectoryGrid
           activities={activities}
-          isLoading={isLoading && activities.length === 0}
+          isLoading={isLoading}
           coringaImagePath={page === totalPages ? initialActivities[0]?.image_path ?? null : null}
           coringaTema={page === totalPages ? submittedQuery || null : null}
         />
