@@ -1,6 +1,6 @@
 "use client"
 
-import { Bookmark, Crown, Download, Printer, Sparkles } from "lucide-react"
+import { BadgePlus, Bookmark, Crown, Download, Printer, Sparkles } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -42,7 +42,7 @@ export function PaywallModal() {
 
   return (
     <Dialog open={isPaywallOpen} onOpenChange={(open) => !open && closePaywall()}>
-      <DialogContent className="w-[480px] max-w-[92dvw]">
+      <DialogContent className="w-[480px] max-w-[92dvw] max-h-[90dvh] overflow-y-auto">
         <DialogHeader className="items-center text-center">
           <div className="mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg">
             <Icon className="h-7 w-7" />
@@ -63,8 +63,7 @@ export function PaywallModal() {
             <li className="flex items-start gap-2">
               <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
               <span>
-                Acesso a mais de <strong>{totalLabel}</strong> atividades pedagógicas
-                alinhadas à BNCC
+                Mais de <strong>{totalLabel}</strong> atividades pedagógicas alinhadas à BNCC
               </span>
             </li>
             <li className="flex items-start gap-2">
@@ -77,6 +76,12 @@ export function PaywallModal() {
               <Bookmark className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
               <span>
                 <strong>Salve atividades</strong> para revisitar e organizar seu acervo
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <BadgePlus className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              <span>
+                <strong>Novas atividades</strong> todo domingo e quarta-feira
               </span>
             </li>
           </ul>
