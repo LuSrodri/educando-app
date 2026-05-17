@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/site-header"
 import { Hero } from "@/components/hero"
 import { MaterialsSection } from "@/components/materials-section"
 import { Footer } from "@/components/footer"
+import { AdsterraBanner } from "@/components/adsterra-banner"
 import { getAllActivities } from "@/lib/activities"
 import { createServerClient } from "@/lib/supabase/server"
 
@@ -32,6 +33,7 @@ export default async function Home() {
       <main className="min-h-screen bg-background">
         <Hero />
         <MaterialsSection initialActivities={activities} initialTotal={total} />
+        <AdsterraBanner />
       </main>
       <Footer />
     </>

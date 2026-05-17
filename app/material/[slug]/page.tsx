@@ -10,6 +10,7 @@ import { SharedActivityClient } from "./shared-activity-client"
 import { RelatedActivities } from "@/components/related-activities"
 import { SiteHeader } from "@/components/site-header"
 import { RedirectSearchBar } from "@/components/redirect-search-bar"
+import { AdsterraBanner } from "@/components/adsterra-banner"
 import type { Activity } from "@/lib/supabase/types"
 import { SITE_URL } from "@/lib/site-config"
 
@@ -164,6 +165,7 @@ export default async function MaterialPage({ params }: PageProps) {
         </div>
 
         <RelatedActivities activities={related} currentActivity={activity} />
+        <AdsterraBanner />
       </main>
     </>
   )
