@@ -129,7 +129,12 @@ export default async function PersonalizadoPage({ params }: PageProps) {
                     className="h-auto w-full rounded-lg shadow-md"
                   />
                 </div>
-                <SharedActivityClient activityId={id} imageUrl={imageUrl} activityTitle={title} />
+                <SharedActivityClient
+                  activityId={id}
+                  imageUrl={imageUrl}
+                  activityTitle={title}
+                  mode="personal"
+                />
               </CardContent>
             </Card>
           </div>

@@ -239,6 +239,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          stripe_customer_id: string | null
           updated_at: string
         }
         Insert: {
@@ -247,6 +248,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -255,9 +257,87 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          canceled_at: string | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          interval: Database["public"]["Enums"]["subscription_interval"]
+          price_brl_cents: number
+          status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string
+          stripe_price_id: string
+          stripe_subscription_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          interval?: Database["public"]["Enums"]["subscription_interval"]
+          price_brl_cents: number
+          status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string
+          stripe_price_id: string
+          stripe_subscription_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          interval?: Database["public"]["Enums"]["subscription_interval"]
+          price_brl_cents?: number
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string
+          stripe_price_id?: string
+          stripe_subscription_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_activities: {
+        Row: {
+          activity_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_activities_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rate_limit_counters: {
         Row: {
@@ -341,6 +421,7 @@ export type Database = {
         Returns: boolean
       }
       current_credit_balance: { Args: { p_user_id: string }; Returns: number }
+      is_subscription_active: { Args: { p_user_id: string }; Returns: boolean }
       find_activity_by_id_suffix: {
         Args: { p_suffix: string }
         Returns: {
@@ -398,6 +479,16 @@ export type Database = {
         | "canceled"
         | "expired"
       payment_pack_code: "experimentar" | "popular" | "melhor_valor"
+      subscription_interval: "month" | "year"
+      subscription_status:
+        | "incomplete"
+        | "incomplete_expired"
+        | "trialing"
+        | "active"
+        | "past_due"
+        | "canceled"
+        | "unpaid"
+        | "paused"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -524,9 +615,13 @@ export type CompositeTypes<
 
 // ─── Convenience aliases ──────────────────────────────────────────────────────
 export type Activity = Tables<"activities">
+export type Subscription = Tables<"subscriptions">
+export type SavedActivity = Tables<"saved_activities">
 export type InsertTables<T extends keyof Database["public"]["Tables"]> =
   Database["public"]["Tables"][T]["Insert"]
 export type PaymentPackCode = Database["public"]["Enums"]["payment_pack_code"]
+export type SubscriptionStatus = Database["public"]["Enums"]["subscription_status"]
+export type SubscriptionInterval = Database["public"]["Enums"]["subscription_interval"]
 
 export const Constants = {
   public: {
@@ -546,6 +641,17 @@ export const Constants = {
         "expired",
       ],
       payment_pack_code: ["experimentar", "popular", "melhor_valor"],
+      subscription_interval: ["month", "year"],
+      subscription_status: [
+        "incomplete",
+        "incomplete_expired",
+        "trialing",
+        "active",
+        "past_due",
+        "canceled",
+        "unpaid",
+        "paused",
+      ],
     },
   },
 } as const

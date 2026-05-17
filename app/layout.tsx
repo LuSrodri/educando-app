@@ -7,7 +7,8 @@ import { ClarityAnalytics } from "@/components/clarity-analytics"
 import { ConsentBanner } from "@/components/consent-banner"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { AuthGateProvider } from "@/components/auth/auth-gate-provider"
-import { getCurrentUser } from "@/lib/supabase/ssr-server"
+import { createSSRServerClient, getCurrentUser } from "@/lib/supabase/ssr-server"
+import { getSubscriptionState } from "@/lib/subscriptions"
 import { SITE_URL, SITE_NAME } from "@/lib/site-config"
 import "./globals.css"
 
@@ -122,7 +123,21 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const user = await getCurrentUser()
+  const supabase = await createSSRServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const [premiumState, totalRes] = await Promise.all([
+    user ? getSubscriptionState(supabase, user.id) : Promise.resolve({ isPremium: false }),
+    supabase
+      .from("activities")
+      .select("id", { count: "exact", head: true })
+      .is("user_id", null),
+  ])
+
+  const isPremium = premiumState.isPremium
+  const activityTotal = totalRes.count ?? 0
 
   return (
     <html lang="pt-BR">
@@ -139,7 +154,11 @@ export default async function RootLayout({
           {`window.ezstandalone = window.ezstandalone || {}; ezstandalone.cmd = ezstandalone.cmd || [];`}
         </Script>
         <Script src="https://ezoicanalytics.com/analytics.js" strategy="afterInteractive" />
-        <AuthGateProvider initialUser={user}>
+        <AuthGateProvider
+          initialUser={user}
+          initialIsPremium={isPremium}
+          initialActivityTotal={activityTotal}
+        >
           <ErrorBoundary>{children}</ErrorBoundary>
           <ConsentBanner />
           <Analytics />

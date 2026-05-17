@@ -10,6 +10,8 @@ import { SharedActivityClient } from "./shared-activity-client"
 import { RelatedActivities } from "@/components/related-activities"
 import { SiteHeader } from "@/components/site-header"
 import { RedirectSearchBar } from "@/components/redirect-search-bar"
+import { ProtectedImage } from "@/components/protected-image"
+import { createSSRServerClient, getCurrentUser } from "@/lib/supabase/ssr-server"
 import type { Activity } from "@/lib/supabase/types"
 import { SITE_URL } from "@/lib/site-config"
 
@@ -89,6 +91,20 @@ export default async function MaterialPage({ params }: PageProps) {
   const pageUrl = `${SITE_URL}/material/${generateMaterialSlug(activity.theme, id)}`
   const related = await getRelatedActivities(activity, 3)
 
+  // Saved state inicial — só consulta se o user está logado.
+  let initialSaved = false
+  const user = await getCurrentUser()
+  if (user) {
+    const supabase = await createSSRServerClient()
+    const { data } = await supabase
+      .from("saved_activities")
+      .select("activity_id")
+      .eq("user_id", user.id)
+      .eq("activity_id", id)
+      .maybeSingle()
+    initialSaved = !!data
+  }
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -151,13 +167,18 @@ export default async function MaterialPage({ params }: PageProps) {
             <Card className="overflow-hidden border-2 border-amber-200 shadow-lg">
               <CardContent className="p-0">
                 <div className="bg-white p-4 md:p-6">
-                  <img
+                  <ProtectedImage
                     src={imageUrl}
                     alt={title}
                     className="h-auto w-full rounded-lg shadow-md"
                   />
                 </div>
-                <SharedActivityClient activityId={id} imageUrl={imageUrl} activityTitle={title} />
+                <SharedActivityClient
+                  activityId={id}
+                  imageUrl={imageUrl}
+                  activityTitle={title}
+                  initialSaved={initialSaved}
+                />
               </CardContent>
             </Card>
           </div>

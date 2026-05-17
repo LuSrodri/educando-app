@@ -158,3 +158,14 @@
 .font-heading {
   font-family: var(--font-heading);
 }
+
+/* Imagens premium (atividades curated) — bloqueia salvar via right-click,
+   drag pra desktop, e long-press no mobile. Não impede a renderização nem o
+   feature de "Guardar no Pinterest" (que usa a URL diretamente). */
+.protected-image {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  pointer-events: none;
+}

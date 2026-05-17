@@ -3,23 +3,52 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { PinterestSaveButton } from "@/components/pinterest-save-button"
-import { Download, Printer, Share2, Check, Copy, Loader2 } from "lucide-react"
+import {
+  Bookmark,
+  BookmarkCheck,
+  Check,
+  Copy,
+  Crown,
+  Download,
+  Loader2,
+  Printer,
+  Share2,
+} from "lucide-react"
+import { useAuthGate } from "@/components/auth/auth-gate-context"
 
 interface SharedActivityClientProps {
   activityId: string
   imageUrl: string
   activityTitle: string
+  /**
+   * "public" = atividade curated do diretório (download/imprimir/salvar são
+   * premium, mostra Crown e Pinterest). "personal" = atividade gerada pelo
+   * próprio user (tudo livre, sem Crown, sem Salvar, sem Pinterest).
+   */
+  mode?: "public" | "personal"
+  initialSaved?: boolean
 }
 
-export function SharedActivityClient({ activityId, imageUrl, activityTitle }: SharedActivityClientProps) {
+export function SharedActivityClient({
+  activityId,
+  imageUrl,
+  activityTitle,
+  mode = "public",
+  initialSaved = false,
+}: SharedActivityClientProps) {
+  const isPublicCurated = mode === "public"
+  const { isPremium, openPaywall } = useAuthGate()
   const [copied, setCopied] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isSaved, setIsSaved] = useState(initialSaved)
 
-  const shareUrl = typeof window !== "undefined"
-    ? window.location.href
-    : `https://educando.app/material/${activityId}`
+  const shareUrl =
+    typeof window !== "undefined"
+      ? window.location.href
+      : `https://educando.app/material/${activityId}`
 
-  const downloadImage = async () => {
+  async function downloadImage() {
     setIsDownloading(true)
     try {
       const response = await fetch(imageUrl)
@@ -39,7 +68,7 @@ export function SharedActivityClient({ activityId, imageUrl, activityTitle }: Sh
     }
   }
 
-  const printImage = () => {
+  function printImage() {
     const iframe = document.createElement("iframe")
     iframe.style.cssText = "position:absolute;visibility:hidden;width:1px;height:1px;border:0;"
     document.body.appendChild(iframe)
@@ -99,7 +128,28 @@ export function SharedActivityClient({ activityId, imageUrl, activityTitle }: Sh
     }
   }
 
-  const copyLink = async () => {
+  async function toggleSaved() {
+    setIsSaving(true)
+    try {
+      const method = isSaved ? "DELETE" : "POST"
+      const res = await fetch("/api/salvar", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activityId }),
+      })
+      if (res.ok) {
+        setIsSaved(!isSaved)
+      } else {
+        console.error("[salvar] failed", await res.text())
+      }
+    } catch (error) {
+      console.error("Error toggling saved:", error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  async function copyLink() {
     try {
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
@@ -109,7 +159,7 @@ export function SharedActivityClient({ activityId, imageUrl, activityTitle }: Sh
     }
   }
 
-  const shareNative = async () => {
+  async function shareNative() {
     if (navigator.share) {
       try {
         await navigator.share({
@@ -117,8 +167,7 @@ export function SharedActivityClient({ activityId, imageUrl, activityTitle }: Sh
           text: "Confira essa atividade escolar criada com educando.app!",
           url: shareUrl,
         })
-      } catch (error) {
-        // User cancelled or error - fallback to copy
+      } catch {
         copyLink()
       }
     } else {
@@ -126,38 +175,89 @@ export function SharedActivityClient({ activityId, imageUrl, activityTitle }: Sh
     }
   }
 
+  // ─── handlers que checam premium antes de executar ──────────────────────
+  function handleDownloadClick() {
+    if (isPublicCurated && !isPremium) {
+      openPaywall({ action: "download", onAfterSubscribed: () => downloadImage() })
+      return
+    }
+    downloadImage()
+  }
+  function handlePrintClick() {
+    if (isPublicCurated && !isPremium) {
+      openPaywall({ action: "print", onAfterSubscribed: () => printImage() })
+      return
+    }
+    printImage()
+  }
+  function handleSaveClick() {
+    if (!isPremium) {
+      openPaywall({ action: "save", onAfterSubscribed: () => toggleSaved() })
+      return
+    }
+    toggleSaved()
+  }
+
+  const showCrown = isPublicCurated
+  const crownClass = isPremium ? "text-amber-500" : "text-gray-400"
+
   return (
     <div className="border-t border-amber-100 bg-amber-50 p-4">
       <div className="flex flex-wrap gap-2 justify-center">
         <Button
-          onClick={downloadImage}
+          onClick={handleDownloadClick}
           disabled={isDownloading}
           variant="outline"
           className="bg-white border-gray-300 hover:bg-gray-50 text-gray-700"
         >
+          {showCrown && <Crown className={`w-4 h-4 ${crownClass}`} />}
           {isDownloading ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-4 h-4" />
           )}
           Baixar
         </Button>
 
         <Button
-          onClick={printImage}
+          onClick={handlePrintClick}
           variant="outline"
           className="bg-white border-gray-300 hover:bg-gray-50 text-gray-700"
         >
-          <Printer className="w-4 h-4 mr-2" />
+          {showCrown && <Crown className={`w-4 h-4 ${crownClass}`} />}
+          <Printer className="w-4 h-4" />
           Imprimir
         </Button>
+
+        {isPublicCurated && (
+          <Button
+            onClick={handleSaveClick}
+            disabled={isSaving}
+            variant="outline"
+            className={`bg-white hover:bg-gray-50 ${
+              isSaved && isPremium
+                ? "border-amber-300 text-amber-700"
+                : "border-gray-300 text-gray-700"
+            }`}
+          >
+            <Crown className={`w-4 h-4 ${crownClass}`} />
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : isSaved && isPremium ? (
+              <BookmarkCheck className="w-4 h-4" />
+            ) : (
+              <Bookmark className="w-4 h-4" />
+            )}
+            {isSaved && isPremium ? "Salvo" : "Salvar"}
+          </Button>
+        )}
 
         <Button
           onClick={shareNative}
           variant="outline"
           className="bg-white border-pink-300 hover:bg-pink-50 text-pink-700"
         >
-          <Share2 className="w-4 h-4 mr-2" />
+          <Share2 className="w-4 h-4" />
           Compartilhar
         </Button>
 
@@ -168,21 +268,24 @@ export function SharedActivityClient({ activityId, imageUrl, activityTitle }: Sh
         >
           {copied ? (
             <>
-              <Check className="w-4 h-4 mr-2" />
+              <Check className="w-4 h-4" />
               Copiado!
             </>
           ) : (
             <>
-              <Copy className="w-4 h-4 mr-2" />
+              <Copy className="w-4 h-4" />
               Copiar Link
             </>
           )}
         </Button>
-        <PinterestSaveButton
-          activityUrl={`https://educando.app/material/${activityId}`}
-          imageUrl={imageUrl}
-          description={activityTitle}
-        />
+
+        {isPublicCurated && (
+          <PinterestSaveButton
+            activityUrl={`https://educando.app/material/${activityId}`}
+            imageUrl={imageUrl}
+            description={activityTitle}
+          />
+        )}
       </div>
     </div>
   )

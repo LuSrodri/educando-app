@@ -26,7 +26,7 @@ export function PinterestSaveButton({ activityUrl, imageUrl, description, size =
       )}
     >
       <Image src="/images/pinterest-icon.png" alt="Pinterest" width={14} height={14} className="shrink-0" />
-      Salvar no Pinterest
+      Guardar no Pinterest
     </a>
   )
 }
