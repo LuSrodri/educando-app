@@ -7,7 +7,11 @@ export function EntrarButton({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      onClick={() => openLogin()}
+      onClick={() =>
+        openLogin({
+          next: window.location.pathname + window.location.search,
+        })
+      }
       className={
         className ??
         "text-sm font-medium text-gray-700 transition-colors hover:text-amber-700"
