@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import Stripe from "stripe"
 import { getStripe } from "@/lib/stripe"
 import { getPremiumMonthlyPriceId } from "@/lib/subscription-config"
 import { createServerClient as createSupabaseAdmin } from "@/lib/supabase/server"
@@ -53,6 +54,26 @@ export async function POST(request: NextRequest) {
     .maybeSingle()
 
   let customerId = profile?.stripe_customer_id ?? null
+
+  // Customer salvo pode ter sido criado em test mode (ou apagado direto no
+  // Stripe). Valida antes de usar — se sumiu, zera e recria pra não estourar
+  // "No such customer" nas chamadas seguintes.
+  if (customerId) {
+    try {
+      const retrieved = await stripe.customers.retrieve(customerId)
+      if (retrieved.deleted) {
+        customerId = null
+      }
+    } catch (err) {
+      if (err instanceof Stripe.errors.StripeError && err.code === "resource_missing") {
+        customerId = null
+      } else {
+        console.error("[assinatura/criar] stripe customer retrieve error:", (err as Error).message)
+        return NextResponse.json({ error: "stripe_error" }, { status: 502 })
+      }
+    }
+  }
+
   if (!customerId) {
     const customer = await stripe.customers.create({
       email: user.email,
