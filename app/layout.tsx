@@ -86,6 +86,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: SITE_URL,
   },
+  other: {
+    monetag: "3760a430d9a533286dfa6582adfe3916",
+  },
 }
 
 export const viewport: Viewport = {
