@@ -10,7 +10,6 @@ import { SharedActivityClient } from "./shared-activity-client"
 import { RelatedActivities } from "@/components/related-activities"
 import { SiteHeader } from "@/components/site-header"
 import { RedirectSearchBar } from "@/components/redirect-search-bar"
-import { MaterialPaywallModal } from "@/components/material/material-paywall-modal"
 import type { Activity } from "@/lib/supabase/types"
 import { SITE_URL } from "@/lib/site-config"
 
