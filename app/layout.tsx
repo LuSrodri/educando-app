@@ -142,6 +142,11 @@ export default async function RootLayout({
           {`window.ezstandalone = window.ezstandalone || {}; ezstandalone.cmd = ezstandalone.cmd || [];`}
         </Script>
         <Script src="https://ezoicanalytics.com/analytics.js" strategy="afterInteractive" />
+        <Script
+          src="https://5gvci.com/act/files/tag.min.js?z=11016841"
+          strategy="afterInteractive"
+          data-cfasync="false"
+        />
         <AuthGateProvider initialUser={user}>
           <ErrorBoundary>{children}</ErrorBoundary>
           <ConsentBanner />
