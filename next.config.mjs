@@ -19,15 +19,6 @@ const nextConfig = {
       "@radix-ui/react-label",
     ],
   },
-  async redirects() {
-    return [
-      {
-        source: "/ads.txt",
-        destination: "https://srv.adstxtmanager.com/19390/educando.app",
-        permanent: true,
-      },
-    ]
-  },
 }
 
 export default nextConfig
