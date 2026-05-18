@@ -1,6 +1,7 @@
 "use client"
 
 import { BadgePlus, Bookmark, Crown, Download, Printer, Sparkles } from "lucide-react"
+import { track } from "@vercel/analytics"
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { useAuthGate } from "@/components/auth/auth-gate-context"
 import { PREMIUM_MONTHLY } from "@/lib/subscription-config"
+
+const PLAN_ID = "premium_monthly"
 
 const FOCUS_COPY = {
   download: {
@@ -31,8 +34,16 @@ const FOCUS_COPY = {
 } as const
 
 export function PaywallModal() {
-  const { isPaywallOpen, closePaywall, paywallOpts, activityTotal, openSubscription } =
+  const { user, isPaywallOpen, closePaywall, paywallOpts, activityTotal, openSubscription } =
     useAuthGate()
+
+  function handleCtaClick() {
+    track("paywall_cta_clicked", {
+      user_id: user?.id ?? null,
+      plan: PLAN_ID,
+    })
+    openSubscription()
+  }
 
   const action = paywallOpts.action ?? "download"
   const Copy = FOCUS_COPY[action] ?? FOCUS_COPY.download
@@ -100,7 +111,7 @@ export function PaywallModal() {
         <Button
           size="lg"
           className="w-full bg-amber-600 text-white hover:bg-amber-700"
-          onClick={openSubscription}
+          onClick={handleCtaClick}
         >
           <Crown className="h-4 w-4" />
           Assinar agora

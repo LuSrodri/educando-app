@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { track } from "@vercel/analytics"
 import { Button } from "@/components/ui/button"
 import { PinterestSaveButton } from "@/components/pinterest-save-button"
 import {
@@ -37,7 +38,7 @@ export function SharedActivityClient({
   initialSaved = false,
 }: SharedActivityClientProps) {
   const isPublicCurated = mode === "public"
-  const { isPremium, openPaywall } = useAuthGate()
+  const { user, isPremium, openPaywall } = useAuthGate()
   const [copied, setCopied] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -175,9 +176,18 @@ export function SharedActivityClient({
     }
   }
 
+  function trackPaywallTriggered(action: "download" | "print" | "bookmark") {
+    track("paywall_triggered", {
+      action,
+      user_id: user?.id ?? null,
+      activity_id: activityId,
+    })
+  }
+
   // ─── handlers que checam premium antes de executar ──────────────────────
   function handleDownloadClick() {
     if (isPublicCurated && !isPremium) {
+      trackPaywallTriggered("download")
       openPaywall({ action: "download", onAfterSubscribed: () => downloadImage() })
       return
     }
@@ -185,6 +195,7 @@ export function SharedActivityClient({
   }
   function handlePrintClick() {
     if (isPublicCurated && !isPremium) {
+      trackPaywallTriggered("print")
       openPaywall({ action: "print", onAfterSubscribed: () => printImage() })
       return
     }
@@ -192,6 +203,7 @@ export function SharedActivityClient({
   }
   function handleSaveClick() {
     if (!isPremium) {
+      trackPaywallTriggered("bookmark")
       openPaywall({ action: "save", onAfterSubscribed: () => toggleSaved() })
       return
     }

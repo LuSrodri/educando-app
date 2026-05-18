@@ -6,6 +6,7 @@ import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js"
+import { track } from "@vercel/analytics"
 import { Crown } from "lucide-react"
 import {
   Dialog,
@@ -17,6 +18,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { useAuthGate } from "@/components/auth/auth-gate-context"
 import { PREMIUM_MONTHLY } from "@/lib/subscription-config"
+
+const PLAN_ID = "premium_monthly"
 
 // stripePromise é singleton — Stripe.js carrega uma vez por sessão.
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
@@ -44,7 +47,7 @@ function getStripePromise() {
  * `subscriptions` — não precisamos detectar sucesso no client.
  */
 export function SubscriptionModal() {
-  const { isSubscriptionOpen, closeSubscription } = useAuthGate()
+  const { user, isSubscriptionOpen, closeSubscription } = useAuthGate()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   // Incrementa quando o modal reabre — força remount do Provider pra criar
   // uma nova Checkout Session em vez de reusar uma que pode ter expirado.
@@ -58,6 +61,10 @@ export function SubscriptionModal() {
   }, [isSubscriptionOpen])
 
   const fetchClientSecret = useCallback(async (): Promise<string> => {
+    track("checkout_started", {
+      user_id: user?.id ?? null,
+      plan: PLAN_ID,
+    })
     const res = await fetch("/api/assinatura/criar", { method: "POST" })
     const data = (await res.json()) as { clientSecret?: string; error?: string }
     if (!res.ok || !data.clientSecret) {
@@ -69,7 +76,7 @@ export function SubscriptionModal() {
       throw new Error(msg)
     }
     return data.clientSecret
-  }, [])
+  }, [user?.id])
 
   return (
     <Dialog open={isSubscriptionOpen} onOpenChange={(open) => !open && closeSubscription()}>
