@@ -77,19 +77,6 @@ export default function Image() {
             color: "#92400e",
           }}
         >
-          Gratuito
-        </div>
-        <div
-          style={{
-            background: "white",
-            border: "1.5px solid #fcd34d",
-            borderRadius: 100,
-            padding: "8px 20px",
-            fontSize: 16,
-            fontWeight: 600,
-            color: "#92400e",
-          }}
-        >
           Alinhado à BNCC
         </div>
         <div

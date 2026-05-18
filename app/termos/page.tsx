@@ -86,7 +86,7 @@ export default function TermosPage() {
                 <p>O educando.app oferece duas camadas de serviço:</p>
                 <ul className="mt-3 list-disc space-y-2 pl-6">
                   <li>
-                    <strong>Diretório público</strong>: navegação e download gratuitos de
+                    <strong>Diretório público</strong>: navegação e download de
                     atividades pedagógicas alinhadas à BNCC, sem necessidade de cadastro.
                   </li>
                   <li>
@@ -220,7 +220,7 @@ export default function TermosPage() {
                   Você concede ao educando.app uma <strong>licença não-exclusiva,
                   irrevogável e gratuita</strong> para incluir o conteúdo gerado, de forma
                   anonimizada (sem qualquer dado pessoal seu ou de terceiros), no diretório
-                  público gratuito do educando.app, com finalidade de ampliar o acesso
+                  público do educando.app, com finalidade de ampliar o acesso
                   pedagógico e fortalecer o projeto. A anonimização significa que o conteúdo
                   publicado não traz seu nome, e-mail ou outros identificadores.
                 </p>

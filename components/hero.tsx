@@ -24,7 +24,7 @@ export function Hero() {
             </span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-gray-700 sm:mt-6 sm:text-lg md:text-xl">
-            Encontre atividades gratuitas por tema, série e habilidade BNCC.
+            Encontre atividades por tema, série e habilidade BNCC.
           </p>
 
           <WeeklyDropBanner />

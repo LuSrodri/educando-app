@@ -71,7 +71,7 @@ const FAQS = [
     a: "Em média 60 segundos. A IA faz pesquisa em fontes pedagógicas, elabora a estrutura e renderiza a ficha em alta resolução (A4, 300 DPI) — tudo automaticamente.",
   },
   {
-    q: "Por que pagar se já tem o diretório gratuito?",
+    q: "Por que pagar se já tem o diretório?",
     a: "O diretório tem milhares de fichas prontas, mas elas atendem temas amplos. Quando você precisa de algo específico — sua turma, seu projeto, sua faixa etária, o tema da sua semana — você gera em 60 segundos em vez de procurar e adaptar por horas.",
   },
   {
@@ -307,7 +307,7 @@ export default async function SejamebroPage({ searchParams }: PageProps) {
 
               <p className="mt-8 text-center text-sm text-gray-500">
                 <Link href="/" className="text-amber-600 underline-offset-2 hover:underline">
-                  Ver todo o diretório gratuito →
+                  Ver todo o diretório →
                 </Link>
               </p>
             </div>
