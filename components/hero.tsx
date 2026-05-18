@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { ChevronDown } from "lucide-react"
 import { WeeklyDropBanner } from "./weekly-drop-banner"
 
 export function Hero() {
@@ -15,8 +16,8 @@ export function Hero() {
         />
       </div>
 
-      <div className="container mx-auto px-4 py-16 text-center sm:py-24">
-        <div className="mx-auto inline-block max-w-4xl rounded-3xl border border-white/40 bg-white/80 p-6 shadow-xl backdrop-blur-md sm:p-10">
+      <div className="container mx-auto px-8 py-4 text-center min-h-[70dvh] flex items-center justify-center">
+        <div className="mx-auto inline-block max-w-4xl rounded-3xl border border-white/40 bg-white/80 px-6 py-5 sm:px-16 sm:py-12 shadow-xl backdrop-blur-md">
           <h1 className="font-heading text-3xl font-bold leading-tight tracking-tight text-gray-900 sm:text-4xl md:text-6xl">
             Atividades prontas para sua turma a{" "}
             <span className="bg-gradient-to-r from-amber-500 to-amber-700 bg-clip-text text-transparent whitespace-nowrap">
@@ -28,6 +29,13 @@ export function Hero() {
           </p>
 
           <WeeklyDropBanner />
+
+          <a
+            href="#materiais"
+            className="group mt-6 inline-flex flex-col items-center gap-1 font-semibold text-gray-600 transition-colors hover:text-gray-800 [text-shadow:_0_1px_2px_rgb(0_0_0_/_0.15)]"
+          >
+            <ChevronDown className="h-10 w-10 animate-bounce transition-transform group-hover:scale-110" />
+          </a>
         </div>
       </div>
     </section>

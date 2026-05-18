@@ -1,6 +1,6 @@
 export function WeeklyDropBanner() {
   return (
-    <section className="container mx-auto px-4 pt-6 sm:pt-8">
+    <section className="container mx-auto mt-8">
       <div className="relative overflow-hidden rounded-2xl border border-amber-200/80 bg-gradient-to-br from-amber-50 via-amber-50/50 to-white px-4 py-4 shadow-sm sm:px-6 sm:py-5">
         <div
           aria-hidden
