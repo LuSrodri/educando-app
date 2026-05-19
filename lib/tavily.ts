@@ -41,13 +41,19 @@ export async function tavilySearch(
   const apiKey = process.env.TAVILY_API_KEY
   if (!apiKey) throw new Error("TAVILY_API_KEY missing")
 
+  const searchDepth = options.searchDepth ?? "fast"
   const body: Record<string, unknown> = {
     query,
     max_results: Math.min(Math.max(options.maxResults ?? 5, 1), 20),
-    search_depth: options.searchDepth ?? "fast",
+    search_depth: searchDepth,
     topic: "general",
-    country: "brazil",
     include_answer: options.includeAnswer ? "basic" : false,
+  }
+  // `country` is rejected by Tavily on fast/ultra-fast depths. BR scoping is
+  // already handled by `include_domains` upstream, so we only set country on
+  // basic/advanced where it's accepted.
+  if (searchDepth === "basic" || searchDepth === "advanced") {
+    body.country = "brazil"
   }
   if (options.includeDomains && options.includeDomains.length > 0) {
     body.include_domains = options.includeDomains
