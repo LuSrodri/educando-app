@@ -6,7 +6,7 @@ import { Crown, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuthGate } from "@/components/auth/auth-gate-context"
 
-export function SubscribeButton({ label = "Assinar Premium" }: { label?: string }) {
+export function SubscribeButton({ label = "Começar teste grátis" }: { label?: string }) {
   const { openPaywall } = useAuthGate()
   return (
     <Button
@@ -20,16 +20,15 @@ export function SubscribeButton({ label = "Assinar Premium" }: { label?: string 
   )
 }
 
-export function CancelSubscriptionButton() {
+export function CancelSubscriptionButton({ isTrialing = false }: { isTrialing?: boolean }) {
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
 
   async function handleCancel() {
-    if (
-      !confirm(
-        "Tem certeza? Sua assinatura segue ativa até o fim do período pago, depois disso não renova.",
-      )
-    ) {
+    const message = isTrialing
+      ? "Tem certeza? Seu acesso segue até o fim dos 7 dias de teste e nenhuma cobrança será feita."
+      : "Tem certeza? Sua assinatura segue ativa até o fim do período pago, depois disso não renova."
+    if (!confirm(message)) {
       return
     }
     setSubmitting(true)

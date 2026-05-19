@@ -19,26 +19,26 @@ const FOCUS_COPY = {
   becomePremium: {
     icon: Crown,
     title: "Torne-se Premium",
-    description: "Assine para acessar recursos exclusivos e apoiar o projeto.",
-    ctaButton: "Assinar agora",
+    description: "Comece grátis por 7 dias e acesse todos os recursos.",
+    ctaButton: "Começar teste grátis",
   },
   download: {
     icon: Download,
     title: "Baixe esta atividade",
     description: "O download em alta resolução é exclusivo para assinantes Premium.",
-    ctaButton: "Continuar baixando",
+    ctaButton: "Continuar para o download",
   },
   print: {
     icon: Printer,
     title: "Imprima esta atividade",
     description: "A impressão direta é exclusiva para assinantes Premium.",
-    ctaButton: "Continuar a impressão",
+    ctaButton: "Continuar para impressão",
   },
   save: {
     icon: Bookmark,
     title: "Salve esta atividade",
     description: "Guardar atividades para ver depois é exclusivo para assinantes Premium.",
-    ctaButton: "Continuar o salvamento",
+    ctaButton: "Continuar para salvar",
   },
 } as const
 
@@ -108,15 +108,18 @@ export function PaywallModal() {
             </li>
           </ul>
 
-          <div className="mt-5 flex items-baseline justify-center gap-1">
-            <span className="font-heading text-4xl font-black text-amber-900">
-              {PREMIUM_MONTHLY.priceLabel}
-            </span>
-            <span className="text-sm text-amber-800">/{PREMIUM_MONTHLY.intervalLabel}</span>
+          <div className="mt-5 text-center">
+            <p className="font-heading text-2xl font-black text-amber-900">
+              7 dias grátis
+            </p>
+            <p className="mt-1 text-sm text-amber-800">
+              depois{" "}
+              <strong>
+                {PREMIUM_MONTHLY.priceLabel}/{PREMIUM_MONTHLY.intervalLabel}
+              </strong>
+              {" "}· cancele quando quiser
+            </p>
           </div>
-          <p className="text-center text-xs text-gray-500">
-            Cancele quando quiser · sem fidelidade
-          </p>
         </div>
 
         <Button
@@ -129,7 +132,8 @@ export function PaywallModal() {
         </Button>
 
         <p className="text-center text-xs text-gray-500">
-          Pagamento processado pela Stripe (cobrança internacional, pode incluir IOF do banco)
+          Sem cobrança hoje. Você só paga se continuar depois de 7 dias.
+          Pagamento processado pela Stripe (cobrança internacional, pode incluir IOF do banco).
         </p>
       </DialogContent>
     </Dialog>

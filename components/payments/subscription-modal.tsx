@@ -86,8 +86,10 @@ export function SubscriptionModal() {
             <Crown className="h-5 w-5 text-amber-600" />
             Assinar Premium
           </DialogTitle>
-          <DialogDescription>
-            {PREMIUM_MONTHLY.priceLabel}/mês · cancele quando quiser
+          <DialogDescription className="flex flex-col gap-1.5">
+            <span>
+              Sem cobrança hoje · depois {PREMIUM_MONTHLY.priceLabel}/mês · cancele quando quiser
+            </span>
           </DialogDescription>
         </DialogHeader>
 

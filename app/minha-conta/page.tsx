@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { Bookmark, BookOpen, Crown, LogOut, Sparkles } from "lucide-react"
+import { Bookmark, BookOpen, Crown, Gift, LogOut, Sparkles } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -183,10 +183,14 @@ export default async function MinhaContaPage({ searchParams }: PageProps) {
             {showSubscriptionSuccess && (
               <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4">
                 <p className="font-heading font-semibold text-amber-900">
-                  Assinatura ativa! Bem-vindo ao Premium.
+                  {subscription?.status === "trialing"
+                    ? "Seu teste grátis começou — aproveite!"
+                    : "Assinatura ativa! Bem-vindo ao Premium."}
                 </p>
                 <p className="mt-1 text-sm text-amber-800">
-                  Baixe, imprima e salve atividades sem limites.
+                  {subscription?.status === "trialing"
+                    ? `Você tem acesso total até ${formatDateBr(subscription.current_period_end)}. Cancele antes dessa data e não pague nada.`
+                    : "Baixe, imprima e salve atividades sem limites."}
                 </p>
               </div>
             )}
@@ -216,33 +220,43 @@ export default async function MinhaContaPage({ searchParams }: PageProps) {
               </h2>
 
               {subscription && isPremium ? (
-                <div className="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
-                        <Crown className="h-3.5 w-3.5" />
-                        {subscription.cancel_at_period_end
-                          ? "Cancelamento agendado"
-                          : "Premium ativa"}
+                (() => {
+                  const isTrialing = subscription.status === "trialing"
+                  const badge = subscription.cancel_at_period_end
+                    ? { label: "Cancelamento agendado", className: "bg-gray-100 text-gray-800", Icon: Crown }
+                    : isTrialing
+                      ? { label: "Em teste grátis", className: "bg-amber-600 text-white", Icon: Gift }
+                      : { label: "Premium ativa", className: "bg-amber-100 text-amber-900", Icon: Crown }
+                  const Icon = badge.Icon
+                  const periodLabel = subscription.cancel_at_period_end
+                    ? `Acesso até ${formatDateBr(subscription.current_period_end)}.`
+                    : isTrialing
+                      ? `Teste grátis até ${formatDateBr(subscription.current_period_end)} — primeira cobrança nessa data.`
+                      : `Próxima cobrança em ${formatDateBr(subscription.current_period_end)}.`
+                  return (
+                    <div className="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className={`mb-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge.className}`}>
+                            <Icon className="h-3.5 w-3.5" />
+                            {badge.label}
+                          </div>
+                          <p className="font-heading text-2xl font-bold text-gray-900">
+                            {PREMIUM_MONTHLY.priceLabel}/{PREMIUM_MONTHLY.intervalLabel}
+                          </p>
+                          <p className="mt-1 text-sm text-gray-600">{periodLabel}</p>
+                        </div>
                       </div>
-                      <p className="font-heading text-2xl font-bold text-gray-900">
-                        {PREMIUM_MONTHLY.priceLabel}/{PREMIUM_MONTHLY.intervalLabel}
-                      </p>
-                      <p className="mt-1 text-sm text-gray-600">
-                        {subscription.cancel_at_period_end
-                          ? `Acesso até ${formatDateBr(subscription.current_period_end)}.`
-                          : `Próxima cobrança em ${formatDateBr(subscription.current_period_end)}.`}
-                      </p>
+                      <div className="mt-5 flex flex-wrap gap-3">
+                        {subscription.cancel_at_period_end ? (
+                          <ReactivateSubscriptionButton />
+                        ) : (
+                          <CancelSubscriptionButton isTrialing={isTrialing} />
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    {subscription.cancel_at_period_end ? (
-                      <ReactivateSubscriptionButton />
-                    ) : (
-                      <CancelSubscriptionButton />
-                    )}
-                  </div>
-                </div>
+                  )
+                })()
               ) : (
                 <div className="rounded-2xl border-2 border-amber-200 bg-white p-6 shadow-sm">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -251,6 +265,7 @@ export default async function MinhaContaPage({ searchParams }: PageProps) {
                         Desbloqueie download, impressão e salvos
                       </p>
                       <p className="mt-1 text-sm text-gray-600">
+                        Grátis nos primeiros 7 dias · depois{" "}
                         {PREMIUM_MONTHLY.priceLabel}/{PREMIUM_MONTHLY.intervalLabel} · cancele
                         quando quiser
                       </p>

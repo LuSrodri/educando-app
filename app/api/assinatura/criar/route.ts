@@ -143,6 +143,7 @@ export async function POST(request: NextRequest) {
       return_url: `${origin}/minha-conta?assinatura=ativada&session_id={CHECKOUT_SESSION_ID}`,
       locale: "pt-BR",
       subscription_data: {
+        trial_period_days: 7,
         metadata: { user_id: user.id, plan: "premium-monthly" },
       },
       metadata: { user_id: user.id },
