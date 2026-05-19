@@ -147,7 +147,7 @@ ${imagePromptBody}`
 
   const response = await openai.responses.create({
     model: "gpt-5.4-mini",
-    reasoning: { effort: "xhigh" },
+    reasoning: { effort: "medium" },
     tools: [{ type: "web_search" }],
     instructions,
     input: userPrompt,
