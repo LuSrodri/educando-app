@@ -1,41 +1,56 @@
-// Minimal Tavily Search client. Used to pull external image candidates when the
-// internal directory has fewer than N results for a query.
+// Minimal Tavily Search client. Used to ground spec generation in real
+// Brazilian pedagogical sources (BNCC, Nova Escola, MEC, etc.).
 
 const TAVILY_URL = "https://api.tavily.com/search"
-
-export interface TavilyImage {
-  url: string
-  description?: string
-}
 
 export interface TavilyResult {
   title?: string
   url?: string
   content?: string
-  images?: TavilyImage[]
 }
 
 export interface TavilySearchResponse {
   query: string
-  images: TavilyImage[]
+  answer?: string
   results: TavilyResult[]
+  request_id?: string
 }
 
-export async function tavilySearchImages(
+export interface TavilySearchOptions {
+  maxResults?: number
+  includeAnswer?: boolean
+  includeDomains?: string[]
+  searchDepth?: "basic" | "fast" | "ultra-fast" | "advanced"
+}
+
+export class TavilyError extends Error {
+  status: number
+  requestId?: string
+  constructor(message: string, status: number, requestId?: string) {
+    super(message)
+    this.name = "TavilyError"
+    this.status = status
+    this.requestId = requestId
+  }
+}
+
+export async function tavilySearch(
   query: string,
-  options: { maxResults?: number } = {},
+  options: TavilySearchOptions = {},
 ): Promise<TavilySearchResponse> {
   const apiKey = process.env.TAVILY_API_KEY
   if (!apiKey) throw new Error("TAVILY_API_KEY missing")
 
-  const body = {
+  const body: Record<string, unknown> = {
     query,
-    include_images: true,
-    include_image_descriptions: true,
-    max_results: Math.min(Math.max(options.maxResults ?? 10, 1), 20),
-    search_depth: "basic" as const,
-    topic: "general" as const,
-    country: "brazil" as const,
+    max_results: Math.min(Math.max(options.maxResults ?? 5, 1), 20),
+    search_depth: options.searchDepth ?? "fast",
+    topic: "general",
+    country: "brazil",
+    include_answer: options.includeAnswer ? "basic" : false,
+  }
+  if (options.includeDomains && options.includeDomains.length > 0) {
+    body.include_domains = options.includeDomains
   }
 
   const controller = new AbortController()
@@ -52,30 +67,20 @@ export async function tavilySearchImages(
     })
     if (!res.ok) {
       const text = await res.text().catch(() => "")
-      throw new Error(`tavily_${res.status}: ${text.slice(0, 200)}`)
+      let requestId: string | undefined
+      try {
+        requestId = JSON.parse(text)?.request_id
+      } catch {
+        // body wasn't JSON
+      }
+      throw new TavilyError(
+        `tavily_${res.status}: ${text.slice(0, 200)}`,
+        res.status,
+        requestId,
+      )
     }
     return (await res.json()) as TavilySearchResponse
   } finally {
     clearTimeout(t)
   }
-}
-
-/**
- * Dedupe and flatten images from both the top-level `images` list and each
- * result's nested `images` array. Skips empty URLs.
- */
-export function collectImageCandidates(response: TavilySearchResponse): TavilyImage[] {
-  const seen = new Set<string>()
-  const out: TavilyImage[] = []
-  const push = (img?: TavilyImage) => {
-    if (!img?.url) return
-    if (seen.has(img.url)) return
-    seen.add(img.url)
-    out.push(img)
-  }
-  for (const img of response.images ?? []) push(img)
-  for (const r of response.results ?? []) {
-    for (const img of r.images ?? []) push(img)
-  }
-  return out
 }

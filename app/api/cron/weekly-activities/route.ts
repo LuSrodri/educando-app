@@ -3,8 +3,6 @@ import OpenAI from "openai"
 import { createServerClient } from "@/lib/supabase/server"
 import { randomUUID } from "node:crypto"
 import {
-  DESIGN_SYSTEM,
-  type ActivitySpec,
   searchTavily,
   scrapeWithFirecrawl,
   generateSpec,
@@ -45,21 +43,23 @@ async function processTopic(
       return { query, error: "skip_sufficient_coverage" }
     }
 
-    // Research: Tavily for textual + visual references
-    const tavilyResult = await searchTavily(query)
+    // Research: Tavily, already filtered to curated BR pedagogical domains
+    const tavily = await searchTavily(query)
 
-    // Firecrawl for technical grounding — scrape the most pedagogical URL
+    // Firecrawl for technical grounding — scrape the top-ranked source
     let firecrawlContent = ""
-    if (firecrawlKey && tavilyResult.urls.length > 0) {
-      const educationalUrl =
-        tavilyResult.urls.find((u) =>
-          /nova-escola|mec\.gov|qedu|gestaoescolar|bncc|escolakids|brasilescola/.test(u)
-        ) ?? tavilyResult.urls[0]
-      firecrawlContent = await scrapeWithFirecrawl(educationalUrl, firecrawlKey)
+    if (firecrawlKey && tavily.urls.length > 0) {
+      firecrawlContent = await scrapeWithFirecrawl(tavily.urls[0], firecrawlKey)
+    }
+
+    // Quality-gate: don't ingest curated activities when grounding is missing.
+    // The directory is the moat — better to skip than to seed thin content.
+    if (tavily.failed && !firecrawlContent) {
+      return { query, error: "skip_no_grounding" }
     }
 
     // Generate activity spec
-    const spec = await generateSpec(query, tavilyResult.summary, firecrawlContent, openai)
+    const spec = await generateSpec(query, tavily.context, firecrawlContent, openai)
 
     // Generate worksheet image
     const imageBuffer = await generateImage(spec.image_prompt, openai)
@@ -161,8 +161,15 @@ export async function GET(req: Request) {
   )
 
   const generated = results.filter((r) => r.id)
-  const failed = results.filter((r) => r.error && r.error !== "skip_sufficient_coverage")
-  const skipped = results.filter((r) => r.error === "skip_sufficient_coverage")
+  const skipped = results.filter(
+    (r) => r.error === "skip_sufficient_coverage" || r.error === "skip_no_grounding",
+  )
+  const failed = results.filter(
+    (r) =>
+      r.error &&
+      r.error !== "skip_sufficient_coverage" &&
+      r.error !== "skip_no_grounding",
+  )
 
   return NextResponse.json({
     generated: generated.length,

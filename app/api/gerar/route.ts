@@ -85,20 +85,22 @@ export async function POST(request: NextRequest) {
         }
 
         send({ stage: "searching" })
-        const { summary, urls } = await searchTavily(theme)
+        const tavily = await searchTavily(theme)
+        if (tavily.failed) {
+          // Tavily quebrou — geramos mesmo assim, mas o usuário paga 1 crédito
+          // por uma atividade sem grounding externo. Marcamos isso no log
+          // (via [generation] tavily failed) para auditoria.
+          console.warn(`[api/gerar] proceeding without tavily context for theme="${theme}"`)
+        }
 
         send({ stage: "enriching" })
         let firecrawlContent = ""
-        if (urls.length > 0) {
-          const educationalUrl =
-            urls.find((u) =>
-              /nova-escola|mec\.gov|qedu|gestaoescolar|bncc|escolakids|brasilescola/.test(u),
-            ) ?? urls[0]
-          firecrawlContent = await scrapeWithFirecrawl(educationalUrl, firecrawlKey)
+        if (tavily.urls.length > 0) {
+          firecrawlContent = await scrapeWithFirecrawl(tavily.urls[0], firecrawlKey)
         }
 
         send({ stage: "generating_spec" })
-        const spec = await generateSpec(theme, summary, firecrawlContent, openai, type)
+        const spec = await generateSpec(theme, tavily.context, firecrawlContent, openai, type)
 
         send({ stage: "generating_image" })
         const imageBuffer = await generateImage(spec.image_prompt, openai)
