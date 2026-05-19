@@ -68,6 +68,7 @@ export function GenerationForm({
   const [type, setType] = useState<ActivityType>("activity")
   const [stage, setStage] = useState<Stage>("idle")
   const [errorMsg, setErrorMsg] = useState("")
+  const [connectionLost, setConnectionLost] = useState(false)
   const readerRef = useRef<ReadableStreamDefaultReader<Uint8Array> | null>(null)
 
   const isRunning = stage !== "idle" && stage !== "done" && stage !== "error"
@@ -77,6 +78,7 @@ export function GenerationForm({
     async (t: string, ty: ActivityType) => {
       setStage("searching")
       setErrorMsg("")
+      setConnectionLost(false)
       try {
         const res = await fetch("/api/gerar", {
           method: "POST",
@@ -114,8 +116,17 @@ export function GenerationForm({
           }
         }
       } catch (err) {
+        // TypeError mid-stream = conexão derrubada por intermediário (NAT, proxy,
+        // operadora). O servidor pode ter completado mesmo assim — não afirmar
+        // que o crédito não foi debitado.
+        const isNetworkDrop = err instanceof TypeError
         setStage("error")
-        setErrorMsg((err as Error).message ?? "Erro de rede. Tente novamente.")
+        setConnectionLost(isNetworkDrop)
+        setErrorMsg(
+          isNetworkDrop
+            ? "A conexão caiu durante a geração."
+            : ((err as Error).message ?? "Erro de rede. Tente novamente."),
+        )
       }
     },
     [router],
@@ -315,10 +326,22 @@ export function GenerationForm({
 
       {stage === "error" && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-          <p className="text-sm font-medium text-red-900">Ops — algo deu errado</p>
+          <p className="text-sm font-medium text-red-900">
+            {connectionLost ? "Conexão perdida" : "Ops — algo deu errado"}
+          </p>
           <p className="mt-1 text-sm text-red-700">{errorMsg}</p>
           <p className="mt-2 text-xs text-red-600">
-            Seu crédito não foi debitado (o débito só ocorre após a geração bem-sucedida).
+            {connectionLost ? (
+              <>
+                A geração pode ter sido concluída no servidor.{" "}
+                <a href="/minha-conta" className="font-medium underline">
+                  Confira seu histórico
+                </a>{" "}
+                antes de tentar de novo para não duplicar.
+              </>
+            ) : (
+              "Seu crédito não foi debitado (o débito só ocorre após a geração bem-sucedida)."
+            )}
           </p>
           <Button
             size="sm"

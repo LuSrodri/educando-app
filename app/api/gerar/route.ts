@@ -26,9 +26,31 @@ type SseStage =
   | { stage: "error"; message: string; code?: string }
 
 const encoder = new TextEncoder()
+const KEEPALIVE_CHUNK = encoder.encode(": keepalive\n\n")
 
 function sseChunk(data: SseStage): Uint8Array {
   return encoder.encode(`data: ${JSON.stringify(data)}\n\n`)
+}
+
+// SSE comment frames (": ...\n\n") are discarded by EventSource/readers but
+// keep the underlying TCP connection from looking idle to NAT/proxies, which
+// would otherwise drop it during long awaits (image generation can take 60s+).
+async function withKeepalive<T>(
+  controller: ReadableStreamDefaultController<Uint8Array>,
+  promise: Promise<T>,
+): Promise<T> {
+  const ping = setInterval(() => {
+    try {
+      controller.enqueue(KEEPALIVE_CHUNK)
+    } catch {
+      // Controller already closed (client disconnected) — nothing to do.
+    }
+  }, 10_000)
+  try {
+    return await promise
+  } finally {
+    clearInterval(ping)
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -85,7 +107,7 @@ export async function POST(request: NextRequest) {
         }
 
         send({ stage: "searching" })
-        const tavily = await searchTavily(theme)
+        const tavily = await withKeepalive(controller, searchTavily(theme))
         if (tavily.failed) {
           // Tavily quebrou — geramos mesmo assim, mas o usuário paga 1 crédito
           // por uma atividade sem grounding externo. Marcamos isso no log
@@ -96,14 +118,20 @@ export async function POST(request: NextRequest) {
         send({ stage: "enriching" })
         let firecrawlContent = ""
         if (tavily.urls.length > 0) {
-          firecrawlContent = await scrapeWithFirecrawl(tavily.urls[0], firecrawlKey)
+          firecrawlContent = await withKeepalive(
+            controller,
+            scrapeWithFirecrawl(tavily.urls[0], firecrawlKey),
+          )
         }
 
         send({ stage: "generating_spec" })
-        const spec = await generateSpec(theme, tavily.context, firecrawlContent, openai, type)
+        const spec = await withKeepalive(
+          controller,
+          generateSpec(theme, tavily.context, firecrawlContent, openai, type),
+        )
 
         send({ stage: "generating_image" })
-        const imageBuffer = await generateImage(spec.image_prompt, openai)
+        const imageBuffer = await withKeepalive(controller, generateImage(spec.image_prompt, openai))
 
         send({ stage: "saving" })
         activityId = randomUUID()
