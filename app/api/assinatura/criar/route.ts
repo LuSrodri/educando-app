@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       ui_mode: "embedded_page",
       mode: "subscription",
       customer: customerId,
-      payment_method_types: ["card"],
+      payment_method_types: ["card", "pix"],
       line_items: [{ price: getPremiumMonthlyPriceId(), quantity: 1 }],
       return_url: `${origin}/minha-conta?assinatura=ativada&session_id={CHECKOUT_SESSION_ID}`,
       locale: "pt-BR",
