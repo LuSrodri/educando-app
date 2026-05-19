@@ -12,8 +12,6 @@ type ActivityType = "activity" | "support_material"
 
 type Stage =
   | "idle"
-  | "searching"
-  | "enriching"
   | "generating_spec"
   | "generating_image"
   | "saving"
@@ -22,9 +20,7 @@ type Stage =
 
 const STAGE_LABELS: Record<Stage, string> = {
   idle: "",
-  searching: "Pesquisando referências pedagógicas…",
-  enriching: "Analisando conteúdo especializado…",
-  generating_spec: "Elaborando a estrutura da ficha…",
+  generating_spec: "Pesquisando e elaborando a estrutura da ficha…",
   generating_image: "Gerando a ficha (pode levar ~40s)…",
   saving: "Salvando na sua conta…",
   done: "Concluído!",
@@ -32,8 +28,6 @@ const STAGE_LABELS: Record<Stage, string> = {
 }
 
 const STAGE_ORDER: Stage[] = [
-  "searching",
-  "enriching",
   "generating_spec",
   "generating_image",
   "saving",
@@ -76,7 +70,7 @@ export function GenerationForm({
 
   const fireGeneration = useCallback(
     async (t: string, ty: ActivityType) => {
-      setStage("searching")
+      setStage("generating_spec")
       setErrorMsg("")
       setConnectionLost(false)
       try {

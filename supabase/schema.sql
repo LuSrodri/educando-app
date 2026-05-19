@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS activities (
                        CHECK (type IN ('activity', 'support_material')),
   source_url        TEXT,
   source_provider   TEXT NOT NULL DEFAULT 'internal'
-                       CHECK (source_provider IN ('internal', 'tavily')),
+                       CHECK (source_provider IN ('internal')),
   quality_score     REAL,
   search_vector     tsvector
 );

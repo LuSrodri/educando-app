@@ -158,14 +158,8 @@ export default function PrivacidadePage() {
                     <strong>Stripe</strong> (processamento de pagamentos) — Brasil/EUA.
                   </li>
                   <li>
-                    <strong>OpenAI, L.L.C.</strong> (geração de texto e imagem) — Estados Unidos.
-                  </li>
-                  <li>
-                    <strong>Tavily</strong> (pesquisa web pedagógica) — Estados Unidos.
-                  </li>
-                  <li>
-                    <strong>Firecrawl</strong> (extração de conteúdo de páginas educacionais) —
-                    Estados Unidos.
+                    <strong>OpenAI, L.L.C.</strong> (geração de texto e imagem, incluindo
+                    pesquisa web pedagógica integrada ao modelo) — Estados Unidos.
                   </li>
                 </ul>
                 <p className="mt-3">

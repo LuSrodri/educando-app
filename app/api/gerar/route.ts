@@ -3,22 +3,15 @@ import OpenAI from "openai"
 import { randomUUID } from "node:crypto"
 import { getCurrentUser } from "@/lib/supabase/ssr-server"
 import { createServerClient as createSupabaseAdmin } from "@/lib/supabase/server"
-import {
-  searchTavily,
-  scrapeWithFirecrawl,
-  generateSpec,
-  generateImage,
-} from "@/lib/generation"
+import { generateSpec, generateImage } from "@/lib/generation"
 import { generateMaterialSlug } from "@/lib/slug"
 
 export const dynamic = "force-dynamic"
-export const maxDuration = 180
+export const maxDuration = 300
 
 type ActivityType = "activity" | "support_material"
 
 type SseStage =
-  | { stage: "searching" }
-  | { stage: "enriching" }
   | { stage: "generating_spec" }
   | { stage: "generating_image" }
   | { stage: "saving" }
@@ -85,7 +78,6 @@ export async function POST(request: NextRequest) {
 
   const admin = createSupabaseAdmin()
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! })
-  const firecrawlKey = process.env.FIRECRAWL_API_KEY ?? ""
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -106,29 +98,8 @@ export async function POST(request: NextRequest) {
           return
         }
 
-        send({ stage: "searching" })
-        const tavily = await withKeepalive(controller, searchTavily(theme))
-        if (tavily.failed) {
-          // Tavily quebrou — geramos mesmo assim, mas o usuário paga 1 crédito
-          // por uma atividade sem grounding externo. Marcamos isso no log
-          // (via [generation] tavily failed) para auditoria.
-          console.warn(`[api/gerar] proceeding without tavily context for theme="${theme}"`)
-        }
-
-        send({ stage: "enriching" })
-        let firecrawlContent = ""
-        if (tavily.urls.length > 0) {
-          firecrawlContent = await withKeepalive(
-            controller,
-            scrapeWithFirecrawl(tavily.urls[0], firecrawlKey),
-          )
-        }
-
         send({ stage: "generating_spec" })
-        const spec = await withKeepalive(
-          controller,
-          generateSpec(theme, tavily.context, firecrawlContent, openai, type),
-        )
+        const spec = await withKeepalive(controller, generateSpec(theme, openai, type))
 
         send({ stage: "generating_image" })
         const imageBuffer = await withKeepalive(controller, generateImage(spec.image_prompt, openai))

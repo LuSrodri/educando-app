@@ -2,12 +2,7 @@ import { NextResponse } from "next/server"
 import OpenAI from "openai"
 import { createServerClient } from "@/lib/supabase/server"
 import { randomUUID } from "node:crypto"
-import {
-  searchTavily,
-  scrapeWithFirecrawl,
-  generateSpec,
-  generateImage,
-} from "@/lib/generation"
+import { generateSpec, generateImage } from "@/lib/generation"
 
 export const maxDuration = 600
 export const dynamic = "force-dynamic"
@@ -27,7 +22,6 @@ async function processTopic(
   query: string,
   openai: OpenAI,
   supabase: ReturnType<typeof createServerClient>,
-  firecrawlKey: string
 ): Promise<TopicResult> {
   try {
     // Skip if already have sufficient coverage (idempotency for duplicate cron events).
@@ -43,23 +37,8 @@ async function processTopic(
       return { query, error: "skip_sufficient_coverage" }
     }
 
-    // Research: Tavily, already filtered to curated BR pedagogical domains
-    const tavily = await searchTavily(query)
-
-    // Firecrawl for technical grounding — scrape the top-ranked source
-    let firecrawlContent = ""
-    if (firecrawlKey && tavily.urls.length > 0) {
-      firecrawlContent = await scrapeWithFirecrawl(tavily.urls[0], firecrawlKey)
-    }
-
-    // Quality-gate: don't ingest curated activities when grounding is missing.
-    // The directory is the moat — better to skip than to seed thin content.
-    if (tavily.failed && !firecrawlContent) {
-      return { query, error: "skip_no_grounding" }
-    }
-
-    // Generate activity spec
-    const spec = await generateSpec(query, tavily.context, firecrawlContent, openai)
+    // Generate activity spec (model uses its own web_search tool internally)
+    const spec = await generateSpec(query, openai)
 
     // Generate worksheet image
     const imageBuffer = await generateImage(spec.image_prompt, openai)
@@ -113,10 +92,7 @@ export async function GET(req: Request) {
   }
 
   const openaiKey = process.env.OPENAI_API_KEY!
-  const tavilyKey = process.env.TAVILY_API_KEY!
-  const firecrawlKey = process.env.FIRECRAWL_API_KEY ?? ""
-
-  if (!openaiKey || !tavilyKey) {
+  if (!openaiKey) {
     return NextResponse.json({ error: "missing_env_vars" }, { status: 500 })
   }
 
@@ -157,18 +133,13 @@ export async function GET(req: Request) {
 
   // Process all topics in parallel
   const results = await Promise.all(
-    topTerms.map((query) => processTopic(query, openai, supabase, firecrawlKey))
+    topTerms.map((query) => processTopic(query, openai, supabase))
   )
 
   const generated = results.filter((r) => r.id)
-  const skipped = results.filter(
-    (r) => r.error === "skip_sufficient_coverage" || r.error === "skip_no_grounding",
-  )
+  const skipped = results.filter((r) => r.error === "skip_sufficient_coverage")
   const failed = results.filter(
-    (r) =>
-      r.error &&
-      r.error !== "skip_sufficient_coverage" &&
-      r.error !== "skip_no_grounding",
+    (r) => r.error && r.error !== "skip_sufficient_coverage",
   )
 
   return NextResponse.json({
