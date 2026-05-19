@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button"
 import { useAuthGate } from "@/components/auth/auth-gate-context"
 
 export function SubscribeButton({ label = "Assinar Premium" }: { label?: string }) {
-  const { openSubscription } = useAuthGate()
+  const { openPaywall } = useAuthGate()
   return (
     <Button
       size="lg"
-      onClick={openSubscription}
+      onClick={() => openPaywall({action: "becomePremium"})}
       className="bg-amber-600 text-white hover:bg-amber-700"
     >
       <Crown className="h-4 w-4" />

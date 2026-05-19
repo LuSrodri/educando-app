@@ -16,20 +16,29 @@ import { PREMIUM_MONTHLY } from "@/lib/subscription-config"
 const PLAN_ID = "premium_monthly"
 
 const FOCUS_COPY = {
+  becomePremium: {
+    icon: Crown,
+    title: "Torne-se Premium",
+    description: "Assine para acessar recursos exclusivos e apoiar o projeto.",
+    ctaButton: "Assinar agora",
+  },
   download: {
     icon: Download,
     title: "Baixe esta atividade",
     description: "O download em alta resolução é exclusivo para assinantes Premium.",
+    ctaButton: "Continuar baixando",
   },
   print: {
     icon: Printer,
     title: "Imprima esta atividade",
     description: "A impressão direta é exclusiva para assinantes Premium.",
+    ctaButton: "Continuar a impressão",
   },
   save: {
     icon: Bookmark,
     title: "Salve esta atividade",
     description: "Guardar atividades para ver depois é exclusivo para assinantes Premium.",
+    ctaButton: "Continuar o salvamento",
   },
 } as const
 
@@ -37,15 +46,17 @@ export function PaywallModal() {
   const { user, isPaywallOpen, closePaywall, paywallOpts, activityTotal, openSubscription } =
     useAuthGate()
 
+  const action = paywallOpts.action ?? "download"
+
   function handleCtaClick() {
     track("paywall_cta_clicked", {
       user_id: user?.id ?? null,
       plan: PLAN_ID,
+      action,
     })
     openSubscription()
   }
 
-  const action = paywallOpts.action ?? "download"
   const Copy = FOCUS_COPY[action] ?? FOCUS_COPY.download
   const Icon = Copy.icon
 
@@ -114,7 +125,7 @@ export function PaywallModal() {
           onClick={handleCtaClick}
         >
           <Crown className="h-4 w-4" />
-          Assinar agora
+          {Copy.ctaButton}
         </Button>
 
         <p className="text-center text-xs text-gray-500">

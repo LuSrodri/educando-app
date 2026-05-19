@@ -12,7 +12,7 @@ export interface OpenCreditsOpts {
   initialPack?: string
 }
 
-export type PaywallAction = "download" | "print" | "save"
+export type PaywallAction = "download" | "print" | "save" | "becomePremium"
 
 export interface OpenPaywallOpts {
   action?: PaywallAction
