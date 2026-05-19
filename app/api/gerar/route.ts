@@ -7,7 +7,7 @@ import { generateSpec, generateImage } from "@/lib/generation"
 import { generateMaterialSlug } from "@/lib/slug"
 
 export const dynamic = "force-dynamic"
-export const maxDuration = 300
+export const maxDuration = 600
 
 type ActivityType = "activity" | "support_material"
 
