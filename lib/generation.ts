@@ -16,26 +16,13 @@ export interface ActivitySpec {
 export const DESIGN_SYSTEM = `
 SISTEMA DE DESIGN — FICHA PEDAGÓGICA (A4 retrato, pronta para impressão, 300 DPI):
 
-CABEÇALHO (incluir apenas para type "activity" — omitir totalmente em materiais de apoio):
-Retângulo de largura total com borda fina no topo da página. Duas linhas de campos para preencher:
-  Linha 1: "Nome: _________________________________    Escola: _________________________________"
-  Linha 2: "Professor(a): ______________________    Turma: ________    Ano: ________    Data: ____/____/______"
-Linhas generosas para escrita à mão. Borda fina, sem preenchimento de cor. Texto somente preto.
-
-LAYOUT DE MATERIAL DE APOIO (aplicar apenas para type "support_material" — substitui o corpo da atividade):
-Sem cabeçalho, sem campos de aluno, sem linhas de resposta, sem exercícios, sem instruções dirigidas ao aluno.
-A página é uma peça de REFERÊNCIA / CONSULTA / EXPOSIÇÃO (cartaz, infográfico, glossário visual, diagrama rotulado, linha do tempo, tabela de referência, mapa mental, mapa anatômico/geográfico). Sua função é ser lida, fixada na parede ou guardada para estudo — não preenchida.
-Título visível, textos de instrução/legenda e rodapé BNCC são OPCIONAIS — inclua apenas quando o tema realmente pedir (ex.: cartaz cujo sentido depende de manchete, diagrama cujas partes precisam de legenda). Quando a imagem se explica sozinha (anatomia rotulada, mapa geográfico, tabuada, alfabeto pictórico), omita título e rodapé e deixe a peça respirar. Default: menos elementos textuais, não mais.
-Quando incluir um título, trate-o como manchete (16–20pt, bold). Abaixo dele (ou ocupando a página inteira quando não houver título), conteúdo informativo denso e bem organizado: ilustrações rotuladas, balões explicativos, legendas, tabelas comparativas, diagramas hierárquicos ou chaves pictóricas, conforme o tema pedir. Vocabulário-chave pode ser destacado (bold ou em pílula cinza-escuro). Seções claramente agrupadas por traços finos ou espaço em branco, não por caixas que sugerem preenchimento.
-Ilustrações carregam o peso pedagógico e podem ocupar 40–70% (ou mais) da página. Todo elemento visual é rotulado, legendado ou anotado em português apenas quando a anotação realmente esclarece.
-
-TIPOGRAFIA: Sans-serif neutra, limpa, em todo o documento — estilo Helvetica ou Arial. Sem letras arredondadas decorativas, sem fontes display, sem serifas. Título: 14–16pt bold. Corpo/instruções: 11pt. Rótulos/legendas: 9–10pt. Mínimo absoluto 8pt.
+TIPOGRAFIA: Sans-serif neutra, limpa, em todo o documento — estilo Helvetica ou Arial. Sem letras arredondadas decorativas, sem fontes display, sem serifas. Título (se houver): 14–16pt bold. Corpo/instruções: 11pt. Rótulos/legendas: 9–10pt. Mínimo absoluto 8pt.
 
 REGRA DE COR: Ilustrações e figuras de conteúdo são EM CORES, vibrantes e adequadas à faixa etária. Todos os elementos estruturais — bordas, traços, caixas, texto, linhas de instrução, cabeçalho, rodapé — são estritamente preto, cinza-escuro ou branco. Nenhuma cor em estruturas de layout.
 
 ESPAÇAMENTO: Margens de 1,5 cm em todos os lados. Espaço de respiro entre cada seção. Sem aglomeração ou clutter.
 
-RODAPÉ: Rodapé inferior, alinhado à esquerda, 8–9pt sans-serif: "BNCC: [códigos aqui]"
+RODAPÉ (se houver): Rodapé inferior, alinhado à esquerda, 8–9pt sans-serif: "BNCC: [códigos aqui]"
 
 FIDELIDADE AO PEDIDO DO USUÁRIO — REGRA SUPREMA:
 O image_prompt deve refletir EXATAMENTE o que o usuário pediu. Nada de adicionar personagens, cenários culturais, decoração temática, animais brasileiros, comidas regionais, folclore ou ambientação que o usuário NÃO pediu explicitamente. Se o usuário disse "atividade de frações", a ficha é sobre frações — não sobre "Iara visita a feira e divide tapioca". Se o usuário pediu ambientação cultural ou personagem específico, inclua exatamente o que foi pedido. Default: neutro, focado no conteúdo pedagógico solicitado, sem floreios.
@@ -96,7 +83,8 @@ export async function generateSpec(
     "- O título, tema, descrições, image_prompt e seleção de códigos BNCC devem refletir EXATAMENTE o que o usuário pediu, sem inventar tema, personagem, ambientação cultural, recorte regional ou decoração que o usuário não solicitou.",
     "- Se o usuário pediu \"frações para o 4º ano\", a ficha é sobre frações para o 4º ano — não introduza personagens, animais brasileiros, comidas regionais, folclore ou contexto cultural por conta própria.",
     "- Se o usuário pediu explicitamente ambientação cultural, personagem, contexto regional ou tema específico, siga ao pé da letra o que ele descreveu.",
-    "- Default: neutro, focado, pedagogicamente correto e literal ao pedido.",
+    "- Default: neutro, focado, pedagogicamente correto e fiel ao pedido.",
+    "- Ao pedido de textos e outros tipos de literatura, priorize por textos conhecidos, amplamente usados em sala de aula, e em sua versão mais completa e rica possível, dentro do limite de caracteres. Não invente textos, nem resuma demais. Se o pedido for por um texto específico, use esse texto — não escolha outro similar. Se o pedido for por um tema, escolha um texto que seja exemplar para esse tema, e não invente um texto que se encaixe no tema.",
     "",
     "USO DA FERRAMENTA DE BUSCA (web_search):",
     "- Use a busca web APENAS para validar códigos BNCC reais (formato EF__XX__, EI__XX__) e confirmar detalhes pedagógicos do conteúdo que o usuário pediu.",
@@ -111,20 +99,27 @@ export async function generateSpec(
 
   const imagePromptBody = isSupport
     ? [
-        "- SEM cabeçalho de aluno, SEM campos de preenchimento, SEM linhas de resposta, SEM enunciados de exercício.",
-        "- Título visível, textos de instrução/legenda e rodapé BNCC são OPCIONAIS — inclua apenas se o tema pedir. Default: menos chrome, não mais.",
-        "- Corpo informativo: ilustrações coloridas, com rótulos/legendas em português APENAS onde esclarecem.",
-        "- Apenas elementos que o usuário pediu. Sem decoração cultural não solicitada.",
-        "- Tipografia, espaçamento e estrutura conforme o sistema de design.",
-      ].join("\n")
+      "- SEM cabeçalho de aluno, SEM campos de preenchimento, SEM linhas de resposta, SEM enunciados de exercício.",
+      "- Título visível, textos de instrução/legenda e rodapé BNCC são OPCIONAIS — inclua apenas se o tema pedir. Default: menos chrome, não mais.",
+      "- Corpo informativo: ilustrações coloridas, com rótulos/legendas em português APENAS onde esclarecem.",
+      "- Apenas elementos que o usuário pediu. Sem decoração cultural não solicitada.",
+      "- Tipografia, espaçamento e estrutura conforme o sistema de design.",
+    ].join("\n")
     : [
-        "- O cabeçalho completo (nome, escola, turma, professor(a), ano, data).",
-        "- Cada seção do corpo com instruções em português e espaços para o aluno preencher.",
-        "- Ilustrações coloridas que SERVEM ao conteúdo dos exercícios pedidos pelo usuário. Sem decoração solta.",
-        "- Apenas elementos que o usuário pediu. Sem ambientação cultural não solicitada.",
-        "- O rodapé com os códigos BNCC reais.",
-        "- Tipografia, espaçamento e estrutura conforme o sistema de design.",
-      ].join("\n")
+      "- O cabeçalho completo (nome, escola, turma, professor(a), ano, data).",
+      "- Cada seção do corpo com instruções em português e espaços para o aluno preencher.",
+      "- Ilustrações coloridas que SERVEM ao conteúdo dos exercícios pedidos pelo usuário. Sem decoração solta.",
+      "- Apenas elementos que o usuário pediu. Sem ambientação cultural não solicitada.",
+      "- O rodapé com os códigos BNCC reais.",
+      "- Tipografia, espaçamento e estrutura conforme o sistema de design.",
+      `
+        CABEÇALHO:
+        Retângulo de largura total com borda fina no topo da página. Duas linhas de campos para preencher:
+          Linha 1: "Nome: _________________________________    Escola: _________________________________"
+          Linha 2: "Professor(a): ______________________    Turma: ________    Ano: ________    Data: ____/____/______"
+        Linhas generosas para escrita à mão. Borda fina, sem preenchimento de cor. Texto somente preto.
+        `
+    ].join("\n")
 
   const noun = isSupport ? "UM material de apoio educacional impresso" : "UMA atividade educacional impressa"
   const typeInstruction = forceType
@@ -138,6 +133,7 @@ export async function generateSpec(
 REGRAS DE TEXTO:
 - "short_description": 1 frase, 80–180 caracteres.
 - "long_description": 2–4 frases, 300–880 caracteres, incluindo faixa etária/ano e sugestão de uso. NUNCA exceda 880 caracteres e SEMPRE termine em ponto final.
+- Em ambos, não terá referências de sites, autores, direitos autorais, marca d'água, logotipo ou menção à IA. Apenas descrição clara e cativante da atividade/material, seu tema, público-alvo e sugestão de uso.
 
 PARA O image_prompt (em português, fiel ao pedido), aplique este sistema de design:
 ${DESIGN_SYSTEM}
