@@ -86,6 +86,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: SITE_URL,
   },
+  other: {
+    "p:domain_verify": "660f47cc8dc7dd8550956bf49ec4188b",
+  },
 }
 
 export const viewport: Viewport = {
