@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { track } from "@vercel/analytics"
 import { Button } from "@/components/ui/button"
-import { PinterestSaveButton } from "@/components/pinterest-save-button"
 import {
   Bookmark,
   BookmarkCheck,
@@ -23,8 +22,8 @@ interface SharedActivityClientProps {
   activityTitle: string
   /**
    * "public" = atividade curated do diretório (download/imprimir/salvar são
-   * premium, mostra Crown e Pinterest). "personal" = atividade gerada pelo
-   * próprio user (tudo livre, sem Crown, sem Salvar, sem Pinterest).
+   * premium, mostra Crown). "personal" = atividade gerada pelo próprio user
+   * (tudo livre, sem Crown, sem Salvar).
    */
   mode?: "public" | "personal"
   initialSaved?: boolean
@@ -291,13 +290,6 @@ export function SharedActivityClient({
           )}
         </Button>
 
-        {isPublicCurated && (
-          <PinterestSaveButton
-            activityUrl={`https://educando.app/material/${activityId}`}
-            imageUrl={imageUrl}
-            description={activityTitle}
-          />
-        )}
       </div>
     </div>
   )

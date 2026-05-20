@@ -160,8 +160,7 @@
 }
 
 /* Imagens premium (atividades curated) — bloqueia salvar via right-click,
-   drag pra desktop, e long-press no mobile. Não impede a renderização nem o
-   feature de "Guardar no Pinterest" (que usa a URL diretamente). */
+   drag pra desktop, e long-press no mobile. Não impede a renderização. */
 .protected-image {
   user-select: none;
   -webkit-user-select: none;

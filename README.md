@@ -145,7 +145,7 @@ O script é idempotente (procura por `metadata.app:'educando' AND metadata.plan:
 **Gate de UI:**
 
 - `<SharedActivityClient mode="public">` (default em `/material/[slug]`) — botões Baixar/Imprimir/Salvar abrem `<PaywallModal />` se o user não é premium.
-- `<SharedActivityClient mode="personal">` (em `/personalizado/[slug]`) — sem Crown, sem Salvar, sem Pinterest. Atividades próprias são livres.
+- `<SharedActivityClient mode="personal">` (em `/personalizado/[slug]`) — sem Crown, sem Salvar. Atividades próprias são livres.
 - `<ProtectedImage />` aplica `.protected-image` (no-select, no-drag, no-contextmenu) somente em `/material/[slug]`.
 
 ## Pipeline de geração
